@@ -119,7 +119,7 @@ function createWindow() {
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
     // Open first tab
-    createTab('https://yandex.ru');
+    createTab(); // opens newtab
   });
 
   mainWindow.on('resize', () => updateViewBounds());
@@ -156,7 +156,14 @@ function updateViewBounds() {
   });
 }
 
-function createTab(url = 'https://yandex.ru') {
+const NEWTAB_URL = `file://${path.join(__dirname, 'src', 'newtab.html')}`;
+
+function resolveTabUrl(url) {
+  if (!url || url === 'about:blank' || url === 'newtab') return NEWTAB_URL;
+  return url;
+}
+
+function createTab(url = NEWTAB_URL) {
   const id = nextTabId++;
   const view = new BrowserView({
     webPreferences: {
@@ -189,8 +196,9 @@ function createTab(url = 'https://yandex.ru') {
   });
 
   wc.on('page-title-updated', (_, title) => {
-    tab.title = title || 'Без названия';
-    if (id === activeTabId) mainWindow.setTitle(`${tab.title} — Integra`);
+    tab.title = title || 'Новая вкладка';
+    const displayTitle = tab.url && tab.url.includes('newtab.html') ? 'Новая вкладка' : (tab.title || 'Без названия');
+    if (id === activeTabId) mainWindow.setTitle(`${displayTitle} — Integra`);
     sendTabsUpdate();
   });
 
@@ -227,7 +235,7 @@ function createTab(url = 'https://yandex.ru') {
   });
 
   setActiveTab(id);
-  view.webContents.loadURL(url);
+  view.webContents.loadURL(resolveTabUrl(url));
 
   return id;
 }
@@ -327,7 +335,7 @@ ipcMain.on('nav-forward', () => getActiveTab()?.view.webContents.goForward());
 ipcMain.on('nav-reload', () => getActiveTab()?.view.webContents.reload());
 ipcMain.on('nav-stop', () => getActiveTab()?.view.webContents.stop());
 
-ipcMain.on('tab-new', (_, { url } = {}) => createTab(url || 'https://yandex.ru'));
+ipcMain.on('tab-new', (_, { url } = {}) => createTab(url));
 ipcMain.on('tab-close', (_, { id }) => closeTab(id));
 ipcMain.on('tab-activate', (_, { id }) => setActiveTab(id));
 

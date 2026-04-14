@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Новая вкладка</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700;900&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #111111;
+      --bg2:     #181818;
+      --solid1:  #1a1a1b;
+      --solid2:  #222223;
+      --b:       rgba(255,255,255,.05);
+      --b2:      rgba(255,255,255,.09);
+      --b3:      rgba(255,255,255,.15);
+      --s1:      rgba(255,255,255,.05);
+      --s2:      rgba(255,255,255,.08);
+      --t1:      #efefef;
+      --t2:      rgba(239,239,239,.55);
+      --t3:      rgba(239,239,239,.25);
+      --y:       #8b5cf6;
+      --y2:      #a78bfa;
+      --y3:      #0ea5e9;
+      --ybg:     rgba(139,92,246,.13);
+      --yb:      rgba(139,92,246,.36);
+      --font:    'Google Sans', -apple-system, sans-serif;
+      --ease:    cubic-bezier(.16,1,.3,1);
+      --sp:      cubic-bezier(.34,1.56,.64,1);
+    }
+
+    html, body {
+      height: 100%;
+      background: #0d0d0f;
+      color: var(--t1);
+      font-family: var(--font);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 40px;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    /* ── Clock ── */
+    #clock-wrap {
+      text-align: center;
+      animation: fadeUp .5s var(--ease) both;
+    }
+
+    #clock {
+      font-size: 72px;
+      font-weight: 900;
+      letter-spacing: -3px;
+      background: linear-gradient(135deg, #efefef 30%, rgba(239,239,239,.4));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #date {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--t3);
+      margin-top: 8px;
+      letter-spacing: .3px;
+    }
+
+    /* ── Search bar ── */
+    #search-wrap {
+      width: 100%;
+      max-width: 560px;
+      animation: fadeUp .5s .08s var(--ease) both;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--solid1);
+      border: 1px solid var(--b2);
+      border-radius: 16px;
+      padding: 0 18px;
+      height: 52px;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+      cursor: text;
+    }
+
+    .search-box:focus-within {
+      border-color: rgba(139,92,246,.5);
+      background: rgba(255,255,255,.04);
+      box-shadow: 0 0 0 4px rgba(139,92,246,.1);
+    }
+
+    .search-ico {
+      color: var(--t3);
+      flex-shrink: 0;
+      display: flex;
+    }
+
+    #search-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--t1);
+      font-family: var(--font);
+      font-size: 16px;
+      font-weight: 500;
+      caret-color: var(--y2);
+    }
+
+    #search-input::placeholder { color: var(--t3); }
+
+    .search-engine {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      color: var(--t3);
+      flex-shrink: 0;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: var(--s1);
+      border: 1px solid var(--b);
+      cursor: pointer;
+      transition: background .12s, color .12s;
+      user-select: none;
+    }
+
+    .search-engine:hover { background: var(--s2); color: var(--t2); }
+
+    /* ── Quick links ── */
+    #links-wrap {
+      width: 100%;
+      max-width: 560px;
+      animation: fadeUp .5s .16s var(--ease) both;
+    }
+
+    #links-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .7px;
+      text-transform: uppercase;
+      color: var(--t3);
+      margin-bottom: 12px;
+    }
+
+    #links-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .ql-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 10px 12px;
+      background: var(--solid1);
+      border: 1px solid var(--b);
+      border-radius: 14px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background .15s var(--ease), border-color .15s, transform .15s var(--sp);
+    }
+
+    .ql-item:hover {
+      background: var(--solid2);
+      border-color: var(--b2);
+      transform: translateY(-2px);
+    }
+
+    .ql-item:active { transform: scale(.96); }
+
+    .ql-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      background: var(--s1);
+    }
+
+    .ql-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--t2);
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+    }
+
+    /* ── Integra wordmark ── */
+    #wordmark {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .5px;
+      color: var(--t3);
+      animation: fadeUp .5s .24s var(--ease) both;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #wordmark span {
+      background: linear-gradient(135deg, var(--y2), var(--y3));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(128,128,128,.2); border-radius: 99px; }
+  </style>
+</head>
+<body>
+
+  <!-- Clock -->
+  <div id="clock-wrap">
+    <div id="clock">00:00</div>
+    <div id="date"></div>
+  </div>
+
+  <!-- Search -->
+  <div id="search-wrap">
+    <div class="search-box" id="search-box">
+      <span class="search-ico">
+        <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
+          <circle cx="7.5" cy="7.5" r="5.5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M11.5 11.5L15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <input type="text" id="search-input" placeholder="Поиск или адрес сайта" autocomplete="off" spellcheck="false">
+      <div class="search-engine" id="engine-toggle" title="Сменить поисковик">Яндекс</div>
+    </div>
+  </div>
+
+  <!-- Quick links -->
+  <div id="links-wrap">
+    <div id="links-label">Быстрый доступ</div>
+    <div id="links-grid"></div>
+  </div>
+
+  <!-- Wordmark -->
+  <div id="wordmark">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <circle cx="7" cy="7" r="5.5" stroke="url(#g)" stroke-width="1.5"/>
+      <path d="M4 7h6M7 4v6" stroke="url(#g)" stroke-width="1.4" stroke-linecap="round"/>
+      <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="14" y2="14" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#8b5cf6"/><stop offset="1" stop-color="#0ea5e9"/>
+        </linearGradient>
+      </defs>
+    </svg>
+    <span>Integra</span>
+  </div>
+
+<script>
+  // ── Clock ──────────────────────────────────────────────────
+  const $clock = document.getElementById('clock');
+  const $date  = document.getElementById('date');
+  const days   = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+  const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+
+  function tick() {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2, '0');
+    const m = String(now.getMinutes()).padStart(2, '0');
+    $clock.textContent = `${h}:${m}`;
+    $date.textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  // ── Search engines ─────────────────────────────────────────
+  const engines = [
+    { name: 'Яндекс', url: 'https://yandex.ru/search/?text=' },
+    { name: 'Google',  url: 'https://www.google.com/search?q=' },
+    { name: 'DuckDDG', url: 'https://duckduckgo.com/?q=' },
+  ];
+  let engineIdx = 0;
+
+  document.getElementById('engine-toggle').addEventListener('click', () => {
+    engineIdx = (engineIdx + 1) % engines.length;
+    document.getElementById('engine-toggle').textContent = engines[engineIdx].name;
+  });
+
+  // ── Search ─────────────────────────────────────────────────
+  const $input = document.getElementById('search-input');
+  $input.focus();
+
+  document.getElementById('search-box').addEventListener('click', () => $input.focus());
+
+  $input.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    const v = $input.value.trim();
+    if (!v) return;
+    const isUrl = /^https?:\/\//i.test(v) || (/^[a-zA-Z0-9-]+\.[a-z]{2,}/.test(v) && !v.includes(' '));
+    const dest = isUrl ? (v.startsWith('http') ? v : 'https://' + v) : engines[engineIdx].url + encodeURIComponent(v);
+    window.location.href = dest;
+  });
+
+  // ── Quick links ────────────────────────────────────────────
+  const links = [
+    { name: 'Яндекс',  url: 'https://yandex.ru',        icon: '🔍' },
+    { name: 'VK',      url: 'https://vk.com',            icon: '💬' },
+    { name: 'YouTube', url: 'https://youtube.com',       icon: '▶️' },
+    { name: 'GitHub',  url: 'https://github.com',        icon: '🐙' },
+    { name: 'Telegram',url: 'https://web.telegram.org',  icon: '✈️' },
+    { name: 'Habr',    url: 'https://habr.com',          icon: '📖' },
+    { name: 'Mail.ru', url: 'https://mail.ru',           icon: '📧' },
+    { name: 'Почта',   url: 'https://mail.yandex.ru',    icon: '📨' },
+  ];
+
+  const $grid = document.getElementById('links-grid');
+  links.forEach(({ name, url, icon }) => {
+    const a = document.createElement('a');
+    a.className = 'ql-item';
+    a.href = url;
+    a.innerHTML = `<div class="ql-icon">${icon}</div><div class="ql-name">${name}</div>`;
+    $grid.appendChild(a);
+  });
+</script>
+</body>
+</html>

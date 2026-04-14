@@ -186,9 +186,9 @@ function applyBypassState(enabled) {
 // ── URL formatting ─────────────────────────────────────────────
 function formatUrl(url) {
   if (!url || url === 'about:blank') return '';
+  if (url.includes('newtab.html') || url.startsWith('file://')) return '';
   try {
     const u = new URL(url);
-    // Show clean version: strip trailing slash on homepage, keep path
     return u.hostname + (u.pathname !== '/' ? u.pathname : '') + u.search;
   } catch { return url; }
 }
