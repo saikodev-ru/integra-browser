@@ -1,0 +1,59 @@
+{
+  "name": "integra-browser",
+  "productName": "Integra",
+  "version": "0.1.0",
+  "description": "Стильный браузер на основе Chromium без телеметрии с обходом DPI/ТСПУ",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build:win": "electron-builder --win --x64",
+    "build:all": "electron-builder --win"
+  },
+  "keywords": ["browser", "chromium", "privacy", "russia", "dpi-bypass"],
+  "author": "saikodev-ru",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "ru.saikodev.integra",
+    "productName": "Integra",
+    "copyright": "© 2025 saikodev",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "assets/**/*",
+      "bypass/**/*",
+      "!bypass/**/*.pdb"
+    ],
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Integra"
+    },
+    "extraResources": [
+      {
+        "from": "bypass/",
+        "to": "bypass/",
+        "filter": ["**/*"]
+      }
+    ]
+  }
+}
