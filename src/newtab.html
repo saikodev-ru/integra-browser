@@ -267,6 +267,26 @@
       justify-content: center;
       font-size: 18px;
       background: var(--s1);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .ql-icon img {
+      width: 22px;
+      height: 22px;
+      border-radius: 5px;
+      object-fit: contain;
+    }
+
+    .ql-letter {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: 10px;
     }
 
     .ql-name {
@@ -468,22 +488,46 @@
 
   // ── Quick links ────────────────────────────────────────────
   const links = [
-    { name: 'Яндекс',    url: 'https://yandex.ru',        icon: '🔍' },
-    { name: 'VK',        url: 'https://vk.com',            icon: '💬' },
-    { name: 'YouTube',   url: 'https://youtube.com',       icon: '▶️' },
-    { name: 'GitHub',    url: 'https://github.com',        icon: '🐙' },
-    { name: 'Telegram',  url: 'https://web.telegram.org',  icon: '✈️' },
-    { name: 'Habr',      url: 'https://habr.com',          icon: '📖' },
-    { name: 'Mail.ru',   url: 'https://mail.ru',           icon: '📧' },
-    { name: 'Яндекс.Музыка', url: 'https://music.yandex.ru', icon: '🎵' },
+    { name: 'Яндекс',        url: 'https://yandex.ru' },
+    { name: 'VK',            url: 'https://vk.com' },
+    { name: 'YouTube',       url: 'https://youtube.com' },
+    { name: 'GitHub',        url: 'https://github.com' },
+    { name: 'Telegram',      url: 'https://web.telegram.org' },
+    { name: 'Habr',          url: 'https://habr.com' },
+    { name: 'Mail.ru',       url: 'https://mail.ru' },
+    { name: 'Яндекс.Музыка', url: 'https://music.yandex.ru' },
   ];
 
+  // Color palette for letter fallbacks
+  const letterColors = [
+    '#8b5cf6', '#0ea5e9', '#34c759', '#ff9f0a',
+    '#ff453a', '#ff6b9d', '#5856d6', '#00c7be',
+  ];
+
+  function getDomain(url) {
+    try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return ''; }
+  }
+
+  function getLetterColor(domain) {
+    let hash = 0;
+    for (let i = 0; i < domain.length; i++) hash = domain.charCodeAt(i) + ((hash << 5) - hash);
+    return letterColors[Math.abs(hash) % letterColors.length];
+  }
+
   const $grid = document.getElementById('links-grid');
-  links.forEach(({ name, url, icon }) => {
+  links.forEach(({ name, url }) => {
+    const domain = getDomain(url);
+    const letter = domain.charAt(0).toUpperCase();
+    const color = getLetterColor(domain);
+    const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+
     const a = document.createElement('a');
     a.className = 'ql-item';
     a.href = url;
-    a.innerHTML = `<div class="ql-icon">${icon}</div><div class="ql-name">${name}</div>`;
+    a.innerHTML = `<div class="ql-icon" data-domain="${escapeHtml(domain)}">
+      <img src="${faviconUrl}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+      <div class="ql-letter" style="display:none; background:${color}20; color:${color};">${letter}</div>
+    </div><div class="ql-name">${name}</div>`;
     $grid.appendChild(a);
   });
 
