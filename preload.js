@@ -13,6 +13,9 @@ contextBridge.exposeInMainWorld('integra', {
   // Paths & URLs
   getWebViewPreloadPath: () => ipcRenderer.invoke('get-webview-preload-path'),
   getNewTabUrl: () => ipcRenderer.invoke('get-newtab-url'),
+  getSettingsUrl: () => ipcRenderer.invoke('get-settings-url'),
+  getHistoryUrl: () => ipcRenderer.invoke('get-history-url'),
+  getErrorUrl: () => ipcRenderer.invoke('get-error-url'),
 
   // Bookmarks
   getBookmarks: () => ipcRenderer.invoke('bookmarks-get'),
@@ -32,6 +35,20 @@ contextBridge.exposeInMainWorld('integra', {
   getSavedTabs: () => ipcRenderer.invoke('get-saved-tabs'),
   saveTabsSession: (tabData) => ipcRenderer.send('save-tabs-session', tabData),
 
+  // History
+  historyGet: () => ipcRenderer.invoke('history-get'),
+  historyAdd: (url, title) => ipcRenderer.send('history-add', { url, title }),
+  historyClear: () => ipcRenderer.send('history-clear'),
+  historyDelete: (id) => ipcRenderer.send('history-delete', { id }),
+
+  // Cookies
+  cookiesGet: () => ipcRenderer.invoke('cookies-get'),
+  cookiesClear: () => ipcRenderer.invoke('cookies-clear'),
+
+  // Cache
+  cacheGetSize: () => ipcRenderer.invoke('cache-get-size'),
+  cacheClear: () => ipcRenderer.invoke('cache-clear'),
+
   // Native context menu for webview
   showContextMenu: (params) => ipcRenderer.send('show-page-context-menu', params),
 
@@ -41,7 +58,11 @@ contextBridge.exposeInMainWorld('integra', {
 
   // Listeners
   on: (channel, fn) => {
-    const allowed = ['fullscreen-change', 'bypass-no-binary', 'bookmarks-update', 'settings-changed', 'incognito-mode', 'save-tabs', 'ctx-action'];
+    const allowed = [
+      'fullscreen-change', 'bypass-no-binary', 'bookmarks-update',
+      'settings-changed', 'incognito-mode', 'save-tabs',
+      'ctx-action', 'do-zoom',
+    ];
     if (allowed.includes(channel)) ipcRenderer.on(channel, (_, ...args) => fn(...args));
   },
 });

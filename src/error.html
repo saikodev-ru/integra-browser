@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ошибка</title>
+  <base target="_self">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700;900&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0d0d0f;
+      --solid1:  #1a1a1b;
+      --solid2:  #222223;
+      --solid3:  #2d2d2f;
+      --b:       rgba(255,255,255,.05);
+      --b2:      rgba(255,255,255,.09);
+      --b3:      rgba(255,255,255,.15);
+      --s1:      rgba(255,255,255,.05);
+      --s2:      rgba(255,255,255,.08);
+      --s3:      rgba(255,255,255,.14);
+      --t1:      #efefef;
+      --t2:      rgba(239,239,239,.55);
+      --t3:      rgba(239,239,239,.25);
+      --y:       #8b5cf6;
+      --y2:      #a78bfa;
+      --y3:      #0ea5e9;
+      --ybg:     rgba(139,92,246,.13);
+      --yb:      rgba(139,92,246,.36);
+      --red:     #ff453a;
+      --green:   #34c759;
+      --font:    'Google Sans', -apple-system, sans-serif;
+      --ease:    cubic-bezier(.16,1,.3,1);
+      --sp:      cubic-bezier(.34,1.56,.64,1);
+      --accent-grad: linear-gradient(135deg, #8b5cf6, #0ea5e9);
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--t1);
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 500;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* ── Animated background ── */
+    .bg-pattern {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      z-index: 0;
+      opacity: .35;
+    }
+
+    .bg-pattern::before {
+      content: '';
+      position: absolute;
+      inset: -50%;
+      width: 200%;
+      height: 200%;
+      background:
+        radial-gradient(ellipse 600px 600px at 20% 30%, rgba(139,92,246,.12) 0%, transparent 70%),
+        radial-gradient(ellipse 500px 500px at 80% 70%, rgba(14,165,233,.1) 0%, transparent 70%),
+        radial-gradient(ellipse 400px 400px at 50% 50%, rgba(255,69,58,.06) 0%, transparent 70%);
+      animation: bgDrift 20s ease-in-out infinite alternate;
+    }
+
+    @keyframes bgDrift {
+      0%   { transform: translate(0, 0) rotate(0deg); }
+      33%  { transform: translate(-30px, 20px) rotate(1deg); }
+      66%  { transform: translate(20px, -15px) rotate(-0.5deg); }
+      100% { transform: translate(-10px, 10px) rotate(0.5deg); }
+    }
+
+    /* Grid dots */
+    .bg-dots {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background-image: radial-gradient(rgba(255,255,255,.04) 1px, transparent 1px);
+      background-size: 32px 32px;
+      animation: dotsShift 30s linear infinite;
+    }
+
+    @keyframes dotsShift {
+      0%   { background-position: 0 0; }
+      100% { background-position: 32px 32px; }
+    }
+
+    /* Floating orbs */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(60px);
+      z-index: 0;
+      animation: orbFloat 15s ease-in-out infinite alternate;
+    }
+
+    .orb-1 {
+      width: 200px;
+      height: 200px;
+      background: rgba(139,92,246,.08);
+      top: 15%;
+      left: 10%;
+      animation-duration: 18s;
+    }
+
+    .orb-2 {
+      width: 160px;
+      height: 160px;
+      background: rgba(14,165,233,.06);
+      bottom: 20%;
+      right: 15%;
+      animation-duration: 22s;
+      animation-delay: -5s;
+    }
+
+    .orb-3 {
+      width: 120px;
+      height: 120px;
+      background: rgba(255,69,58,.05);
+      top: 60%;
+      left: 60%;
+      animation-duration: 16s;
+      animation-delay: -10s;
+    }
+
+    @keyframes orbFloat {
+      0%   { transform: translate(0, 0) scale(1); }
+      25%  { transform: translate(30px, -20px) scale(1.1); }
+      50%  { transform: translate(-20px, 30px) scale(0.95); }
+      75%  { transform: translate(15px, 15px) scale(1.05); }
+      100% { transform: translate(-10px, -25px) scale(1); }
+    }
+
+    /* ── Error content ── */
+    .error-content {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 40px 24px;
+      max-width: 480px;
+      width: 100%;
+    }
+
+    /* Error icon */
+    .error-icon-wrap {
+      width: 80px;
+      height: 80px;
+      border-radius: 24px;
+      background: rgba(255,69,58,.08);
+      border: 1px solid rgba(255,69,58,.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 28px;
+      animation: iconIn .6s var(--ease) both;
+      position: relative;
+    }
+
+    .error-icon-wrap::after {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: 24px;
+      background: var(--accent-grad);
+      opacity: .1;
+      z-index: -1;
+      animation: pulseGlow 3s ease-in-out infinite;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { opacity: .1; }
+      50% { opacity: .2; }
+    }
+
+    .error-icon-wrap svg {
+      color: var(--red);
+      animation: iconShake .5s var(--ease) .3s both;
+    }
+
+    @keyframes iconIn {
+      from { opacity: 0; transform: scale(.8) translateY(-10px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    @keyframes iconShake {
+      0%   { transform: rotate(0deg); }
+      15%  { transform: rotate(-8deg); }
+      30%  { transform: rotate(8deg); }
+      45%  { transform: rotate(-5deg); }
+      60%  { transform: rotate(5deg); }
+      75%  { transform: rotate(-2deg); }
+      100% { transform: rotate(0deg); }
+    }
+
+    /* Error code */
+    .error-code {
+      font-size: 72px;
+      font-weight: 900;
+      letter-spacing: -4px;
+      line-height: 1;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, var(--t1) 20%, rgba(239,239,239,.3));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: codeIn .5s .1s var(--ease) both;
+    }
+
+    @keyframes codeIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* Error title */
+    .error-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--t1);
+      margin-bottom: 8px;
+      animation: fadeUp .5s .2s var(--ease) both;
+    }
+
+    /* Error URL */
+    .error-url {
+      font-size: 13px;
+      color: var(--t3);
+      max-width: 400px;
+      margin: 0 auto 28px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      padding: 8px 14px;
+      background: var(--solid1);
+      border: 1px solid var(--b);
+      border-radius: 10px;
+      font-variant-numeric: tabular-nums;
+      animation: fadeUp .5s .25s var(--ease) both;
+    }
+
+    /* Buttons */
+    .error-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      animation: fadeUp .5s .3s var(--ease) both;
+    }
+
+    .err-btn {
+      height: 42px;
+      padding: 0 24px;
+      border-radius: 12px;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s, border-color .15s, transform .1s var(--sp), opacity .15s;
+      white-space: nowrap;
+    }
+
+    .err-btn:active { transform: scale(.97); }
+
+    .err-btn-primary {
+      background: var(--accent-grad);
+      border: none;
+      color: #fff;
+    }
+
+    .err-btn-primary:hover {
+      opacity: .88;
+    }
+
+    .err-btn-secondary {
+      background: var(--s1);
+      border: 1px solid var(--b2);
+      color: var(--t1);
+    }
+
+    .err-btn-secondary:hover {
+      background: var(--s2);
+      border-color: var(--b3);
+    }
+
+    /* Countdown */
+    .countdown-wrap {
+      margin-top: 18px;
+      font-size: 12px;
+      color: var(--t3);
+      animation: fadeUp .5s .4s var(--ease) both;
+    }
+
+    .countdown-num {
+      color: var(--y2);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Branding */
+    .branding {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      color: var(--t3);
+      opacity: .4;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 1;
+    }
+
+    .branding svg {
+      opacity: .6;
+    }
+
+    .branding span {
+      background: var(--accent-grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    @media (max-width: 500px) {
+      .error-code { font-size: 56px; letter-spacing: -3px; }
+      .error-actions { flex-direction: column; }
+      .err-btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Animated background -->
+  <div class="bg-pattern"></div>
+  <div class="bg-dots"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <!-- Error content -->
+  <div class="error-content">
+    <div class="error-icon-wrap">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M12 8v5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="12" cy="15.5" r="1" fill="currentColor"/>
+      </svg>
+    </div>
+
+    <div class="error-code" id="error-code">—</div>
+    <div class="error-title" id="error-title">Ошибка подключения</div>
+
+    <div class="error-url" id="error-url" title="">—</div>
+
+    <div class="error-actions">
+      <button class="err-btn err-btn-primary" id="btn-retry">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="vertical-align: -2px; margin-right: 6px;">
+          <path d="M11.5 7a4.5 4.5 0 1 1-1.3-3.2L11.5 5V2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Попробовать снова
+      </button>
+      <button class="err-btn err-btn-secondary" id="btn-home">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="vertical-align: -2px; margin-right: 6px;">
+          <path d="M7 1.5L1.5 6.5H4V12h2.5V8.5h1V12H10V6.5h2.5L7 1.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" fill="none"/>
+        </svg>
+        На главную
+      </button>
+    </div>
+
+    <div class="countdown-wrap hidden" id="countdown-wrap">
+      Автоматическое повторение через <span class="countdown-num" id="countdown-num">10</span> сек
+    </div>
+  </div>
+
+  <!-- Branding -->
+  <div class="branding">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+      <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.2"/>
+      <path d="M4 6h4M6 4v4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+    </svg>
+    <span>Integra</span>
+  </div>
+
+  <script>
+    // ── Parse URL params ─────────────────────────────────────
+    const params = new URLSearchParams(window.location.search);
+    const errorCode = params.get('code') || '0';
+    const errorUrl  = params.get('url')  || '';
+    const errorDesc = params.get('desc') || '';
+
+    // ── Error descriptions ──────────────────────────────────
+    const descriptions = {
+      '400': 'Неверный запрос',
+      '401': 'Требуется авторизация',
+      '403': 'Доступ запрещён',
+      '404': 'Страница не найдена',
+      '408': 'Время ожидания истекло',
+      '500': 'Внутренняя ошибка сервера',
+      '502': 'Плохой шлюз',
+      '503': 'Сервис недоступен',
+    };
+
+    // ── Populate page ───────────────────────────────────────
+    function escapeHtml(str) {
+      const d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
+    }
+
+    document.getElementById('error-code').textContent = errorCode || '!';
+    document.getElementById('error-title').textContent = descriptions[errorCode] || errorDesc || 'Ошибка подключения';
+    
+    const urlEl = document.getElementById('error-url');
+    if (errorUrl) {
+      urlEl.textContent = errorUrl;
+      urlEl.title = errorUrl;
+    } else {
+      urlEl.style.display = 'none';
+    }
+
+    // ── Auto-retry countdown ────────────────────────────────
+    // Auto-retry for network-like errors (no code, or timeout/server errors)
+    const autoRetryCodes = ['0', '408', '502', '503', '500'];
+    const shouldAutoRetry = autoRetryCodes.includes(errorCode);
+    const countdownWrap = document.getElementById('countdown-wrap');
+    const countdownNum  = document.getElementById('countdown-num');
+    let countdownTimer = null;
+    let countdownValue = 10;
+
+    if (shouldAutoRetry) {
+      countdownWrap.classList.remove('hidden');
+      countdownValue = 10;
+      countdownNum.textContent = countdownValue;
+      countdownTimer = setInterval(() => {
+        countdownValue--;
+        countdownNum.textContent = countdownValue;
+        if (countdownValue <= 0) {
+          clearInterval(countdownTimer);
+          doRetry();
+        }
+      }, 1000);
+    }
+
+    // ── Actions ─────────────────────────────────────────────
+    function postMsg(data) {
+      try {
+        if (window.chrome && window.chrome.webview) {
+          window.chrome.webview.postMessage(data);
+        } else {
+          window.parent.postMessage(data, '*');
+        }
+      } catch {}
+    }
+
+    function doRetry() {
+      if (countdownTimer) clearInterval(countdownTimer);
+      countdownWrap.classList.add('hidden');
+      postMsg({ type: 'error-retry', url: errorUrl });
+    }
+
+    document.getElementById('btn-retry').addEventListener('click', doRetry);
+
+    document.getElementById('btn-home').addEventListener('click', () => {
+      if (countdownTimer) clearInterval(countdownTimer);
+      postMsg({ type: 'error-home' });
+    });
+
+    // ── Cancel countdown on any user interaction ─────────────
+    document.addEventListener('click', () => {
+      if (countdownTimer && countdownValue > 0) {
+        clearInterval(countdownTimer);
+        countdownWrap.classList.add('hidden');
+      }
+    }, { once: true });
+
+    document.addEventListener('keydown', () => {
+      if (countdownTimer && countdownValue > 0) {
+        clearInterval(countdownTimer);
+        countdownWrap.classList.add('hidden');
+      }
+    }, { once: true });
+  </script>
+</body>
+</html>

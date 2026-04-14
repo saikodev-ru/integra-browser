@@ -6,6 +6,9 @@ const api = window.integra;
 // ── DOM refs ──────────────────────────────────────────────────
 const $tabsList       = document.getElementById('tabs-list');
 const $urlbar         = document.getElementById('urlbar');
+const $urlbarWrap     = document.getElementById('urlbar-wrap');
+const $urlbarTitle    = document.getElementById('urlbar-title');
+const $urlbarZoom     = document.getElementById('urlbar-zoom');
 const $btnBack        = document.getElementById('btn-back');
 const $btnForward     = document.getElementById('btn-forward');
 const $btnReload      = document.getElementById('btn-reload');
@@ -21,6 +24,7 @@ const $icoStar        = document.getElementById('ico-star');
 const $icoStarFilled  = document.getElementById('ico-star-filled');
 const $btnSettings    = document.getElementById('btn-settings');
 const $btnIncognito   = document.getElementById('btn-incognito');
+const $btnHistory     = document.getElementById('btn-history');
 
 const $bookmarksBar   = document.getElementById('bookmarks-bar');
 const $bookmarksList  = document.getElementById('bookmarks-list');
@@ -58,6 +62,9 @@ let ctxBmId = null;
 let ctxBmUrl = null;
 let isIncognito = false;
 let NEWTAB_URL = '';
+let SETTINGS_URL = '';
+let HISTORY_URL = '';
+let ERROR_URL = '';
 let webviewPreloadPath = '';
 const FALLBACK_URL = 'about:blank';
 
@@ -66,8 +73,10 @@ const FALLBACK_URL = 'about:blank';
   try {
     webviewPreloadPath = await api.getWebViewPreloadPath();
     NEWTAB_URL = await api.getNewTabUrl();
+    SETTINGS_URL = await api.getSettingsUrl();
+    HISTORY_URL = await api.getHistoryUrl();
+    ERROR_URL = await api.getErrorUrl();
     console.log('[init] newtab URL:', NEWTAB_URL);
-    console.log('[init] preload path:', webviewPreloadPath);
 
     const state = await api.getState();
     bookmarks = state.bookmarks || [];
@@ -91,9 +100,11 @@ const FALLBACK_URL = 'about:blank';
       console.log('[init] no saved tabs, creating default');
       createTab(NEWTAB_URL);
     }
+
+    // Initial resize after layout settles
+    requestAnimationFrame(() => resizeAllWebviews());
   } catch (err) {
     console.error('[init] FATAL:', err);
-    // Fallback: create at least one tab with hardcoded URL
     NEWTAB_URL = NEWTAB_URL || FALLBACK_URL;
     createTab(NEWTAB_URL);
   }
@@ -106,7 +117,6 @@ api.on('bookmarks-update', (bm) => { bookmarks = bm || []; renderBookmarksBar();
 api.on('settings-changed', (s) => { settings = s || {}; applySettings(); });
 api.on('incognito-mode', (v) => { isIncognito = v; });
 api.on('save-tabs', () => {
-  // Main asks us to save tabs before window closes
   const tabData = tabs.map(t => ({
     url: t.url && !t.url.includes('127.0.0.1') && !t.url.startsWith('about:') ? t.url : '',
     title: t.title || '',
@@ -124,11 +134,13 @@ api.on('ctx-action', (action) => {
     if (action === 'back') { if (wv) wv.goBack(); }
     else if (action === 'forward') { if (wv) wv.goForward(); }
     else if (action === 'reload') { if (wv) wv.reload(); }
+    else if (action === 'zoom-in') { zoomIn(); }
+    else if (action === 'zoom-out') { zoomOut(); }
+    else if (action === 'zoom-reset') { zoomReset(); }
     else if (action === 'bookmark-toggle') $btnBookmark.click();
     else if (action === 'new-tab') createTab(NEWTAB_URL);
     else if (action === 'copied') showToast('Скопировано');
   } else if (action && typeof action === 'object') {
-    // Object actions (open-link, open-link-tab)
     if (action.action === 'open-link') {
       const t = getActiveTab();
       if (t) { t.url = action.url; t.webview.loadURL(action.url); }
@@ -137,6 +149,41 @@ api.on('ctx-action', (action) => {
     }
   }
 });
+
+// ── Zoom IPC from main ───────────────────────────────────────
+api.on('do-zoom', ({ tabId, level }) => {
+  const tab = getTab(tabId);
+  if (!tab) return;
+  tab.zoomLevel = level;
+  try { tab.webview.setZoomLevel(level); } catch {}
+  if (tab.id === activeTabId) updateZoomIndicator(tab);
+});
+
+// ══════════════════════════════════════════════════════════════
+//  WEBVIEW RESIZE (explicit pixel dimensions)
+// ══════════════════════════════════════════════════════════════
+
+function resizeAllWebviews() {
+  const rect = $webviewsContainer.getBoundingClientRect();
+  const w = Math.round(rect.width);
+  const h = Math.round(rect.height);
+  if (w <= 0 || h <= 0) return;
+
+  tabs.forEach(tab => {
+    if (!tab.webview) return;
+    try {
+      tab.webview.style.width = w + 'px';
+      tab.webview.style.height = h + 'px';
+    } catch (e) {
+      console.warn('[resize] error setting webview size:', e.message);
+    }
+  });
+}
+
+// Watch for container size changes and window resize
+window.addEventListener('resize', () => resizeAllWebviews());
+const resizeObs = new ResizeObserver(() => resizeAllWebviews());
+resizeObs.observe($webviewsContainer);
 
 // ══════════════════════════════════════════════════════════════
 //  TAB MANAGEMENT
@@ -149,6 +196,11 @@ function getActiveWebView() { const t = getActiveTab(); return t ? t.webview : n
 function resolveTabUrl(url) {
   if (!url || url === 'about:blank' || url === 'newtab' || url === '') return NEWTAB_URL || FALLBACK_URL;
   return url;
+}
+
+function isInternalPage(url) {
+  if (!url) return false;
+  return url.includes('settings.html') || url.includes('history.html') || url.includes('error.html');
 }
 
 function createTab(url, opts = {}) {
@@ -166,6 +218,12 @@ function createTab(url, opts = {}) {
     // ── Webview events ──
     webview.addEventListener('did-attach', () => {
       console.log('[webview] did-attach, tab', id);
+      // Set explicit size after attachment
+      const rect = $webviewsContainer.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        webview.style.width = Math.round(rect.width) + 'px';
+        webview.style.height = Math.round(rect.height) + 'px';
+      }
     });
 
     webview.addEventListener('did-start-loading', () => {
@@ -191,7 +249,26 @@ function createTab(url, opts = {}) {
       if (e.errorCode === -3) return; // ABORTED — ignore
       const tab = getTab(id);
       if (!tab) return;
-      // If it's a local URL that failed, just show blank
+
+      const errorMap = {
+        '-2': 502, '-6': 404, '-21': 403, '-100': 404,
+        '-102': 502, '-105': 404, '-106': 503, '-109': 502,
+        '-200': -1, '-201': -1, '-202': -1, '-203': -1, '-204': -1,
+      };
+
+      if (e.errorCode in errorMap) {
+        const httpCode = errorMap[e.errorCode];
+        const failedUrl = e.validatedURL || tab.url || '';
+        tab.loading = false;
+        tab.title = httpCode > 0 ? `Ошибка ${httpCode}` : 'Не удалось загрузить';
+        const errorPageUrl = `${ERROR_URL}?code=${httpCode}&url=${encodeURIComponent(failedUrl)}`;
+        try { tab.webview.loadURL(errorPageUrl); } catch {}
+        tab.url = errorPageUrl;
+        renderTabs();
+        if (id === activeTabId) updateNavFromTab(tab);
+        return;
+      }
+
       if (tab.url && tab.url.includes('127.0.0.1')) {
         tab.loading = false;
         tab.title = 'Новая вкладка';
@@ -207,7 +284,13 @@ function createTab(url, opts = {}) {
       if (tab) {
         tab.title = e.title || 'Новая вкладка';
         renderTabs();
-        if (id === activeTabId) document.title = `${tab.title} — Integra`;
+        if (id === activeTabId) {
+          document.title = `${tab.title} — Integra`;
+          updateUrlbarTitle(tab);
+        }
+        if (!isInternalPage(tab.url) && !tab.url.includes('127.0.0.1') && !tab.url.startsWith('about:')) {
+          api.historyAdd(tab.url, tab.title);
+        }
       }
     });
 
@@ -221,6 +304,9 @@ function createTab(url, opts = {}) {
       if (tab) {
         tab.url = e.url;
         if (id === activeTabId) updateNavFromTab(tab);
+        if (!isInternalPage(e.url) && !e.url.includes('127.0.0.1') && !e.url.startsWith('about:')) {
+          api.historyAdd(e.url, tab.title);
+        }
       }
     });
 
@@ -232,10 +318,10 @@ function createTab(url, opts = {}) {
       }
     });
 
+    // ── Context menu via IPC from preload (more reliable than webview event) ──
     webview.addEventListener('context-menu', (e) => {
       if (id === activeTabId) {
         const rect = webview.getBoundingClientRect();
-        // Use native context menu via IPC (DOM menus are behind webview native layer)
         api.showContextMenu({
           x: rect.left + e.params.x,
           y: rect.top + e.params.y,
@@ -271,6 +357,30 @@ function createTab(url, opts = {}) {
       console.error('[webview] render process gone, tab', id, 'reason:', e.reason);
     });
 
+    // ── IPC from webview preload (internal page messages + context menu) ──
+    webview.addEventListener('ipc-message', (e) => {
+      if (e.channel === 'internal-msg') {
+        const msg = e.args[0];
+        // Handle context menu from preload (more reliable than webview context-menu event)
+        if (msg && msg.type === 'context-menu') {
+          if (id === activeTabId) {
+            const rect = webview.getBoundingClientRect();
+            api.showContextMenu({
+              x: rect.left + msg.x,
+              y: rect.top + msg.y,
+              pageURL: msg.pageURL,
+              linkURL: msg.linkURL,
+              selectionText: msg.selectionText,
+              canGoBack: webview.canGoBack(),
+              canGoForward: webview.canGoForward(),
+            });
+          }
+          return;
+        }
+        handleInternalMessage(id, msg);
+      }
+    });
+
     // Add to DOM
     $webviewsContainer.appendChild(webview);
 
@@ -283,6 +393,7 @@ function createTab(url, opts = {}) {
       muted: opts.muted || false,
       audible: false,
       group: opts.group || null,
+      zoomLevel: opts.zoomLevel || 0,
     };
     tabs.push(tab);
 
@@ -295,12 +406,10 @@ function createTab(url, opts = {}) {
       }
     }
 
-    // Set as active (unless opts.active === false)
     if (opts.active !== false) {
       setActiveTab(id);
     }
 
-    // Load URL after webview is in DOM
     webview.src = resolvedUrl;
     console.log('[tab] created', id, 'url:', resolvedUrl);
     return id;
@@ -316,19 +425,47 @@ function setActiveTab(id) {
   const tab = getTab(id);
   if (tab) {
     tab.webview.style.display = 'block';
+    // Explicit resize on tab switch to fix sizing
+    const rect = $webviewsContainer.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      tab.webview.style.width = Math.round(rect.width) + 'px';
+      tab.webview.style.height = Math.round(rect.height) + 'px';
+    }
+    // Restore zoom level
+    try { tab.webview.setZoomLevel(tab.zoomLevel || 0); } catch {}
     updateNavFromTab(tab);
     document.title = `${tab.title} — Integra`;
     updateBookmarkStarState(isBookmarkedUrl(tab.url));
+    updateUrlbarTitle(tab);
+    updateZoomIndicator(tab);
   }
   renderTabs();
 }
 
-function closeTab(id) {
+function closeTab(id, animate = true) {
   const idx = tabs.findIndex(t => t.id === id);
   if (idx === -1) return;
   const tab = tabs[idx];
+
+  if (animate) {
+    const tabEl = $tabsList.querySelector(`.tab[data-id="${id}"]`);
+    if (tabEl) {
+      tabEl.classList.add('closing');
+      setTimeout(() => {
+        tab.webview.remove();
+        tabs.splice(tabs.findIndex(t => t.id === id), 1);
+        finishClose(idx, id);
+      }, 250);
+      return;
+    }
+  }
+
   tab.webview.remove();
   tabs.splice(idx, 1);
+  finishClose(idx, id);
+}
+
+function finishClose(idx, id) {
   if (tabs.length === 0) { createTab(NEWTAB_URL); return; }
   if (activeTabId === id) setActiveTab(tabs[Math.min(idx, tabs.length - 1)].id);
   else renderTabs();
@@ -361,13 +498,13 @@ function setTabGroup(id, group) {
 
 function closeOtherTabs(id) {
   const toClose = tabs.filter(t => t.id !== id).map(t => t.id);
-  toClose.forEach(tid => closeTab(tid));
+  toClose.forEach(tid => closeTab(tid, false));
 }
 
 function closeTabsToRight(id) {
   const idx = tabs.findIndex(t => t.id === id);
   if (idx === -1) return;
-  tabs.slice(idx + 1).map(t => t.id).forEach(tid => closeTab(tid));
+  tabs.slice(idx + 1).map(t => t.id).forEach(tid => closeTab(tid, false));
 }
 
 function reorderTab(tabId, newIndex) {
@@ -393,8 +530,12 @@ function renderTabs() {
 
   tabs.forEach((tab, idx) => {
     let el = existing.get(tab.id);
-    if (!el) el = buildTabEl(tab);
-    else updateTabEl(el, tab);
+    if (!el) {
+      el = buildTabEl(tab);
+      // Add enter animation
+      requestAnimationFrame(() => el.classList.add('entering'));
+      setTimeout(() => el.classList.remove('entering'), 260);
+    } else updateTabEl(el, tab);
     const beforeEl = $tabsList.children[idx];
     if (beforeEl && beforeEl !== $newTabBtn) {
       if ($tabsList.children[idx] !== el) $tabsList.insertBefore(el, $tabsList.children[idx]);
@@ -425,8 +566,25 @@ function buildTabEl(tab) {
   el.querySelector('.tab-close').addEventListener('click', (e) => { e.stopPropagation(); closeTab(tab.id); });
   el.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); showTabCtxMenu(tab.id, e.clientX, e.clientY); });
 
-  el.addEventListener('dragstart', (e) => { el.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', tab.id); });
-  el.addEventListener('dragend', () => { el.classList.remove('dragging'); $tabsList.querySelectorAll('.drag-over-left,.drag-over-right').forEach(t => t.classList.remove('drag-over-left','drag-over-right')); });
+  // ── Drag-n-drop with animations ──
+  el.addEventListener('dragstart', (e) => {
+    el.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', tab.id);
+    // Create a drag image
+    const dragImage = el.cloneNode(true);
+    dragImage.style.position = 'absolute';
+    dragImage.style.top = '-1000px';
+    dragImage.style.width = el.offsetWidth + 'px';
+    dragImage.style.opacity = '0.7';
+    document.body.appendChild(dragImage);
+    e.dataTransfer.setDragImage(dragImage, e.offsetX, e.offsetY);
+    requestAnimationFrame(() => dragImage.remove());
+  });
+  el.addEventListener('dragend', () => {
+    el.classList.remove('dragging');
+    $tabsList.querySelectorAll('.drag-over-left,.drag-over-right').forEach(t => t.classList.remove('drag-over-left','drag-over-right'));
+  });
   el.addEventListener('dragover', (e) => {
     e.preventDefault(); e.dataTransfer.dropEffect = 'move';
     $tabsList.querySelectorAll('.drag-over-left,.drag-over-right').forEach(t => t.classList.remove('drag-over-left','drag-over-right'));
@@ -480,7 +638,7 @@ function updateNavFromTab(tab) {
   if (!tab) return;
   try {
     const wv = tab.webview;
-    if (!urlbarFocused) $urlbar.value = formatUrl(tab.url);
+    if (!urlbarFocused) $urlbar.value = isNewtabUrl(tab.url) ? '' : tab.url;
     $btnBack.disabled = !wv.canGoBack();
     $btnForward.disabled = !wv.canGoForward();
     isLoading = tab.loading;
@@ -490,8 +648,31 @@ function updateNavFromTab(tab) {
     $secureIcon.classList.toggle('hidden', !(tab.url && tab.url.startsWith('https://')));
     if (isLoading) startLoadBar(); else finishLoadBar();
     updateBookmarkStarState(isBookmarkedUrl(tab.url));
+    updateUrlbarTitle(tab);
+    updateZoomIndicator(tab);
+    $urlbarWrap.classList.toggle('has-value', !!$urlbar.value);
   } catch (e) {
     console.error('[nav] updateNavFromTab error:', e);
+  }
+}
+
+function updateUrlbarTitle(tab) {
+  if (!tab || urlbarFocused) return;
+  if (isNewtabUrl(tab.url) || isInternalPage(tab.url)) {
+    $urlbarTitle.textContent = tab.title || 'Новая вкладка';
+  } else {
+    $urlbarTitle.textContent = tab.title || formatUrl(tab.url) || 'Новая вкладка';
+  }
+}
+
+function updateZoomIndicator(tab) {
+  if (!tab) return;
+  const level = tab.zoomLevel || 0;
+  if (level === 0) {
+    $urlbarZoom.classList.add('hidden');
+  } else {
+    $urlbarZoom.classList.remove('hidden');
+    $urlbarZoom.textContent = Math.round(100 * Math.pow(1.2, level)) + '%';
   }
 }
 
@@ -533,9 +714,29 @@ let loadBarValue = 0;
 function startLoadBar() { $loadingBar.classList.add('active'); loadBarValue = 10; $loadingBar.style.transition = 'width .3s ease, opacity .2s'; $loadingBar.style.width = loadBarValue + '%'; clearInterval(loadBarTimer); loadBarTimer = setInterval(() => { if (loadBarValue < 85) { loadBarValue += Math.random() * 8; $loadingBar.style.width = Math.min(loadBarValue, 85) + '%'; } }, 400); }
 function finishLoadBar() { clearInterval(loadBarTimer); $loadingBar.style.transition = 'width .15s ease, opacity .4s .3s'; $loadingBar.style.width = '100%'; setTimeout(() => { $loadingBar.classList.remove('active'); $loadingBar.style.width = '0'; }, 350); }
 
-// ── URL bar ───────────────────────────────────────────────────
-$urlbar.addEventListener('focus', () => { urlbarFocused = true; const t = getActiveTab(); if (t) $urlbar.value = isNewtabUrl(t.url) ? '' : t.url; $urlbar.select(); });
-$urlbar.addEventListener('blur', () => { urlbarFocused = false; const t = getActiveTab(); if (t) $urlbar.value = formatUrl(t.url); });
+// ══════════════════════════════════════════════════════════════
+//  SAFARI-STYLE URL BAR
+// ══════════════════════════════════════════════════════════════
+
+$urlbar.addEventListener('focus', () => {
+  urlbarFocused = true;
+  $urlbarWrap.classList.add('focused');
+  const t = getActiveTab();
+  if (t) $urlbar.value = isNewtabUrl(t.url) ? '' : t.url;
+  $urlbar.select();
+});
+$urlbar.addEventListener('blur', () => {
+  urlbarFocused = false;
+  $urlbarWrap.classList.remove('focused');
+  const t = getActiveTab();
+  if (t) {
+    $urlbar.value = isNewtabUrl(t.url) ? '' : formatUrl(t.url);
+    $urlbarWrap.classList.toggle('has-value', !!$urlbar.value);
+  }
+});
+$urlbar.addEventListener('input', () => {
+  $urlbarWrap.classList.toggle('has-value', !!$urlbar.value);
+});
 $urlbar.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
     const raw = $urlbar.value; const u = resolveInput(raw);
@@ -557,9 +758,35 @@ $urlbar.addEventListener('keydown', (e) => {
   }
   if (e.key === 'Escape') $urlbar.blur();
 });
-document.getElementById('urlbar-wrap').addEventListener('click', () => $urlbar.focus());
+$urlbarWrap.addEventListener('click', () => $urlbar.focus());
 
-// ── Nav buttons ───────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+//  ZOOM CONTROL
+// ══════════════════════════════════════════════════════════════
+
+function setZoomLevel(delta) {
+  const tab = getActiveTab();
+  if (!tab) return;
+  const newLevel = Math.max(-3, Math.min(4, (tab.zoomLevel || 0) + delta));
+  tab.zoomLevel = newLevel;
+  try { tab.webview.setZoomLevel(newLevel); } catch {}
+  updateZoomIndicator(tab);
+}
+
+function zoomIn() { setZoomLevel(0.5); }
+function zoomOut() { setZoomLevel(-0.5); }
+function zoomReset() {
+  const tab = getActiveTab();
+  if (!tab) return;
+  tab.zoomLevel = 0;
+  try { tab.webview.setZoomLevel(0); } catch {}
+  updateZoomIndicator(tab);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  NAV BUTTONS
+// ══════════════════════════════════════════════════════════════
+
 $btnBack.addEventListener('click', () => { const wv = getActiveWebView(); if (wv) wv.goBack(); });
 $btnForward.addEventListener('click', () => { const wv = getActiveWebView(); if (wv) wv.goForward(); });
 $btnReload.addEventListener('click', () => {
@@ -574,29 +801,11 @@ $newTabBtn.className = 'tab-new-btn';
 $newTabBtn.title = 'Новая вкладка (Ctrl+T)';
 $newTabBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
 $newTabBtn.addEventListener('click', () => {
-  console.log('[+] new tab clicked, NEWTAB_URL:', NEWTAB_URL);
   createTab(NEWTAB_URL || FALLBACK_URL);
 });
 $newTabBtn.setAttribute('draggable', 'false');
 $newTabBtn.style.webkitAppRegion = 'no-drag';
 $tabsList.appendChild($newTabBtn);
-
-// ── Webview resize handling ──────────────────────────────────
-const webviewResizeObserver = new ResizeObserver(() => {
-  // Force active webview to recalculate its size on container resize
-  const wv = getActiveWebView();
-  if (!wv) return;
-  const wvRect = wv.getBoundingClientRect();
-  const containerRect = $webviewsContainer.getBoundingClientRect();
-  if (Math.abs(wvRect.width - containerRect.width) > 1 || Math.abs(wvRect.height - containerRect.height) > 1) {
-    // Size mismatch detected — force reflow
-    const wasVisible = wv.style.display !== 'none';
-    wv.style.display = 'none';
-    void wv.offsetWidth; // force reflow
-    if (wasVisible) wv.style.display = 'block';
-  }
-});
-webviewResizeObserver.observe($webviewsContainer);
 
 // ── Window controls ───────────────────────────────────────────
 document.getElementById('btn-min').addEventListener('click', () => api.minimize());
@@ -620,11 +829,9 @@ function renderBookmarksBar() {
   $bookmarksList.innerHTML = '';
   if (!settings.showBookmarksBar || bookmarks.length === 0) {
     $bookmarksBar.classList.add('hidden');
-    document.body.classList.remove('show-bookmarks');
     return;
   }
   $bookmarksBar.classList.remove('hidden');
-  document.body.classList.add('show-bookmarks');
   bookmarks.slice(0, 10).forEach(bm => {
     const el = document.createElement('button');
     el.className = 'bm-item';
@@ -665,8 +872,26 @@ $bookmarksSearchInput.addEventListener('input', () => renderBookmarksPanel($book
 document.getElementById('bookmarks-panel-close').addEventListener('click', () => closePanel($bookmarksPanel));
 
 // ══════════════════════════════════════════════════════════════
-//  SETTINGS
+//  SETTINGS AS TAB
 // ══════════════════════════════════════════════════════════════
+
+$btnSettings.addEventListener('click', () => {
+  const existing = tabs.find(t => t.url && t.url.includes('settings.html'));
+  if (existing) { setActiveTab(existing.id); return; }
+  if (SETTINGS_URL) createTab(SETTINGS_URL);
+  else openPanel($settingsPanel);
+});
+document.getElementById('settings-close').addEventListener('click', () => closePanel($settingsPanel));
+document.getElementById('setting-search-engine').addEventListener('change', (e) => api.setSetting('searchEngine', e.target.value));
+document.querySelectorAll('input[name="theme"]').forEach(r => r.addEventListener('change', (e) => api.setSetting('theme', e.target.value)));
+document.getElementById('setting-show-bookmarks').addEventListener('change', (e) => api.setSetting('showBookmarksBar', e.target.checked));
+document.getElementById('setting-transparent-chrome').addEventListener('change', (e) => api.setSetting('transparentChrome', e.target.checked));
+document.getElementById('setting-bypass-start').addEventListener('change', (e) => api.setSetting('bypassOnStart', e.target.checked));
+document.getElementById('setting-clear-exit').addEventListener('change', (e) => api.setSetting('clearOnExit', e.target.checked));
+document.getElementById('setting-font-size').addEventListener('input', (e) => { const s = parseInt(e.target.value); document.getElementById('font-size-value').textContent = s + 'px'; document.body.style.fontSize = s + 'px'; api.setSetting('fontSize', s); });
+document.getElementById('btn-export-settings').addEventListener('click', async () => { const r = await api.exportSettings(); showToast(r.success ? 'Настройки экспортированы' : 'Ошибка экспорта'); });
+document.getElementById('btn-import-settings').addEventListener('click', async () => { const r = await api.importSettings(); if (r.success) { showToast('Настройки импортированы'); applySettings(); } else showToast('Ошибка: ' + (r.error || '')); });
+document.getElementById('btn-reset-settings').addEventListener('click', async () => { await api.resetSettings(); settings = await api.getSettings(); applySettings(); showToast('Настройки сброшены'); });
 
 function applySettings() {
   if (!settings) return;
@@ -684,22 +909,120 @@ function applySettings() {
   document.body.classList.toggle('transparent-mode', !!settings.transparentChrome);
 }
 
-$btnSettings.addEventListener('click', () => openPanel($settingsPanel));
-document.getElementById('settings-close').addEventListener('click', () => closePanel($settingsPanel));
-document.getElementById('setting-search-engine').addEventListener('change', (e) => api.setSetting('searchEngine', e.target.value));
-document.querySelectorAll('input[name="theme"]').forEach(r => r.addEventListener('change', (e) => api.setSetting('theme', e.target.value)));
-document.getElementById('setting-show-bookmarks').addEventListener('change', (e) => api.setSetting('showBookmarksBar', e.target.checked));
-document.getElementById('setting-transparent-chrome').addEventListener('change', (e) => api.setSetting('transparentChrome', e.target.checked));
-document.getElementById('setting-bypass-start').addEventListener('change', (e) => api.setSetting('bypassOnStart', e.target.checked));
-document.getElementById('setting-clear-exit').addEventListener('change', (e) => api.setSetting('clearOnExit', e.target.checked));
-document.getElementById('setting-font-size').addEventListener('input', (e) => { const s = parseInt(e.target.value); document.getElementById('font-size-value').textContent = s + 'px'; document.body.style.fontSize = s + 'px'; api.setSetting('fontSize', s); });
-document.getElementById('btn-export-settings').addEventListener('click', async () => { const r = await api.exportSettings(); showToast(r.success ? 'Настройки экспортированы' : 'Ошибка экспорта'); });
-document.getElementById('btn-import-settings').addEventListener('click', async () => { const r = await api.importSettings(); if (r.success) { showToast('Настройки импортированы'); applySettings(); } else showToast('Ошибка: ' + (r.error || '')); });
-document.getElementById('btn-reset-settings').addEventListener('click', async () => { await api.resetSettings(); settings = await api.getSettings(); applySettings(); showToast('Настройки сброшены'); });
-
 function openPanel(p) { p.classList.remove('hidden'); }
 function closePanel(p) { p.classList.add('hidden'); }
 document.querySelectorAll('.panel-backdrop').forEach(b => b.addEventListener('click', () => b.closest('.panel').classList.add('hidden')));
+
+// ══════════════════════════════════════════════════════════════
+//  HISTORY BUTTON
+// ══════════════════════════════════════════════════════════════
+
+$btnHistory.addEventListener('click', () => {
+  const existing = tabs.find(t => t.url && t.url.includes('history.html'));
+  if (existing) { setActiveTab(existing.id); return; }
+  if (HISTORY_URL) createTab(HISTORY_URL);
+});
+
+// ══════════════════════════════════════════════════════════════
+//  INTERNAL PAGE MESSAGE HANDLER
+// ══════════════════════════════════════════════════════════════
+
+function handleInternalMessage(tabId, msg) {
+  if (!msg || !msg.type) return;
+  const tab = getTab(tabId);
+  if (!tab) return;
+
+  switch (msg.type) {
+    case 'settings-get':
+      // Send initial settings to the internal page
+      api.getSettings().then(s => {
+        tab.webview.send('internal-response', { type: 'init-settings', settings: s || {} });
+      }).catch(() => {});
+      break;
+    case 'navigate':
+      if (msg.url) {
+        tab.url = msg.url;
+        tab.loading = true;
+        try { tab.webview.loadURL(msg.url); } catch {}
+        renderTabs();
+      }
+      break;
+    case 'settings-set':
+      if (msg.key !== undefined) {
+        api.setSetting(msg.key, msg.value);
+      }
+      break;
+    case 'get-history':
+      api.historyGet().then(history => {
+        tab.webview.send('internal-response', { type: 'init-history', entries: history || [] });
+      });
+      break;
+    case 'history-delete':
+      if (msg.id) api.historyDelete(msg.id);
+      break;
+    case 'history-clear':
+      api.historyClear();
+      break;
+    case 'open-tab':
+      if (msg.url) createTab(msg.url);
+      break;
+    case 'get-cookies':
+      api.cookiesGet().then(cookies => {
+        tab.webview.send('internal-response', { type: 'cookies', data: cookies || [] });
+      });
+      break;
+    case 'cookies-clear':
+      api.cookiesClear();
+      break;
+    case 'cache-clear':
+      api.cacheClear().then(() => showToast('Кэш очищен'));
+      break;
+    case 'cache-get-size':
+      api.cacheGetSize().then(size => {
+        tab.webview.send('internal-response', { type: 'cache-size', size });
+      });
+      break;
+    case 'settings-export':
+      api.exportSettings().then(data => {
+        tab.webview.send('internal-response', { type: 'export-data', data });
+      }).catch(() => {
+        tab.webview.send('internal-response', { type: 'export-error' });
+      });
+      break;
+    case 'settings-import':
+      api.importSettings(msg.data).then(r => {
+        if (r.success) {
+          tab.webview.send('internal-response', { type: 'import-success' });
+          settings = api.getSettings().then(s => { settings = s; applySettings(); });
+        } else {
+          tab.webview.send('internal-response', { type: 'import-error', error: r.error });
+        }
+      }).catch(() => {
+        tab.webview.send('internal-response', { type: 'import-error' });
+      });
+      break;
+    case 'settings-reset':
+      api.resetSettings().then(() => {
+        settings = api.getSettings().then(s => { settings = s; applySettings(); });
+        tab.webview.send('internal-response', { type: 'settings-reset-done' });
+      });
+      break;
+    case 'history-open':
+      if (msg.url) createTab(msg.url);
+      break;
+    case 'error-retry':
+      if (msg.url) {
+        tab.url = msg.url;
+        tab.loading = true;
+        try { tab.webview.loadURL(msg.url); } catch {}
+        renderTabs();
+      }
+      break;
+    case 'error-home':
+      createTab(NEWTAB_URL);
+      break;
+  }
+}
 
 // ══════════════════════════════════════════════════════════════
 //  CONTEXT MENUS
@@ -717,8 +1040,6 @@ document.addEventListener('mousedown', (e) => {
   if (!$pageCtxMenu.contains(e.target)) $pageCtxMenu.classList.add('hidden');
   if (!$bmCtxMenu.contains(e.target)) $bmCtxMenu.classList.add('hidden');
 });
-document.addEventListener('click', hideAllMenus);
-document.addEventListener('contextmenu', (e) => { e.preventDefault(); });
 
 // ── Tab Context Menu ────────────────────────────────────────
 function showTabCtxMenu(tabId, x, y) {
@@ -761,30 +1082,7 @@ $tabCtxMenu.addEventListener('click', (e) => {
   hideAllMenus();
 });
 
-// ── Page Context Menu ───────────────────────────────────────
-function showPageCtxMenu(x, y, params) {
-  const bmBtn = $pageCtxMenu.querySelector('[data-action="bookmark-toggle"]');
-  const bmIcon = bmBtn.querySelector('.ico-page-bm');
-  if (isBookmarked) {
-    bmBtn.querySelector('span').textContent = 'Убрать из закладок';
-    bmIcon.querySelector('path').setAttribute('fill', 'currentColor');
-  } else {
-    bmBtn.querySelector('span').textContent = 'Добавить в закладки';
-    bmIcon.querySelector('path').setAttribute('fill', 'none');
-  }
-
-  $pageCtxMenu.style.left = x + 'px';
-  $pageCtxMenu.style.top = y + 'px';
-  $pageCtxMenu.classList.remove('hidden');
-
-  requestAnimationFrame(() => {
-    const rect = $pageCtxMenu.getBoundingClientRect();
-    if (rect.right > window.innerWidth) $pageCtxMenu.style.left = (window.innerWidth - rect.width - 4) + 'px';
-    if (rect.bottom > window.innerHeight) $pageCtxMenu.style.top = (window.innerHeight - rect.height - 4) + 'px';
-  });
-  $pageCtxMenu._params = params;
-}
-
+// ── Page Context Menu (fallback — shown if native menu fails) ─
 $pageCtxMenu.addEventListener('click', (e) => {
   const btn = e.target.closest('.ctx-item');
   if (!btn) return;
@@ -794,8 +1092,11 @@ $pageCtxMenu.addEventListener('click', (e) => {
   if (action === 'back') { if (wv) wv.goBack(); }
   else if (action === 'forward') { if (wv) wv.goForward(); }
   else if (action === 'reload') { if (wv) wv.reload(); }
+  else if (action === 'zoom-in') { zoomIn(); }
+  else if (action === 'zoom-out') { zoomOut(); }
+  else if (action === 'zoom-reset') { zoomReset(); }
   else if (action === 'bookmark-toggle') $btnBookmark.click();
-  else if (action === 'new-tab') createTab();
+  else if (action === 'new-tab') createTab(NEWTAB_URL);
   else if (action === 'copy-url') {
     const t = getActiveTab();
     if (t && t.url) navigator.clipboard.writeText(t.url).then(() => showToast('URL скопирован'));
@@ -864,6 +1165,11 @@ document.addEventListener('keydown', (e) => {
   if (ctrl && e.key === 'b') { e.preventDefault(); api.setSetting('showBookmarksBar', !settings.showBookmarksBar); }
   if (ctrl && e.key === ',') { e.preventDefault(); $btnSettings.click(); }
   if (ctrl && shift && e.key === 'N') { e.preventDefault(); api.newIncognitoWindow(); }
+  if (ctrl && e.key === 'h') { e.preventDefault(); $btnHistory.click(); }
+  // Zoom shortcuts
+  if (ctrl && (e.key === '=' || e.key === '+')) { e.preventDefault(); zoomIn(); }
+  if (ctrl && e.key === '-') { e.preventDefault(); zoomOut(); }
+  if (ctrl && e.key === '0') { e.preventDefault(); zoomReset(); }
   if (e.key === 'Escape') {
     $settingsPanel.classList.add('hidden');
     $bookmarksPanel.classList.add('hidden');

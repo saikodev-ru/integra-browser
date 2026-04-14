@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Настройки</title>
+  <base target="_self">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0d0d0f;
+      --solid1:  #1a1a1b;
+      --solid2:  #222223;
+      --solid3:  #2d2d2f;
+      --b:       rgba(255,255,255,.05);
+      --b2:      rgba(255,255,255,.09);
+      --b3:      rgba(255,255,255,.15);
+      --s1:      rgba(255,255,255,.05);
+      --s2:      rgba(255,255,255,.08);
+      --s3:      rgba(255,255,255,.14);
+      --t1:      #efefef;
+      --t2:      rgba(239,239,239,.55);
+      --t3:      rgba(239,239,239,.25);
+      --y:       #8b5cf6;
+      --y2:      #a78bfa;
+      --y3:      #0ea5e9;
+      --ybg:     rgba(139,92,246,.13);
+      --yb:      rgba(139,92,246,.36);
+      --red:     #ff453a;
+      --green:   #34c759;
+      --font:    'Google Sans', -apple-system, sans-serif;
+      --ease:    cubic-bezier(.16,1,.3,1);
+      --sp:      cubic-bezier(.34,1.56,.64,1);
+      --accent-grad: linear-gradient(135deg, #8b5cf6, #0ea5e9);
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--t1);
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 500;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Gradient accent bar at top ── */
+    .top-accent {
+      width: 100%;
+      height: 3px;
+      background: var(--accent-grad);
+      flex-shrink: 0;
+    }
+
+    /* ── Header ── */
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 28px 36px 0;
+      flex-shrink: 0;
+      animation: fadeUp .4s var(--ease) both;
+    }
+
+    .page-header-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: var(--ybg);
+      border: 1px solid var(--yb);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--y2);
+      flex-shrink: 0;
+    }
+
+    .page-header h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -.3px;
+      color: var(--t1);
+    }
+
+    .page-header-sub {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--t3);
+      margin-top: 2px;
+    }
+
+    /* ── Scrollable content ── */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 36px 40px;
+    }
+
+    /* ── Settings cards ── */
+    .settings-card {
+      background: var(--solid1);
+      border: 1px solid var(--b);
+      border-radius: 14px;
+      padding: 20px 24px;
+      margin-bottom: 12px;
+      transition: border-color .2s, background .2s;
+      animation: fadeUp .4s var(--ease) both;
+    }
+
+    .settings-card:nth-child(1) { animation-delay: .03s; }
+    .settings-card:nth-child(2) { animation-delay: .06s; }
+    .settings-card:nth-child(3) { animation-delay: .09s; }
+    .settings-card:nth-child(4) { animation-delay: .12s; }
+    .settings-card:nth-child(5) { animation-delay: .15s; }
+    .settings-card:nth-child(6) { animation-delay: .18s; }
+    .settings-card:nth-child(7) { animation-delay: .21s; }
+
+    .settings-card:hover {
+      border-color: var(--b2);
+    }
+
+    .card-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .7px;
+      text-transform: uppercase;
+      color: var(--t3);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title svg {
+      opacity: .5;
+      flex-shrink: 0;
+    }
+
+    /* ── Settings row ── */
+    .s-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .s-row:last-child { margin-bottom: 0; }
+
+    /* ── Toggle ── */
+    .toggle-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--t2);
+      cursor: pointer;
+      padding: 4px 0;
+      transition: color .15s;
+    }
+
+    .toggle-label:hover { color: var(--t1); }
+
+    .toggle-switch {
+      position: relative;
+      width: 40px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: var(--s2);
+      border-radius: 12px;
+      transition: background .2s;
+      cursor: pointer;
+    }
+
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--t3);
+      transition: transform .2s var(--sp), background .2s;
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+      background: var(--ybg);
+      border: 1px solid var(--yb);
+    }
+
+    .toggle-switch input:checked + .toggle-slider::before {
+      transform: translateX(18px);
+      background: var(--y2);
+    }
+
+    /* ── Select dropdown ── */
+    .s-select {
+      flex: 1;
+      height: 38px;
+      padding: 0 14px;
+      background: var(--solid2);
+      border: 1px solid var(--b2);
+      border-radius: 10px;
+      color: var(--t1);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 500;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='rgba(255,255,255,.35)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .s-select:focus {
+      border-color: rgba(139,92,246,.5);
+      box-shadow: 0 0 0 3px rgba(139,92,246,.1);
+    }
+
+    .s-select option {
+      background: var(--solid2);
+      color: var(--t1);
+    }
+
+    /* ── Radio group ── */
+    .radio-group {
+      display: flex;
+      gap: 16px;
+    }
+
+    .radio-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--t2);
+      cursor: pointer;
+      padding: 8px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--b);
+      background: var(--s1);
+      transition: background .15s, border-color .15s, color .15s;
+    }
+
+    .radio-label:hover {
+      background: var(--s2);
+      color: var(--t1);
+    }
+
+    .radio-label input { display: none; }
+
+    .radio-mark {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 1.5px solid var(--b3);
+      position: relative;
+      transition: border-color .2s;
+      flex-shrink: 0;
+    }
+
+    .radio-label input:checked ~ .radio-mark {
+      border-color: var(--y2);
+    }
+
+    .radio-label input:checked ~ .radio-mark::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--y2);
+    }
+
+    .radio-label:has(input:checked) {
+      border-color: rgba(139,92,246,.3);
+      background: var(--ybg);
+      color: var(--t1);
+    }
+
+    /* ── Range slider ── */
+    .range-wrap {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+    }
+
+    .range-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--t2);
+      white-space: nowrap;
+    }
+
+    .range-value {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--y2);
+      min-width: 36px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .s-range {
+      flex: 1;
+      height: 4px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: var(--s2);
+      border-radius: 4px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .s-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--y2);
+      cursor: pointer;
+      border: 2px solid var(--bg);
+      box-shadow: 0 0 0 2px var(--yb);
+      transition: transform .1s var(--sp);
+    }
+
+    .s-range::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+
+    /* ── Buttons ── */
+    .s-btn {
+      height: 38px;
+      padding: 0 20px;
+      border-radius: 10px;
+      background: var(--s1);
+      border: 1px solid var(--b2);
+      color: var(--t1);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s, border-color .15s, transform .1s var(--sp);
+      white-space: nowrap;
+    }
+
+    .s-btn:hover {
+      background: var(--s2);
+      border-color: var(--b3);
+    }
+
+    .s-btn:active {
+      transform: scale(.97);
+    }
+
+    .s-btn-danger {
+      color: var(--red);
+      border-color: rgba(255,69,58,.2);
+    }
+
+    .s-btn-danger:hover {
+      background: rgba(255,69,58,.1);
+      border-color: rgba(255,69,58,.35);
+    }
+
+    .s-btn-accent {
+      background: var(--accent-grad);
+      border-color: transparent;
+      color: #fff;
+    }
+
+    .s-btn-accent:hover {
+      opacity: .9;
+      border-color: transparent;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn-row .s-btn { flex: 1; min-width: 120px; }
+
+    /* ── Cache info ── */
+    .cache-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .cache-info {
+      font-size: 12px;
+      color: var(--t3);
+      font-weight: 500;
+    }
+
+    .cache-size {
+      font-variant-numeric: tabular-nums;
+      color: var(--y2);
+      font-weight: 700;
+    }
+
+    /* ── About section ── */
+    .about-app {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .about-logo {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: var(--accent-grad);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .about-info {
+      flex: 1;
+    }
+
+    .about-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--t1);
+    }
+
+    .about-version {
+      font-size: 12px;
+      color: var(--t3);
+      margin-top: 2px;
+    }
+
+    .about-credits {
+      font-size: 12px;
+      color: var(--t3);
+      margin-top: 12px;
+      line-height: 1.6;
+      opacity: .7;
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(8px);
+      background: var(--solid3);
+      border: 1px solid var(--b3);
+      color: var(--t1);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 20px;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.5);
+      opacity: 0;
+      transition: opacity .2s var(--ease), transform .2s var(--ease);
+      z-index: 9999;
+      pointer-events: none;
+      white-space: nowrap;
+      font-family: var(--font);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast.hidden { display: none; }
+
+    /* ── Confirmation modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.6);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeIn .15s var(--ease);
+    }
+
+    .modal-overlay.hidden { display: none; }
+
+    .modal {
+      background: var(--solid2);
+      border: 1px solid var(--b3);
+      border-radius: 20px;
+      padding: 28px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.6);
+      animation: modalIn .2s var(--ease);
+    }
+
+    .modal h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--t1);
+    }
+
+    .modal p {
+      font-size: 13px;
+      color: var(--t2);
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .modal-actions .s-btn {
+      min-width: 100px;
+      text-align: center;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(.95) translateY(8px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(128,128,128,.2); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(128,128,128,.35); }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .page-header { padding: 20px 20px 0; }
+      .content { padding: 20px 20px 32px; }
+      .settings-card { padding: 16px 18px; }
+      .radio-group { flex-direction: column; gap: 8px; }
+      .btn-row { flex-direction: column; }
+      .btn-row .s-btn { min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-accent"></div>
+
+  <header class="page-header">
+    <div class="page-header-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" stroke="currentColor" stroke-width="1.7" fill="none"/>
+      </svg>
+    </div>
+    <div>
+      <h1>Настройки</h1>
+      <div class="page-header-sub">Управление браузером Integra</div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- 1. Search Engine -->
+    <div class="settings-card">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.3"/>
+          <path d="M9.5 9.5L13 13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+        Поисковая система
+      </div>
+      <div class="s-row">
+        <select class="s-select" id="sel-engine">
+          <option value="yandex">Яндекс</option>
+          <option value="google">Google</option>
+          <option value="duckduckgo">DuckDuckGo</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- 2. Theme -->
+    <div class="settings-card">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.3"/>
+          <path d="M7 2v2M7 10v2M2 7h2M10 7h2M3.5 3.5l1.4 1.4M9.1 9.1l1.4 1.4M10.5 3.5l-1.4 1.4M4.9 9.1l-1.4 1.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        Тема оформления
+      </div>
+      <div class="s-row">
+        <div class="radio-group">
+          <label class="radio-label">
+            <input type="radio" name="theme" value="dark" checked>
+            <span class="radio-mark"></span>
+            Тёмная
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="theme" value="system">
+            <span class="radio-mark"></span>
+            Системная
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Appearance -->
+    <div class="settings-card">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <rect x="1" y="1" width="12" height="12" rx="3" stroke="currentColor" stroke-width="1.3" fill="none"/>
+          <path d="M4 5h6M4 7h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        Внешний вид
+      </div>
+      <div class="s-row">
+        <label class="toggle-label">
+          <span>Панель закладок</span>
+          <div class="toggle-switch">
+            <input type="checkbox" id="tog-bookmarks-bar" checked>
+            <span class="toggle-slider"></span>
+          </div>
+        </label>
+      </div>
+      <div class="s-row">
+        <label class="toggle-label">
+          <span>Прозрачная панель</span>
+          <div class="toggle-switch">
+            <input type="checkbox" id="tog-transparent-chrome">
+            <span class="toggle-slider"></span>
+          </div>
+        </label>
+      </div>
+      <div class="s-row">
+        <div class="range-wrap">
+          <span class="range-label">Размер шрифта</span>
+          <input type="range" class="s-range" id="rng-font-size" min="12" max="18" value="14" step="1">
+          <span class="range-value" id="font-size-val">14px</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Privacy -->
+    <div class="settings-card">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <rect x="1.5" y="6" width="11" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
+          <path d="M4 6V4.5a3 3 0 0 1 6 0V6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+          <circle cx="7" cy="9.5" r="1" fill="currentColor"/>
+        </svg>
+        Приватность
+      </div>
+      <div class="s-row">
+        <label class="toggle-label">
+          <span>Блокировка трекеров</span>
+          <div class="toggle-switch">
+            <input type="checkbox" id="tog-block-trackers" checked>
+            <span class="toggle-slider"></span>
+          </div>
+        </label>
+      </div>
+      <div class="s-row">
+        <label class="toggle-label">
+          <span>Блокировать сторонние куки</span>
+          <div class="toggle-switch">
+            <input type="checkbox" id="tog-block-3p-cookies" checked>
+            <span class="toggle-slider"></span>
+          </div>
+        </label>
+      </div>
+      <div class="s-row">
+        <label class="toggle-label">
+          <span>Обход DPI при запуске</span>
+          <div class="toggle-switch">
+            <input type="checkbox" id="tog-bypass-start">
+            <span class="toggle-slider"></span>
+          </div>
+        </label>
+      </div>
+      <div class="s-row">
+        <label class="toggle-label">
+          <span>Очищать данные при выходе</span>
+          <div class="toggle-switch">
+            <input type="checkbox" id="tog-clear-exit">
+            <span class="toggle-slider"></span>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <!-- 5. Cache -->
+    <div class="settings-card">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7a5 5 0 0 1 9.3-2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+          <path d="M12 7a5 5 0 0 1-9.3 2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+          <path d="M9 1v3.5h-3.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M5 13V9.5h3.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Кэширование
+      </div>
+      <div class="s-row">
+        <div class="cache-row">
+          <button class="s-btn s-btn-danger" id="btn-clear-cache">Очистить кэш</button>
+          <span class="cache-info">Размер: <span class="cache-size" id="cache-size-display">...</span></span>
+        </div>
+      </div>
+      <div class="s-row">
+        <label class="toggle-label">
+          <span>Умное предзагрузка</span>
+          <div class="toggle-switch">
+            <input type="checkbox" id="tog-prefetch">
+            <span class="toggle-slider"></span>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <!-- 6. Data -->
+    <div class="settings-card">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M7 1v5l3 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.3"/>
+        </svg>
+        Данные
+      </div>
+      <div class="s-row">
+        <div class="btn-row">
+          <button class="s-btn" id="btn-export">Экспорт</button>
+          <button class="s-btn" id="btn-import">Импорт</button>
+        </div>
+      </div>
+      <div class="s-row" style="margin-top: 4px;">
+        <button class="s-btn s-btn-danger" id="btn-reset" style="width: 100%;">Сбросить настройки</button>
+      </div>
+    </div>
+
+    <!-- 7. About -->
+    <div class="settings-card">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.3"/>
+          <path d="M7 6.5v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="7" cy="4.5" r=".8" fill="currentColor"/>
+        </svg>
+        О программе
+      </div>
+      <div class="about-app">
+        <div class="about-logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="1.8"/>
+            <path d="M6 12h12M12 6v12" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="about-info">
+          <div class="about-name">Integra Browser</div>
+          <div class="about-version" id="app-version">Версия 1.0.0</div>
+        </div>
+      </div>
+      <div class="about-credits">
+        Построен на базе Chromium и Electron.<br>
+        Разработан с ♥ для быстрого и безопасного серфинга.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Toast -->
+  <div class="toast hidden" id="toast"></div>
+
+  <!-- Confirmation modal -->
+  <div class="modal-overlay hidden" id="modal-overlay">
+    <div class="modal">
+      <h3 id="modal-title">Подтверждение</h3>
+      <p id="modal-text">Вы уверены?</p>
+      <div class="modal-actions">
+        <button class="s-btn" id="modal-cancel">Отмена</button>
+        <button class="s-btn s-btn-danger" id="modal-confirm">Подтвердить</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── Utility ──────────────────────────────────────────────
+    function postMsg(data) {
+      try {
+        if (window.chrome && window.chrome.webview) {
+          window.chrome.webview.postMessage(data);
+        } else {
+          window.parent.postMessage(data, '*');
+        }
+      } catch {}
+    }
+
+    function onMsg(handler) {
+      window.addEventListener('integra-response', (e) => {
+        handler(e.detail || {});
+      });
+      // Fallback for direct window.postMessage (dev testing)
+      window.addEventListener('message', (e) => {
+        if (e.data && e.data.type) handler(e.data);
+      });
+    }
+
+    function showToast(text) {
+      const t = document.getElementById('toast');
+      t.textContent = text;
+      t.classList.remove('hidden');
+      requestAnimationFrame(() => t.classList.add('show'));
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => {
+        t.classList.remove('show');
+        setTimeout(() => t.classList.add('hidden'), 200);
+      }, 2200);
+    }
+
+    function showModal(title, text) {
+      return new Promise((resolve) => {
+        const overlay = document.getElementById('modal-overlay');
+        document.getElementById('modal-title').textContent = title;
+        document.getElementById('modal-text').textContent = text;
+        overlay.classList.remove('hidden');
+
+        function close(result) {
+          overlay.classList.add('hidden');
+          cleanup();
+          resolve(result);
+        }
+
+        function cleanup() {
+          document.getElementById('modal-cancel').removeEventListener('click', onCancel);
+          document.getElementById('modal-confirm').removeEventListener('click', onConfirm);
+          overlay.removeEventListener('click', onBgClick);
+        }
+
+        function onCancel() { close(false); }
+        function onConfirm() { close(true); }
+        function onBgClick(e) { if (e.target === overlay) close(false); }
+
+        document.getElementById('modal-cancel').addEventListener('click', onCancel);
+        document.getElementById('modal-confirm').addEventListener('click', onConfirm);
+        overlay.addEventListener('click', onBgClick);
+      });
+    }
+
+    // ── Request initial settings ─────────────────────────────
+    postMsg({ type: 'settings-get' });
+    postMsg({ type: 'get-cache-size' });
+
+    // ── Listen for parent messages ──────────────────────────
+    onMsg((d) => {
+      if (!d || typeof d !== 'object') return;
+
+      // Init settings from parent
+      if (d.type === 'init-settings' && d.settings) {
+        applySettings(d.settings);
+      }
+
+      // Cache size update
+      if (d.type === 'cache-size' && typeof d.size === 'string') {
+        document.getElementById('cache-size-display').textContent = d.size;
+      }
+
+      // Export data received
+      if (d.type === 'export-data' && d.data) {
+        const blob = new Blob([JSON.stringify(d.data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'integra-settings.json';
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('Настройки экспортированы');
+      }
+    });
+
+    // ── Apply settings to UI ────────────────────────────────
+    function applySettings(s) {
+      // Search engine
+      if (s.searchEngine) {
+        document.getElementById('sel-engine').value = s.searchEngine;
+      }
+
+      // Theme
+      if (s.theme) {
+        const radio = document.querySelector(`input[name="theme"][value="${s.theme}"]`);
+        if (radio) radio.checked = true;
+      }
+
+      // Toggles
+      const toggleMap = {
+        showBookmarksBar: 'tog-bookmarks-bar',
+        transparentChrome: 'tog-transparent-chrome',
+        blockTrackers: 'tog-block-trackers',
+        block3pCookies: 'tog-block-3p-cookies',
+        bypassOnStart: 'tog-bypass-start',
+        clearOnExit: 'tog-clear-exit',
+        smartPrefetch: 'tog-prefetch',
+      };
+
+      for (const [key, id] of Object.entries(toggleMap)) {
+        if (s[key] !== undefined) {
+          document.getElementById(id).checked = s[key];
+        }
+      }
+
+      // Font size
+      if (s.fontSize) {
+        document.getElementById('rng-font-size').value = s.fontSize;
+        document.getElementById('font-size-val').textContent = s.fontSize + 'px';
+      }
+
+      // Version
+      if (s.version) {
+        document.getElementById('app-version').textContent = 'Версия ' + s.version;
+      }
+    }
+
+    // ── Wire up controls ────────────────────────────────────
+
+    // Search engine
+    document.getElementById('sel-engine').addEventListener('change', (e) => {
+      postMsg({ type: 'settings-set', key: 'searchEngine', value: e.target.value });
+    });
+
+    // Theme radio
+    document.querySelectorAll('input[name="theme"]').forEach((r) => {
+      r.addEventListener('change', (e) => {
+        postMsg({ type: 'settings-set', key: 'theme', value: e.target.value });
+      });
+    });
+
+    // Generic toggle wiring
+    const toggleToKey = {
+      'tog-bookmarks-bar': 'showBookmarksBar',
+      'tog-transparent-chrome': 'transparentChrome',
+      'tog-block-trackers': 'blockTrackers',
+      'tog-block-3p-cookies': 'block3pCookies',
+      'tog-bypass-start': 'bypassOnStart',
+      'tog-clear-exit': 'clearOnExit',
+      'tog-prefetch': 'smartPrefetch',
+    };
+
+    for (const [id, key] of Object.entries(toggleToKey)) {
+      document.getElementById(id).addEventListener('change', (e) => {
+        postMsg({ type: 'settings-set', key, value: e.target.checked });
+      });
+    }
+
+    // Font size slider
+    const fontSlider = document.getElementById('rng-font-size');
+    const fontDisplay = document.getElementById('font-size-val');
+    fontSlider.addEventListener('input', () => {
+      fontDisplay.textContent = fontSlider.value + 'px';
+    });
+    fontSlider.addEventListener('change', () => {
+      postMsg({ type: 'settings-set', key: 'fontSize', value: parseInt(fontSlider.value) });
+    });
+
+    // Clear cache
+    document.getElementById('btn-clear-cache').addEventListener('click', async () => {
+      const ok = await showModal('Очистить кэш', 'Все кэшированные данные будут удалены. Продолжить?');
+      if (!ok) return;
+      postMsg({ type: 'clear-cache' });
+      document.getElementById('cache-size-display').textContent = '...';
+      showToast('Кэш очищается...');
+    });
+
+    // Export
+    document.getElementById('btn-export').addEventListener('click', () => {
+      postMsg({ type: 'settings-export' });
+    });
+
+    // Import
+    document.getElementById('btn-import').addEventListener('click', () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            const data = JSON.parse(ev.target.result);
+            postMsg({ type: 'settings-import', data });
+            showToast('Настройки импортированы');
+          } catch {
+            showToast('Ошибка: неверный формат файла');
+          }
+        };
+        reader.readAsText(file);
+      };
+      input.click();
+    });
+
+    // Reset
+    document.getElementById('btn-reset').addEventListener('click', async () => {
+      const ok = await showModal('Сбросить настройки', 'Все настройки будут возвращены к значениям по умолчанию. Это действие нельзя отменить.');
+      if (!ok) return;
+      postMsg({ type: 'settings-reset' });
+      showToast('Настройки сброшены');
+    });
+  </script>
+</body>
+</html>

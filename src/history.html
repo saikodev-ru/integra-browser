@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>История</title>
+  <base target="_self">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0d0d0f;
+      --solid1:  #1a1a1b;
+      --solid2:  #222223;
+      --solid3:  #2d2d2f;
+      --b:       rgba(255,255,255,.05);
+      --b2:      rgba(255,255,255,.09);
+      --b3:      rgba(255,255,255,.15);
+      --s1:      rgba(255,255,255,.05);
+      --s2:      rgba(255,255,255,.08);
+      --s3:      rgba(255,255,255,.14);
+      --t1:      #efefef;
+      --t2:      rgba(239,239,239,.55);
+      --t3:      rgba(239,239,239,.25);
+      --y:       #8b5cf6;
+      --y2:      #a78bfa;
+      --y3:      #0ea5e9;
+      --ybg:     rgba(139,92,246,.13);
+      --yb:      rgba(139,92,246,.36);
+      --red:     #ff453a;
+      --green:   #34c759;
+      --font:    'Google Sans', -apple-system, sans-serif;
+      --ease:    cubic-bezier(.16,1,.3,1);
+      --sp:      cubic-bezier(.34,1.56,.64,1);
+      --accent-grad: linear-gradient(135deg, #8b5cf6, #0ea5e9);
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--t1);
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 500;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-accent {
+      width: 100%;
+      height: 3px;
+      background: var(--accent-grad);
+      flex-shrink: 0;
+    }
+
+    /* ── Header ── */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 36px 0;
+      flex-shrink: 0;
+      animation: fadeUp .4s var(--ease) both;
+    }
+
+    .page-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .page-header-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: var(--ybg);
+      border: 1px solid var(--yb);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--y2);
+      flex-shrink: 0;
+    }
+
+    .page-header h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -.3px;
+    }
+
+    .btn-clear-history {
+      height: 34px;
+      padding: 0 16px;
+      border-radius: 10px;
+      background: rgba(255,69,58,.08);
+      border: 1px solid rgba(255,69,58,.2);
+      color: var(--red);
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s, border-color .15s, transform .1s var(--sp);
+      white-space: nowrap;
+    }
+
+    .btn-clear-history:hover {
+      background: rgba(255,69,58,.15);
+      border-color: rgba(255,69,58,.35);
+    }
+
+    .btn-clear-history:active { transform: scale(.97); }
+
+    /* ── Search bar ── */
+    .search-wrap {
+      padding: 20px 36px 0;
+      flex-shrink: 0;
+      animation: fadeUp .4s .05s var(--ease) both;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--solid1);
+      border: 1px solid var(--b2);
+      border-radius: 12px;
+      padding: 0 14px;
+      height: 42px;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+    }
+
+    .search-box:focus-within {
+      border-color: rgba(139,92,246,.5);
+      background: rgba(255,255,255,.04);
+      box-shadow: 0 0 0 3px rgba(139,92,246,.1);
+    }
+
+    .search-ico {
+      color: var(--t3);
+      flex-shrink: 0;
+      display: flex;
+    }
+
+    .search-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--t1);
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 500;
+      caret-color: var(--y2);
+    }
+
+    .search-input::placeholder { color: var(--t3); }
+
+    .search-clear {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      color: var(--t3);
+      transition: background .12s, color .12s;
+      flex-shrink: 0;
+    }
+
+    .search-clear.visible { display: flex; }
+    .search-clear:hover { background: var(--s2); color: var(--t1); }
+
+    /* ── Results info ── */
+    .results-info {
+      padding: 14px 36px 0;
+      font-size: 12px;
+      color: var(--t3);
+      font-weight: 500;
+      flex-shrink: 0;
+      animation: fadeUp .4s .08s var(--ease) both;
+    }
+
+    .results-info.hidden { display: none; }
+
+    /* ── History list ── */
+    .history-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 36px 40px;
+    }
+
+    /* ── Date group ── */
+    .date-group {
+      margin-bottom: 20px;
+      animation: fadeUp .4s var(--ease) both;
+    }
+
+    .date-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .7px;
+      text-transform: uppercase;
+      color: var(--t3);
+      margin-bottom: 8px;
+      padding-left: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .date-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--b);
+    }
+
+    /* ── History item ── */
+    .h-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 11px;
+      cursor: pointer;
+      transition: background .12s;
+      margin-bottom: 2px;
+      position: relative;
+    }
+
+    .h-item:hover {
+      background: var(--s2);
+    }
+
+    .h-item:active {
+      background: var(--s3);
+    }
+
+    .h-favicon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--s1);
+      border: 1px solid var(--b);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .h-favicon img {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      object-fit: contain;
+    }
+
+    .h-favicon .default-ico {
+      opacity: .4;
+    }
+
+    .h-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .h-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--t1);
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      line-height: 1.3;
+    }
+
+    .h-url {
+      font-size: 11px;
+      color: var(--t3);
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      margin-top: 1px;
+    }
+
+    .h-time {
+      font-size: 11px;
+      color: var(--t3);
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+      flex-shrink: 0;
+    }
+
+    .h-delete {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--t3);
+      flex-shrink: 0;
+      opacity: 0;
+      transition: opacity .12s, background .12s, color .12s;
+    }
+
+    .h-item:hover .h-delete { opacity: 1; }
+    .h-delete:hover {
+      background: rgba(255,69,58,.15);
+      color: var(--red);
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      text-align: center;
+      animation: fadeUp .5s var(--ease) both;
+    }
+
+    .empty-state.hidden { display: none; }
+
+    .empty-illustration {
+      width: 100px;
+      height: 100px;
+      border-radius: 24px;
+      background: var(--solid1);
+      border: 1px solid var(--b);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .empty-illustration::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: 24px;
+      background: var(--accent-grad);
+      opacity: .15;
+      z-index: -1;
+    }
+
+    .empty-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--t1);
+      margin-bottom: 6px;
+    }
+
+    .empty-desc {
+      font-size: 13px;
+      color: var(--t3);
+      max-width: 280px;
+      line-height: 1.5;
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(8px);
+      background: var(--solid3);
+      border: 1px solid var(--b3);
+      color: var(--t1);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 20px;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.5);
+      opacity: 0;
+      transition: opacity .2s var(--ease), transform .2s var(--ease);
+      z-index: 9999;
+      pointer-events: none;
+      white-space: nowrap;
+      font-family: var(--font);
+    }
+
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.hidden { display: none; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.6);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeIn .15s var(--ease);
+    }
+
+    .modal-overlay.hidden { display: none; }
+
+    .modal {
+      background: var(--solid2);
+      border: 1px solid var(--b3);
+      border-radius: 20px;
+      padding: 28px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.6);
+      animation: modalIn .2s var(--ease);
+    }
+
+    .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .modal p { font-size: 13px; color: var(--t2); line-height: 1.5; margin-bottom: 20px; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+    .m-btn {
+      height: 36px;
+      padding: 0 18px;
+      border-radius: 10px;
+      background: var(--s1);
+      border: 1px solid var(--b2);
+      color: var(--t1);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s, border-color .15s, transform .1s var(--sp);
+    }
+
+    .m-btn:hover { background: var(--s2); border-color: var(--b3); }
+    .m-btn:active { transform: scale(.97); }
+    .m-btn-danger { color: var(--red); border-color: rgba(255,69,58,.2); }
+    .m-btn-danger:hover { background: rgba(255,69,58,.1); border-color: rgba(255,69,58,.35); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(.95) translateY(8px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(128,128,128,.2); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(128,128,128,.35); }
+
+    @media (max-width: 600px) {
+      .page-header { padding: 20px 20px 0; }
+      .search-wrap { padding: 16px 20px 0; }
+      .results-info { padding: 12px 20px 0; }
+      .history-list { padding: 12px 20px 32px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-accent"></div>
+
+  <header class="page-header">
+    <div class="page-header-left">
+      <div class="page-header-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h1>История</h1>
+    </div>
+    <button class="btn-clear-history" id="btn-clear-all">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="vertical-align: -1px; margin-right: 4px;">
+        <path d="M1.5 3h9M4.5 3V2h3v1M3.5 3l.5 7h4l.5-7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+      Очистить историю
+    </button>
+  </header>
+
+  <div class="search-wrap">
+    <div class="search-box">
+      <span class="search-ico">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+          <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M10 10l3.5 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <input type="text" class="search-input" id="search-input" placeholder="Поиск в истории..." autocomplete="off" spellcheck="false">
+      <button class="search-clear" id="search-clear" title="Очистить поиск">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M2.5 2.5l7 7M9.5 2.5l-7 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="results-info hidden" id="results-info"></div>
+
+  <div class="history-list" id="history-list"></div>
+
+  <!-- Empty state -->
+  <div class="empty-state hidden" id="empty-state">
+    <div class="empty-illustration">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+        <circle cx="20" cy="20" r="15" stroke="currentColor" stroke-width="1.5" opacity=".3"/>
+        <path d="M20 12v8l4 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity=".3"/>
+        <path d="M28 28l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity=".2"/>
+      </svg>
+    </div>
+    <div class="empty-title" id="empty-title">История пуста</div>
+    <div class="empty-desc" id="empty-desc">Здесь будут отображаться посещённые страницы</div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast hidden" id="toast"></div>
+
+  <!-- Confirm modal -->
+  <div class="modal-overlay hidden" id="modal-overlay">
+    <div class="modal">
+      <h3>Очистить историю</h3>
+      <p>Вся история посещений будет удалена навсегда. Это действие нельзя отменить.</p>
+      <div class="modal-actions">
+        <button class="m-btn" id="modal-cancel">Отмена</button>
+        <button class="m-btn m-btn-danger" id="modal-confirm">Удалить всё</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── State ────────────────────────────────────────────────
+    let allEntries = [];
+    let searchTerm = '';
+
+    // ── Utility ──────────────────────────────────────────────
+    function postMsg(data) {
+      try {
+        if (window.chrome && window.chrome.webview) {
+          window.chrome.webview.postMessage(data);
+        } else {
+          window.parent.postMessage(data, '*');
+        }
+      } catch {}
+    }
+
+    function onMsg(handler) {
+      window.addEventListener('integra-response', (e) => {
+        handler(e.detail || {});
+      });
+      // Fallback for direct window.postMessage (dev testing)
+      window.addEventListener('message', (e) => {
+        if (e.data && e.data.type) handler(e.data);
+      });
+    }
+
+    function showToast(text) {
+      const t = document.getElementById('toast');
+      t.textContent = text;
+      t.classList.remove('hidden');
+      requestAnimationFrame(() => t.classList.add('show'));
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => {
+        t.classList.remove('show');
+        setTimeout(() => t.classList.add('hidden'), 200);
+      }, 2200);
+    }
+
+    function escapeHtml(str) {
+      const d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
+    }
+
+    function getDomain(url) {
+      try {
+        return new URL(url).hostname.replace(/^www\./, '');
+      } catch {
+        return url;
+      }
+    }
+
+    function formatTime(ts) {
+      const d = new Date(ts);
+      return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    }
+
+    // ── Date grouping ───────────────────────────────────────
+    function getDateGroup(ts) {
+      const now = new Date();
+      const d = new Date(ts);
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const yesterday = new Date(today.getTime() - 86400000);
+      const weekAgo = new Date(today.getTime() - 7 * 86400000);
+      const entryDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+      if (entryDate.getTime() === today.getTime()) return 'Сегодня';
+      if (entryDate.getTime() === yesterday.getTime()) return 'Вчера';
+      if (entryDate >= weekAgo) return '7 дней назад';
+      return 'Раньше';
+    }
+
+    const groupOrder = ['Сегодня', 'Вчера', '7 дней назад', 'Раньше'];
+
+    // ── Render ───────────────────────────────────────────────
+    function render() {
+      const list = document.getElementById('history-list');
+      const empty = document.getElementById('empty-state');
+      const resultsInfo = document.getElementById('results-info');
+
+      // Filter
+      let filtered = allEntries;
+      if (searchTerm) {
+        const q = searchTerm.toLowerCase();
+        filtered = allEntries.filter(e =>
+          (e.title && e.title.toLowerCase().includes(q)) ||
+          (e.url && e.url.toLowerCase().includes(q))
+        );
+      }
+
+      // Show results info when searching
+      if (searchTerm) {
+        resultsInfo.classList.remove('hidden');
+        resultsInfo.textContent = `Найдено: ${filtered.length}`;
+      } else {
+        resultsInfo.classList.add('hidden');
+      }
+
+      // Empty state
+      if (filtered.length === 0) {
+        list.innerHTML = '';
+        empty.classList.remove('hidden');
+        if (allEntries.length === 0) {
+          document.getElementById('empty-title').textContent = 'История пуста';
+          document.getElementById('empty-desc').textContent = 'Здесь будут отображаться посещённые страницы';
+        } else {
+          document.getElementById('empty-title').textContent = 'Ничего не найдено';
+          document.getElementById('empty-desc').textContent = 'Попробуйте изменить поисковый запрос';
+        }
+        return;
+      }
+
+      empty.classList.add('hidden');
+
+      // Group by date
+      const groups = {};
+      filtered.forEach(e => {
+        const label = getDateGroup(e.timestamp);
+        if (!groups[label]) groups[label] = [];
+        groups[label].push(e);
+      });
+
+      // Sort within each group by timestamp (newest first)
+      for (const key of Object.keys(groups)) {
+        groups[key].sort((a, b) => b.timestamp - a.timestamp);
+      }
+
+      let html = '';
+      let delay = 0;
+      for (const label of groupOrder) {
+        if (!groups[label]) continue;
+        html += `<div class="date-group" style="animation-delay: ${delay * .03}s">`;
+        html += `<div class="date-label">${escapeHtml(label)}</div>`;
+        for (const entry of groups[label]) {
+          const domain = getDomain(entry.url);
+          const time = formatTime(entry.timestamp);
+          const faviconHtml = entry.favicon
+            ? `<img src="${escapeHtml(entry.favicon)}" alt="">`
+            : `<svg class="default-ico" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/>
+                <path d="M5 7h4M7 5v4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+               </svg>`;
+
+          html += `
+            <div class="h-item" data-url="${escapeHtml(entry.url)}">
+              <div class="h-favicon">${faviconHtml}</div>
+              <div class="h-info">
+                <div class="h-title">${escapeHtml(entry.title || domain)}</div>
+                <div class="h-url">${escapeHtml(domain)}</div>
+              </div>
+              <div class="h-time">${time}</div>
+              <button class="h-delete" data-id="${escapeHtml(entry.id)}" title="Удалить">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                </svg>
+              </button>
+            </div>`;
+        }
+        html += '</div>';
+        delay++;
+      }
+
+      list.innerHTML = html;
+
+      // Wire click events
+      list.querySelectorAll('.h-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          if (e.target.closest('.h-delete')) return;
+          const url = item.dataset.url;
+          if (url) postMsg({ type: 'history-open', url });
+        });
+      });
+
+      list.querySelectorAll('.h-delete').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = btn.dataset.id;
+          if (id) {
+            postMsg({ type: 'history-delete', id });
+            allEntries = allEntries.filter(e => String(e.id) !== String(id));
+            render();
+            showToast('Запись удалена');
+          }
+        });
+      });
+    }
+
+    // ── Search ──────────────────────────────────────────────
+    const searchInput = document.getElementById('search-input');
+    const searchClear = document.getElementById('search-clear');
+
+    searchInput.addEventListener('input', () => {
+      searchTerm = searchInput.value.trim();
+      searchClear.classList.toggle('visible', searchTerm.length > 0);
+      render();
+    });
+
+    searchClear.addEventListener('click', () => {
+      searchInput.value = '';
+      searchTerm = '';
+      searchClear.classList.remove('visible');
+      searchInput.focus();
+      render();
+    });
+
+    // ── Clear all history ───────────────────────────────────
+    document.getElementById('btn-clear-all').addEventListener('click', async () => {
+      if (allEntries.length === 0) {
+        showToast('История уже пуста');
+        return;
+      }
+      const overlay = document.getElementById('modal-overlay');
+      overlay.classList.remove('hidden');
+
+      const confirmed = await new Promise(resolve => {
+        function onCancel() { cleanup(); resolve(false); }
+        function onConfirm() { cleanup(); resolve(true); }
+        function onBg(e) { if (e.target === overlay) { cleanup(); resolve(false); } }
+        function cleanup() {
+          document.getElementById('modal-cancel').removeEventListener('click', onCancel);
+          document.getElementById('modal-confirm').removeEventListener('click', onConfirm);
+          overlay.removeEventListener('click', onBg);
+        }
+        document.getElementById('modal-cancel').addEventListener('click', onCancel);
+        document.getElementById('modal-confirm').addEventListener('click', onConfirm);
+        overlay.addEventListener('click', onBg);
+      });
+
+      if (confirmed) {
+        postMsg({ type: 'history-clear' });
+        allEntries = [];
+        render();
+        showToast('История очищена');
+      } else {
+        overlay.classList.add('hidden');
+      }
+    });
+
+    // ── Listen for parent messages ──────────────────────────
+    onMsg((d) => {
+      if (!d || typeof d !== 'object') return;
+
+      if (d.type === 'init-history' && Array.isArray(d.entries)) {
+        allEntries = d.entries;
+        render();
+      }
+    });
+
+    // ── Request initial history ─────────────────────────────
+    postMsg({ type: 'history-get' });
+  </script>
+</body>
+</html>

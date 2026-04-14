@@ -8,9 +8,6 @@
 </head>
 <body>
 
-<!-- ── Drag region overlay for window move ── -->
-<div id="drag-region"></div>
-
 <!-- ── Tab Bar ── -->
 <div id="tabbar">
   <div id="tabs-list">
@@ -49,7 +46,9 @@
     <div id="secure-icon" class="secure-icon hidden">
       <svg width="12" height="13" viewBox="0 0 12 13" fill="none"><rect x="1" y="5.5" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M3.5 5.5V4a2.5 2.5 0 0 1 5 0v1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
     </div>
-    <input type="text" id="urlbar" placeholder="Поиск или адрес сайта" autocomplete="off" spellcheck="false"/>
+    <div id="urlbar-title" class="urlbar-title">Новая вкладка</div>
+    <input type="text" id="urlbar" class="urlbar-input" placeholder="Поиск или адрес сайта" autocomplete="off" spellcheck="false"/>
+    <div id="urlbar-zoom" class="urlbar-zoom hidden">100%</div>
     <div id="urlbar-spinner" class="spinner hidden"></div>
   </div>
 
@@ -64,6 +63,14 @@
     <button class="nav-btn bypass-btn" id="btn-bypass" title="Обход DPI/ТСПУ">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.25" stroke="currentColor" stroke-width="1.5"/><path d="M8 4.5C6 4.5 4.5 6 4.5 8s1.5 3.5 3.5 3.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M8 4.5c2 0 3.5 1.5 3.5 3.5S10 11.5 8 11.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-dasharray="2 1.5"/><path d="M5.5 8h5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M8 5.5v5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
       <span id="bypass-label">Обход</span>
+    </button>
+
+    <!-- History button -->
+    <button class="nav-btn" id="btn-history" title="История (Ctrl+H)">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="6.25" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M8 4.5V8l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
     </button>
 
     <!-- Incognito -->
@@ -156,6 +163,19 @@
     <span>Обновить</span>
   </button>
   <div class="ctx-sep"></div>
+  <button class="ctx-item" data-action="zoom-in">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="currentColor" stroke-width="1.3"/><path d="M9 9l3.5 3.5M6 4v4M4 6h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+    <span>Увеличить масштаб</span>
+  </button>
+  <button class="ctx-item" data-action="zoom-out">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="currentColor" stroke-width="1.3"/><path d="M9 9l3.5 3.5M4 6h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+    <span>Уменьшить масштаб</span>
+  </button>
+  <button class="ctx-item" data-action="zoom-reset">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="currentColor" stroke-width="1.3"/><path d="M9 9l3.5 3.5M6 6h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    <span>Сбросить масштаб</span>
+  </button>
+  <div class="ctx-sep"></div>
   <button class="ctx-item" data-action="bookmark-toggle">
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" class="ico-page-bm"><path d="M7 1.5l1.5 3 3.3.5-2.4 2.3.6 3.3L7 9.2 3.6 10.6l.6-3.3L1.7 5l3.3-.5L7 1.5z" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linejoin="round"/></svg>
     <span>Добавить в закладки</span>
@@ -191,7 +211,7 @@
   </button>
 </div>
 
-<!-- ── Settings Panel ── -->
+<!-- ── Settings Panel (legacy — kept for reference) ── -->
 <div id="settings-panel" class="panel hidden">
   <div class="panel-backdrop"></div>
   <div class="panel-container">

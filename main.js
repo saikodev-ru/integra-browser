@@ -73,6 +73,7 @@ if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 const settingsFile = path.join(dataDir, 'settings.json');
 const bookmarksFile = path.join(dataDir, 'bookmarks.json');
 const tabsFile = path.join(dataDir, 'tabs.json');
+const historyFile = path.join(dataDir, 'history.json');
 
 // ── Default Settings ─────────────────────────────────────────
 const DEFAULT_SETTINGS = {
@@ -115,6 +116,24 @@ function removeBookmark(id) { const i = bookmarks.findIndex(b => b.id === id); i
 function isBookmarked(url) { return bookmarks.some(b => b.url === url); }
 function getBookmarkForUrl(url) { return bookmarks.find(b => b.url === url) || null; }
 function broadcastBookmarks() { if (mainWindow) mainWindow.webContents.send('bookmarks-update', bookmarks); }
+
+// ── History CRUD ─────────────────────────────────────────────
+function loadHistory() {
+  try { if (fs.existsSync(historyFile)) return JSON.parse(fs.readFileSync(historyFile, 'utf-8')); } catch {}
+  return [];
+}
+function saveHistory(h) { try { fs.writeFileSync(historyFile, JSON.stringify(h.slice(0, 5000), null, 2), 'utf-8'); } catch {} }
+function addHistoryEntry(url, title) {
+  if (!url || url.includes('127.0.0.1') || url.startsWith('about:')) return;
+  // Skip internal pages
+  if (url.includes('settings.html') || url.includes('history.html') || url.includes('error.html') || url.includes('newtab.html')) return;
+  const h = loadHistory();
+  // Remove duplicate
+  const existingIdx = h.findIndex(e => e.url === url);
+  if (existingIdx !== -1) h.splice(existingIdx, 1);
+  h.unshift({ id: genId(), url, title: title || url, timestamp: Date.now() });
+  saveHistory(h);
+}
 
 // ── Tabs Session (save/restore) ──────────────────────────────
 function loadTabSession() {
@@ -172,7 +191,8 @@ function stopBypass() { if (bypassProcess) { bypassProcess.kill(); bypassProcess
 function createWindow(incognito = false) {
   const win = new BrowserWindow({
     width: 1280, height: 800, minWidth: 700, minHeight: 500,
-    frame: false, backgroundColor: '#111111',
+    frame: false,
+    backgroundMaterial: 'acrylic',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true, nodeIntegration: false, sandbox: false,
@@ -192,11 +212,9 @@ function createWindow(incognito = false) {
   win.on('leave-full-screen', () => win.webContents.send('fullscreen-change', false));
 
   if (!incognito) {
-    // Save tabs before closing
     win.on('close', () => {
       try {
         win.webContents.send('save-tabs');
-        // sync save-tabs is not possible, but we have an IPC from renderer
       } catch (e) {}
     });
     win.on('closed', () => { stopBypass(); mainWindow = null; });
@@ -230,6 +248,9 @@ ipcMain.on('window-incognito', () => createWindow(true));
 // ── IPC: Paths & URLs ────────────────────────────────────────
 ipcMain.handle('get-webview-preload-path', () => path.join(__dirname, 'webview-preload.js'));
 ipcMain.handle('get-newtab-url', () => getLocalUrl('newtab.html'));
+ipcMain.handle('get-settings-url', () => getLocalUrl('settings.html'));
+ipcMain.handle('get-history-url', () => getLocalUrl('history.html'));
+ipcMain.handle('get-error-url', () => getLocalUrl('error.html'));
 
 // ── IPC: Bypass ──────────────────────────────────────────────
 ipcMain.on('bypass-toggle', (e) => {
@@ -291,6 +312,68 @@ ipcMain.handle('settings-import', (e) => {
 ipcMain.handle('get-saved-tabs', () => loadTabSession());
 ipcMain.on('save-tabs-session', (_, tabData) => saveTabSession(tabData));
 
+// ── IPC: History ─────────────────────────────────────────────
+ipcMain.handle('history-get', () => loadHistory());
+ipcMain.on('history-add', (_, { url, title }) => addHistoryEntry(url, title));
+ipcMain.on('history-clear', () => { try { fs.writeFileSync(historyFile, '[]', 'utf-8'); } catch {} });
+ipcMain.on('history-delete', (_, { id }) => {
+  const h = loadHistory().filter(e => e.id !== id);
+  saveHistory(h);
+});
+
+// ── IPC: Cookies ─────────────────────────────────────────────
+ipcMain.handle('cookies-get', async () => {
+  return session.defaultSession.cookies.get({});
+});
+ipcMain.handle('cookies-clear', async () => {
+  await session.defaultSession.cookies.clearStorageData({});
+  return { success: true };
+});
+
+// ── IPC: Cache ───────────────────────────────────────────────
+ipcMain.handle('cache-get-size', async () => {
+  // Estimate cache size from session
+  try {
+    const cachePath = path.join(app.getPath('userData'), 'Partitions', 'main', 'Cache');
+    if (fs.existsSync(cachePath)) {
+      const getDirSize = (dir) => {
+        let size = 0;
+        try {
+          const files = fs.readdirSync(dir);
+          for (const f of files) {
+            const fp = path.join(dir, f);
+            const st = fs.statSync(fp);
+            if (st.isDirectory()) size += getDirSize(fp);
+            else size += st.size;
+          }
+        } catch {}
+        return size;
+      };
+      const bytes = getDirSize(cachePath);
+      if (bytes > 1048576) return (bytes / 1048576).toFixed(1) + ' MB';
+      if (bytes > 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return bytes + ' B';
+    }
+  } catch {}
+  return '0 B';
+});
+ipcMain.handle('cache-clear', async () => {
+  await session.defaultSession.clearCache();
+  return { success: true };
+});
+
+// ── IPC: Zoom ────────────────────────────────────────────────
+ipcMain.on('zoom-in', (e) => {
+  const win = BrowserWindow.fromWebContents(e.sender);
+  if (win && mainWindow) {
+    const activeTabId = e.sender === mainWindow.webContents ? 'active' : null;
+    // Send to renderer to handle per-tab zoom
+    // We use a different approach: the renderer handles zoom locally
+  }
+});
+ipcMain.on('zoom-out', (e) => {});
+ipcMain.on('zoom-reset', (e) => {});
+
 // ── IPC: Native Context Menu for Webview ─────────────────────
 ipcMain.on('show-page-context-menu', (e, params) => {
   const win = BrowserWindow.fromWebContents(e.sender);
@@ -305,6 +388,14 @@ ipcMain.on('show-page-context-menu', (e, params) => {
     { label: '← Назад', enabled: !!params.canGoBack, click: () => sendAction('back') },
     { label: '→ Вперёд', enabled: !!params.canGoForward, click: () => sendAction('forward') },
     { label: '↻ Обновить', click: () => sendAction('reload') },
+  );
+  items.push({ type: 'separator' });
+
+  // Zoom
+  items.push(
+    { label: '🔍+ Увеличить', click: () => sendAction('zoom-in') },
+    { label: '🔍- Уменьшить', click: () => sendAction('zoom-out') },
+    { label: '🔍 Сбросить масштаб', click: () => sendAction('zoom-reset') },
   );
   items.push({ type: 'separator' });
 
@@ -337,7 +428,6 @@ ipcMain.on('show-page-context-menu', (e, params) => {
   );
 
   const menu = Menu.buildFromTemplate(items);
-  // popup(window, x, y) uses window-relative coordinates
   menu.popup(win, Math.round(params.x), Math.round(params.y));
 });
 
@@ -352,14 +442,47 @@ ipcMain.handle('get-state', () => ({
 
 ipcMain.on('open-external', (_, url) => shell.openExternal(url));
 
+// ── Tracker Blocking ─────────────────────────────────────────
+const TRACKER_DOMAINS = [
+  'google-analytics.com', 'googletagmanager.com', 'doubleclick.net',
+  'facebook.net', 'connect.facebook.net', 'analytics.facebook.com',
+  'hotjar.com', 'mixpanel.com', 'amplitude.com', 'segment.io',
+  'mc.yandex.ru', 'counter.yadro.ru',
+  'hm.baidu.com', 'analytics.google.com', 'bat.bing.com',
+];
+
 // ── App lifecycle ─────────────────────────────────────────────
 app.whenReady().then(async () => {
   await startLocalServer();
 
+  // Tracker blocking via webRequest
+  const trackerPatterns = TRACKER_DOMAINS.map(d => `*://*.${d}/*`);
   session.defaultSession.webRequest.onBeforeRequest(
-    { urls: ['*://*.google-analytics.com/*', '*://*.doubleclick.net/*', '*://ssl.gstatic.com/safebrowsing/*', '*://*.googleapis.com/safebrowsing/*'] },
+    { urls: [...trackerPatterns, '*://ssl.gstatic.com/safebrowsing/*', '*://*.googleapis.com/safebrowsing/*'] },
     (_, cb) => cb({ cancel: true })
   );
+
+  // Preconnect to common search engines on startup
+  try {
+    ['https://yandex.ru', 'https://www.google.com', 'https://duckduckgo.com'].forEach(url => {
+      session.defaultSession.preconnect(url);
+    });
+  } catch (e) {
+    console.warn('[preconnect] failed:', e.message);
+  }
+
+  // DNS prefetch for bookmarked sites
+  function prefetchDns(urls) {
+    try {
+      urls.slice(0, 20).forEach(url => {
+        try { session.defaultSession.preconnect(new URL(url).origin); } catch {}
+      });
+    } catch {}
+  }
+  // Prefetch for bookmarks after a short delay
+  setTimeout(() => {
+    try { prefetchDns(bookmarks.map(b => b.url)); } catch {}
+  }, 3000);
 
   createWindow(false);
   if (currentSettings.bypassOnStart) startBypass();

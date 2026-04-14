@@ -19,26 +19,84 @@
   --tabbar-h: 40px; --navbar-h: 52px; --bookmarksbar-h: 34px;
 }
 
-html, body { height: 100%; overflow: hidden; background: var(--chrome); color: var(--t1); font-family: var(--font); font-size: 14px; font-weight: 500; -webkit-font-smoothing: antialiased; user-select: none; }
-body { display: flex; flex-direction: column; }
+/* ── Flex Layout ──────────────────────────────────────────── */
+html, body {
+  height: 100%; overflow: hidden;
+  background: var(--chrome); color: var(--t1);
+  font-family: var(--font); font-size: 14px; font-weight: 500;
+  -webkit-font-smoothing: antialiased; user-select: none;
+  display: flex; flex-direction: column;
+}
 
-/* ── Drag region ───────────────────────────────────────────── */
-#drag-region { position: fixed; top: 0; left: 0; right: 0; height: var(--tabbar-h); -webkit-app-region: drag; z-index: 9999; pointer-events: none; }
+/* ── Transparent mode: body must be transparent for acrylic to show ── */
+body.transparent-mode {
+  background: transparent !important;
+}
 
 /* ── Tab Bar ─────────────────────────────────────────────────── */
-#tabbar { position: fixed; top: 0; left: 0; right: 0; height: var(--tabbar-h); background: var(--chrome); display: flex; align-items: center; gap: 2px; padding: 0 4px 0 0; border-bottom: 1px solid var(--b); z-index: 100; -webkit-app-region: drag; }
-/* Drag padding at the left edge of tabbar (before tabs) */
-#tabbar::before { content: ''; display: block; width: 8px; height: 100%; flex-shrink: 0; -webkit-app-region: drag; }
+#tabbar {
+  flex-shrink: 0;
+  height: var(--tabbar-h);
+  background: var(--chrome);
+  display: flex; align-items: center;
+  gap: 0; padding: 0;
+  border-bottom: 1px solid var(--b);
+  z-index: 100;
+  /* Entire tabbar is draggable — child interactive elements opt out */
+  -webkit-app-region: drag;
+}
 
-#tabs-list { display: flex; align-items: center; gap: 1px; flex: 1; overflow: hidden; height: 100%; padding-left: 8px; -webkit-app-region: no-drag; min-width: 0; }
+#tabs-list {
+  display: flex; align-items: center;
+  gap: 1px; flex: 1; overflow: hidden;
+  height: 100%; padding: 0 8px;
+  min-width: 0;
+  /* The tabs-list itself IS draggable (empty space = drag area) */
+  -webkit-app-region: drag;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+#tabs-list::-webkit-scrollbar { display: none; }
 
 /* ── Tab ────────────────────────────────────────────────────── */
-.tab { display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 8px; border-radius: 8px; background: transparent; cursor: pointer; min-width: 0; max-width: 200px; flex-shrink: 0; transition: background .15s var(--ease), max-width .15s var(--ease), min-width .15s var(--ease); position: relative; -webkit-app-region: no-drag; border: 1px solid transparent; border-top: 2px solid transparent; }
+.tab {
+  display: flex; align-items: center; gap: 6px;
+  height: 30px; padding: 0 8px;
+  border-radius: 8px; background: transparent;
+  cursor: pointer;
+  /* Fixed width: all tabs same size */
+  width: 200px; max-width: 200px; min-width: 200px;
+  flex-shrink: 0;
+  position: relative;
+  /* Each tab opts out of dragging so you can click/select it */
+  -webkit-app-region: no-drag;
+  border: 1px solid transparent;
+  border-top: 2px solid transparent;
+  transition: background .15s var(--ease), opacity .2s var(--ease), transform .25s var(--ease);
+}
 .tab:hover { background: var(--s2); }
 .tab.active { background: var(--solid2); border-color: var(--b2); }
 
+/* Tab close animation */
+.tab.closing {
+  animation: tabClose .25s var(--ease) forwards;
+  pointer-events: none;
+}
+@keyframes tabClose {
+  to { width: 0; min-width: 0; max-width: 0; padding: 0; opacity: 0; transform: translateX(-10px); overflow: hidden; }
+}
+
+/* Tab creation animation */
+.tab.entering {
+  animation: tabEnter .25s var(--ease) forwards;
+}
+@keyframes tabEnter {
+  from { opacity: 0; transform: scale(.85); }
+  to { opacity: 1; transform: none; }
+}
+
 /* Pinned tab */
-.tab.pinned { max-width: 38px; min-width: 38px; padding: 0 7px; flex-shrink: 0; }
+.tab.pinned { max-width: 38px; min-width: 38px; width: 38px; padding: 0 7px; flex-shrink: 0; }
 .tab.pinned .tab-title { display: none; }
 .tab.pinned .tab-close { display: none !important; opacity: 0 !important; }
 .tab.pinned .tab-favicon { margin: 0; }
@@ -59,8 +117,14 @@ body { display: flex; flex-direction: column; }
 
 /* Drag */
 .tab.dragging { opacity: 0.4; transform: scale(0.95); }
-.tab.drag-over-left { box-shadow: -2px 0 0 0 var(--y2); }
-.tab.drag-over-right { box-shadow: 2px 0 0 0 var(--y2); }
+.tab.drag-over-left::after {
+  content: ''; position: absolute; left: -1px; top: 6px; bottom: 6px; width: 2px;
+  background: var(--y2); border-radius: 1px;
+}
+.tab.drag-over-right::after {
+  content: ''; position: absolute; right: -1px; top: 6px; bottom: 6px; width: 2px;
+  background: var(--y2); border-radius: 1px;
+}
 
 .tab-favicon { width: 14px; height: 14px; flex-shrink: 0; border-radius: 3px; display: flex; align-items: center; justify-content: center; position: relative; }
 .tab-favicon img { width: 14px; height: 14px; border-radius: 2px; object-fit: contain; }
@@ -91,23 +155,60 @@ body { display: flex; flex-direction: column; }
 .wc-close:hover { background: rgba(255, 69, 58, .18); color: #ff453a; }
 
 /* ── Navigation Bar ────────────────────────────────────────── */
-#navbar { position: fixed; top: var(--tabbar-h); left: 0; right: 0; height: var(--navbar-h); background: var(--chrome); display: flex; align-items: center; gap: 4px; padding: 0 10px; border-bottom: 1px solid var(--b); z-index: 100; transition: background .3s; -webkit-app-region: drag; }
-.nav-left, .nav-right { display: flex; align-items: center; gap: 2px; flex-shrink: 0; -webkit-app-region: no-drag; }
-.nav-bar-wrap { -webkit-app-region: no-drag; }
-.nav-btn { width: 32px; height: 32px; border-radius: 9px; background: transparent; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--t3); transition: background .12s var(--ease), color .12s, transform .1s var(--sp); position: relative; }
+#navbar {
+  flex-shrink: 0;
+  height: var(--navbar-h);
+  background: var(--chrome);
+  display: flex; align-items: center;
+  gap: 4px; padding: 0 10px;
+  border-bottom: 1px solid var(--b);
+  z-index: 100;
+  transition: background .3s;
+  /* Entire navbar is draggable */
+  -webkit-app-region: drag;
+}
+/* Only nav-btn elements opt out — gaps between buttons are draggable */
+.nav-left, .nav-right { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+
+.nav-btn { width: 32px; height: 32px; border-radius: 9px; background: transparent; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--t3); transition: background .12s var(--ease), color .12s, transform .1s var(--sp); position: relative; -webkit-app-region: no-drag; }
 .nav-btn:hover:not(:disabled) { background: var(--s2); color: var(--t1); }
 .nav-btn:active:not(:disabled) { transform: scale(.93); }
 .nav-btn:disabled { opacity: .3; cursor: not-allowed; }
 
+/* The URL bar wrapper opts out of dragging so it's clickable */
+.nav-bar-wrap { -webkit-app-region: no-drag; }
 .nav-bar-wrap { flex: 1; position: relative; display: flex; align-items: center; background: var(--solid1); border: 1px solid var(--b2); border-radius: 11px; height: 36px; padding: 0 12px; gap: 8px; transition: border-color .2s, box-shadow .2s, background .2s; cursor: text; }
 .nav-bar-wrap:focus-within { border-color: rgba(139,92,246,.5); background: rgba(255,255,255,.04); box-shadow: 0 0 0 3px rgba(139,92,246,.12); }
+
+/* ── Safari-style URL Bar ─────────────────────────────────── */
+.urlbar-title {
+  position: absolute; left: 0; right: 0; text-align: center;
+  font-size: 13px; font-weight: 500; color: var(--t2);
+  pointer-events: none; transition: opacity .15s, transform .15s;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  padding: 0 40px;
+}
+.nav-bar-wrap.focused .urlbar-title,
+.nav-bar-wrap.has-value .urlbar-title { opacity: 0; transform: scale(.95); pointer-events: none; }
 
 .secure-icon { color: var(--green); flex-shrink: 0; display: flex; align-items: center; }
 .secure-icon.hidden { display: none; }
 
+.urlbar-input { flex: 1; background: transparent; border: none; outline: none; color: var(--t1); font-family: var(--font); font-size: 13.5px; font-weight: 500; caret-color: var(--y2); min-width: 0; }
+.urlbar-input::placeholder { color: var(--t3); }
+.urlbar-input::selection { background: rgba(139,92,246,.3); }
+
+/* Keep old #urlbar for backward compat during transition */
 #urlbar { flex: 1; background: transparent; border: none; outline: none; color: var(--t1); font-family: var(--font); font-size: 13.5px; font-weight: 500; caret-color: var(--y2); min-width: 0; }
 #urlbar::placeholder { color: var(--t3); }
 #urlbar::selection { background: rgba(139,92,246,.3); }
+
+.urlbar-zoom {
+  font-size: 11px; font-weight: 700; color: var(--y2);
+  background: var(--ybg); border: 1px solid var(--yb);
+  border-radius: 6px; padding: 1px 6px; flex-shrink: 0;
+}
+.urlbar-zoom.hidden { display: none; }
 
 .spinner { width: 14px; height: 14px; border: 1.5px solid var(--b3); border-top-color: var(--y2); border-radius: 50%; animation: spin .6s linear infinite; flex-shrink: 0; }
 .spinner.hidden { display: none; }
@@ -124,7 +225,16 @@ body { display: flex; flex-direction: column; }
 #bypass-label { white-space: nowrap; }
 
 /* ── Bookmarks Bar ───────────────────────────────────────── */
-#bookmarks-bar { position: fixed; top: calc(var(--tabbar-h) + var(--navbar-h)); left: 0; right: 0; height: var(--bookmarksbar-h); background: var(--chrome); display: flex; align-items: center; gap: 4px; padding: 0 10px; border-bottom: 1px solid var(--b); z-index: 99; overflow: hidden; transition: top .2s var(--ease), background .3s; }
+#bookmarks-bar {
+  flex-shrink: 0;
+  height: var(--bookmarksbar-h);
+  background: var(--chrome);
+  display: flex; align-items: center;
+  gap: 4px; padding: 0 10px;
+  border-bottom: 1px solid var(--b);
+  z-index: 99; overflow: hidden;
+  transition: background .3s;
+}
 #bookmarks-bar.hidden { display: none; }
 #bookmarks-list { display: flex; align-items: center; gap: 2px; flex: 1; overflow: hidden; height: 100%; }
 
@@ -239,30 +349,22 @@ body { display: flex; flex-direction: column; }
 body.incognito-mode #tabbar::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, #8b5cf6, #0ea5e9); }
 
 /* ── Transparent chrome mode ──────────────────────────────── */
-/* Transparent chrome mode — backdrop-filter doesn't work with <webview> (native layer),
-   so we use semi-transparent backgrounds with a subtle bottom glow instead */
-body.transparent-mode #tabbar { background: rgba(18, 18, 20, 0.82); box-shadow: 0 1px 0 0 rgba(255,255,255,.04); }
-body.transparent-mode #navbar { background: rgba(18, 18, 20, 0.78); box-shadow: 0 1px 0 0 rgba(255,255,255,.03); }
-body.transparent-mode #bookmarks-bar { background: rgba(18, 18, 20, 0.78); box-shadow: 0 1px 0 0 rgba(255,255,255,.03); }
+body.transparent-mode #tabbar { background: rgba(20, 20, 20, 0.75); box-shadow: 0 1px 0 0 rgba(255,255,255,.04); }
+body.transparent-mode #navbar { background: rgba(20, 20, 20, 0.70); box-shadow: 0 1px 0 0 rgba(255,255,255,.03); }
+body.transparent-mode #bookmarks-bar { background: rgba(20, 20, 20, 0.70); box-shadow: 0 1px 0 0 rgba(255,255,255,.03); }
 
-/* ── Webviews Container ───────────────────────────────────── */
+/* ── Webviews Container (flex: 1 fills remaining space) ──── */
 #webviews-container {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  top: calc(var(--tabbar-h) + var(--navbar-h));
-  z-index: 1;
+  flex: 1;
+  position: relative;
   overflow: hidden;
 }
-body.show-bookmarks #webviews-container {
-  top: calc(var(--tabbar-h) + var(--navbar-h) + var(--bookmarksbar-h));
-}
+
+/* ── Webview: absolute positioning with explicit dimensions ── */
 .tab-webview {
-  display: block;
+  display: none;
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 0; left: 0;
   width: 100%;
   height: 100%;
   border: none;
@@ -271,11 +373,18 @@ body.show-bookmarks #webviews-container {
   background: #111111;
 }
 
-/* ── Loading bar ──────────────────────────────────────────── */
-#loading-bar { position: fixed; top: calc(var(--tabbar-h) + var(--navbar-h)); left: 0; height: 2px; background: var(--accent-grad); border-radius: 0 2px 2px 0; z-index: 200; width: 0; opacity: 0; transition: width .3s var(--ease), opacity .2s; }
-#loading-bar.active { opacity: 1; }
-
-/* ── Scrollbar ────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 3px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(128,128,128,.25); border-radius: 99px; }
+/* ── Loading Bar ──────────────────────────────────────────── */
+#loading-bar {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  width: 0;
+  background: linear-gradient(90deg, var(--y), var(--y3));
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  transition: width .15s ease, opacity .2s;
+}
+#loading-bar.active {
+  opacity: 1;
+}
