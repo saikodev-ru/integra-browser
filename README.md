@@ -1,4 +1,4 @@
-# Integra Browser
+# Integral. Browser
 
 Стильный браузер для Windows на основе Chromium — в дизайне [Initial](https://github.com/saikodev-ru/initial-web).
 
@@ -24,7 +24,7 @@ npm start
 
 ```bash
 npm run build:win
-# → dist/Integra Setup x.x.x.exe
+# → dist/Integral. Setup x.x.x.exe
 ```
 
 ## Обход DPI/ТСПУ

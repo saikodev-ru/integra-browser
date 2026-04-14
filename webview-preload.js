@@ -16,7 +16,7 @@ contextBridge.exposeInMainWorld('chrome', {
 // Listen for responses sent back from parent renderer to internal pages
 ipcRenderer.on('internal-response', (e, data) => {
   try {
-    window.dispatchEvent(new CustomEvent('integra-response', { detail: data }));
+    window.dispatchEvent(new CustomEvent('integral-response', { detail: data }));
   } catch {}
 });
 

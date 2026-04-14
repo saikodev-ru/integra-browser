@@ -1,7 +1,7 @@
-/* ── Integra Browser · Renderer ───────────────────────────────── */
+/* ── Integral. Browser · Renderer ───────────────────────────────── */
 'use strict';
 
-const api = window.integra;
+const api = window.integral;
 
 // ── DOM refs ──────────────────────────────────────────────────
 const $tabsList       = document.getElementById('tabs-list');
@@ -298,7 +298,7 @@ function createTab(url, opts = {}) {
         tab.title = e.title || 'Новая вкладка';
         renderTabs();
         if (id === activeTabId) {
-          document.title = `${tab.title} — Integra`;
+          document.title = `${tab.title} — Integral.`
           updateUrlbarTitle(tab);
         }
         if (!isInternalPage(tab.url) && !tab.url.includes('127.0.0.1') && !tab.url.startsWith('about:')) {
@@ -447,7 +447,7 @@ function setActiveTab(id) {
     // Restore zoom level
     try { tab.webview.setZoomLevel(tab.zoomLevel || 0); } catch {}
     updateNavFromTab(tab);
-    document.title = `${tab.title} — Integra`;
+    document.title = `${tab.title} — Integral.`
     updateBookmarkStarState(isBookmarkedUrl(tab.url));
     updateUrlbarTitle(tab);
     updateZoomIndicator(tab);

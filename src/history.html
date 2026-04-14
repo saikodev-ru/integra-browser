@@ -564,7 +564,7 @@
     }
 
     function onMsg(handler) {
-      window.addEventListener('integra-response', (e) => {
+      window.addEventListener('integral-response', (e) => {
         handler(e.detail || {});
       });
       // Fallback for direct window.postMessage (dev testing)

@@ -5,7 +5,7 @@ const fs = require('fs');
 const http = require('http');
 
 // ── No telemetry ──────────────────────────────────────────────
-app.setPath('crashDumps', path.join(app.getPath('temp'), 'integra-noop'));
+app.setPath('crashDumps', path.join(app.getPath('temp'), 'integral-noop'));
 app.commandLine.appendSwitch('disable-crash-reporter');
 app.commandLine.appendSwitch('disable-breakpad');
 app.commandLine.appendSwitch('disable-features', 'Reporting,NetworkQualityEstimator,SafeBrowsingEnhancedProtection');
@@ -67,7 +67,7 @@ function getLocalUrl(filename) {
 
 // ── Persistent Data Paths ────────────────────────────────────
 const userDataPath = app.getPath('userData');
-const dataDir = path.join(userDataPath, 'integra-data');
+const dataDir = path.join(userDataPath, 'integral-data');
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 
 const settingsFile = path.join(dataDir, 'settings.json');
@@ -288,9 +288,9 @@ ipcMain.handle('settings-reset', () => {
 });
 ipcMain.handle('settings-export', (e) => {
   const win = BrowserWindow.fromWebContents(e.sender) || mainWindow;
-  const r = dialog.showOpenDialogSync(win, { title: 'Экспорт настроек', defaultPath: 'integra-settings.json', filters: [{ name: 'JSON', extensions: ['json'] }], properties: ['openDirectory'] });
+  const r = dialog.showOpenDialogSync(win, { title: 'Экспорт настроек', defaultPath: 'integral-settings.json', filters: [{ name: 'JSON', extensions: ['json'] }], properties: ['openDirectory'] });
   if (!r) return { success: false };
-  try { fs.writeFileSync(path.join(r[0], 'integra-settings.json'), JSON.stringify({ settings: currentSettings, bookmarks }, null, 2), 'utf-8'); return { success: true }; }
+  try { fs.writeFileSync(path.join(r[0], 'integral-settings.json'), JSON.stringify({ settings: currentSettings, bookmarks }, null, 2), 'utf-8'); return { success: true }; }
   catch (ex) { return { success: false, error: ex.message }; }
 });
 ipcMain.handle('settings-import', (e) => {

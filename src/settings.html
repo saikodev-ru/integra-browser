@@ -600,7 +600,7 @@
     </div>
     <div>
       <h1>Настройки</h1>
-      <div class="page-header-sub">Управление браузером Integra</div>
+      <div class="page-header-sub">Управление браузером Integral.</div>
     </div>
   </header>
 
@@ -799,7 +799,7 @@
           </svg>
         </div>
         <div class="about-info">
-          <div class="about-name">Integra Browser</div>
+          <div class="about-name">Integral. Browser</div>
           <div class="about-version" id="app-version">Версия 1.0.0</div>
         </div>
       </div>
@@ -839,7 +839,7 @@
     }
 
     function onMsg(handler) {
-      window.addEventListener('integra-response', (e) => {
+      window.addEventListener('integral-response', (e) => {
         handler(e.detail || {});
       });
       // Fallback for direct window.postMessage (dev testing)
@@ -913,7 +913,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'integra-settings.json';
+        a.download = 'integral-settings.json';
         a.click();
         URL.revokeObjectURL(url);
         showToast('Настройки экспортированы');

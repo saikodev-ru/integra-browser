@@ -1,6 +1,6 @@
 {
-  "name": "integra-browser",
-  "productName": "Integra",
+  "name": "integral-browser",
+  "productName": "Integral.",
   "version": "0.1.0",
   "description": "Стильный браузер на основе Chromium без телеметрии с обходом DPI/ТСПУ",
   "main": "main.js",
@@ -18,8 +18,8 @@
     "electron-builder": "^25.0.0"
   },
   "build": {
-    "appId": "ru.saikodev.integra",
-    "productName": "Integra",
+    "appId": "ru.saikodev.integral",
+    "productName": "Integral.",
     "copyright": "© 2025 saikodev",
     "directories": {
       "output": "dist"
@@ -46,7 +46,7 @@
       "installerHeaderIcon": "assets/icon.ico",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Integra"
+      "shortcutName": "Integral."
     },
     "extraResources": [
       {

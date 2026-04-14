@@ -18,19 +18,19 @@
 
 ## Флаги запуска
 
-### winws (запуск Integra делает автоматически):
+### winws (запуск Integral. делает автоматически):
 ```
 --wf-tcp=80,443 --wf-udp=443,50000-65535
 --dpi-desync=split2 --dpi-desync-ttl=5
 --dpi-desync-repeats=11
 ```
 
-### GoodbyeDPI (запуск Integra делает автоматически):
+### GoodbyeDPI (запуск Integral. делает автоматически):
 ```
 -p -r -s -n -e 40 --dns-addr 77.88.8.8 --dns-port 53
 ```
 
 ## Важно
-- Запускай Integra от имени администратора, если bypass не стартует
+- Запускай Integral. от имени администратора, если bypass не стартует
 - winws/GoodbyeDPI требуют WinDivert (обычно входит в пакет)
 - Лицензии bypass-инструментов — смотри в их репозиториях
