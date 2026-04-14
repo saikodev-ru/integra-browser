@@ -104,13 +104,32 @@ function createTab(url = NEWTAB_URL, opts = {}) {
   webview.style.display = 'none';
 
   // ── Webview events ──
+  webview.addEventListener('did-attach', () => {
+    console.log('[webview] did-attach, tab', id);
+  });
   webview.addEventListener('did-start-loading', () => {
+    console.log('[webview] did-start-loading, tab', id);
     const tab = getTab(id);
     if (tab) { tab.loading = true; renderTabs(); if (id === activeTabId) updateNavFromTab(tab); }
   });
   webview.addEventListener('did-stop-loading', () => {
+    console.log('[webview] did-stop-loading, tab', id);
     const tab = getTab(id);
     if (tab) { tab.loading = false; renderTabs(); if (id === activeTabId) updateNavFromTab(tab); }
+  });
+  webview.addEventListener('did-fail-load', (e) => {
+    console.error('[webview] did-fail-load, tab', id, 'code:', e.errorCode, 'desc:', e.errorDescription, 'url:', e.validatedURL);
+    if (e.errorCode === -3) return; // ABORTED — ignore
+    const tab = getTab(id);
+    if (tab && tab.url && (tab.url.startsWith('local://') || tab.url.startsWith('file://'))) {
+      // Local page failed — show blank fallback
+      tab.loading = false;
+      tab.title = 'Новая вкладка';
+      tab.url = 'about:blank';
+      webview.loadURL('about:blank');
+      renderTabs();
+      if (id === activeTabId) updateNavFromTab(tab);
+    }
   });
   webview.addEventListener('page-title-updated', (e) => {
     const tab = getTab(id);
@@ -248,7 +267,7 @@ function reorderTab(tabId, newIndex) {
 }
 
 function isBookmarkedUrl(url) {
-  return url && !url.includes('newtab.html') && bookmarks.some(b => b.url === url);
+  return url && !url.includes('newtab.html') && !url.startsWith('local://') && bookmarks.some(b => b.url === url);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -378,7 +397,7 @@ function applyBypassState(e) { $btnBypass.classList.toggle('active', e); $bypass
 // ── URL helpers ───────────────────────────────────────────────
 function formatUrl(url) {
   if (!url || url === 'about:blank') return '';
-  if (url.includes('newtab.html') || url.startsWith('file://')) return '';
+  if (url.includes('newtab.html') || url.startsWith('file://') || url.startsWith('local://')) return '';
   try { const u = new URL(url); return u.hostname + (u.pathname !== '/' ? u.pathname : '') + u.search; } catch { return url; }
 }
 
@@ -396,14 +415,25 @@ function startLoadBar() { $loadingBar.classList.add('active'); loadBarValue = 10
 function finishLoadBar() { clearInterval(loadBarTimer); $loadingBar.style.transition = 'width .15s ease, opacity .4s .3s'; $loadingBar.style.width = '100%'; setTimeout(() => { $loadingBar.classList.remove('active'); $loadingBar.style.width = '0'; }, 350); }
 
 // ── URL bar ───────────────────────────────────────────────────
-$urlbar.addEventListener('focus', () => { urlbarFocused = true; const t = getActiveTab(); if (t) $urlbar.value = t.url === 'about: blank' ? '' : t.url; $urlbar.select(); });
+$urlbar.addEventListener('focus', () => { urlbarFocused = true; const t = getActiveTab(); if (t) $urlbar.value = (t.url === 'about:blank' || t.url.startsWith('local://')) ? '' : t.url; $urlbar.select(); });
 $urlbar.addEventListener('blur', () => { urlbarFocused = false; const t = getActiveTab(); if (t) $urlbar.value = formatUrl(t.url); });
 $urlbar.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
     const raw = $urlbar.value; const u = resolveInput(raw);
     if (u) {
-      const wv = getActiveWebView();
-      if (wv) wv.loadURL(u);
+      const t = getActiveTab();
+      if (t) {
+        t.url = u;
+        t.loading = true;
+        console.log('[nav] loadURL:', u);
+        try {
+          t.webview.loadURL(u);
+        } catch (err) {
+          console.error('[nav] loadURL error:', err);
+          t.loading = false;
+        }
+        renderTabs();
+      }
       $urlbar.blur();
     }
   }

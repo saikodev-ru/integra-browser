@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, session, shell, Menu, nativeTheme, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, session, shell, Menu, nativeTheme, dialog, protocol, net } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs');
@@ -11,6 +11,21 @@ app.commandLine.appendSwitch('disable-features', 'Reporting,NetworkQualityEstima
 app.commandLine.appendSwitch('no-report-upload');
 app.commandLine.appendSwitch('disable-component-update');
 app.commandLine.appendSwitch('disable-background-networking');
+
+// ── Register custom protocol for local pages (avoids file:// restrictions in webviews) ──
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'local',
+    privileges: {
+      bypassCSP: true,
+      stream: true,
+      supportFetchAPI: true,
+      standard: false,
+      secure: true,
+      corsEnabled: true,
+    },
+  },
+]);
 
 // ── Persistent Data Paths ────────────────────────────────────
 const userDataPath = app.getPath('userData');
@@ -157,7 +172,7 @@ ipcMain.on('window-incognito', () => createWindow(true));
 
 // ── IPC: Paths ───────────────────────────────────────────────
 ipcMain.handle('get-webview-preload-path', () => path.join(__dirname, 'webview-preload.js'));
-ipcMain.handle('get-newtab-url', () => `file://${path.join(__dirname, 'src', 'newtab.html')}`);
+ipcMain.handle('get-newtab-url', () => 'local://newtab.html');
 
 // ── IPC: Bypass ──────────────────────────────────────────────
 ipcMain.on('bypass-toggle', (e) => {
@@ -228,6 +243,37 @@ ipcMain.on('open-external', (_, url) => shell.openExternal(url));
 
 // ── App lifecycle ─────────────────────────────────────────────
 app.whenReady().then(() => {
+  // ── Serve local files via local:// protocol ────────────────
+  protocol.handle('local', (request) => {
+    try {
+      const urlPath = new URL(request.url).pathname.replace(/^\//, '');
+      const filePath = path.join(__dirname, 'src', urlPath);
+      const ext = path.extname(filePath).toLowerCase();
+      const mimeTypes = {
+        '.html': 'text/html; charset=utf-8',
+        '.css': 'text/css; charset=utf-8',
+        '.js': 'application/javascript; charset=utf-8',
+        '.json': 'application/json; charset=utf-8',
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.svg': 'image/svg+xml',
+        '.ico': 'image/x-icon',
+        '.woff': 'font/woff',
+        '.woff2': 'font/woff2',
+      };
+      const contentType = mimeTypes[ext] || 'application/octet-stream';
+      if (!fs.existsSync(filePath)) {
+        return new Response('Not Found', { status: 404, headers: { 'Content-Type': 'text/plain' } });
+      }
+      return new Response(fs.createReadStream(filePath), {
+        headers: { 'Content-Type': contentType },
+      });
+    } catch (e) {
+      console.error('[protocol] local:// handler error:', e);
+      return new Response('Internal Server Error', { status: 500, headers: { 'Content-Type': 'text/plain' } });
+    }
+  });
+
   session.defaultSession.webRequest.onBeforeRequest(
     { urls: ['*://*.google-analytics.com/*', '*://*.doubleclick.net/*', '*://ssl.gstatic.com/safebrowsing/*', '*://*.googleapis.com/safebrowsing/*'] },
     (_, cb) => cb({ cancel: true })
