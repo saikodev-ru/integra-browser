@@ -374,6 +374,71 @@ ipcMain.on('zoom-in', (e) => {
 ipcMain.on('zoom-out', (e) => {});
 ipcMain.on('zoom-reset', (e) => {});
 
+// ── IPC: Native Context Menu for Tabs ────────────────────────
+ipcMain.on('show-tab-context-menu', (e, params) => {
+  const win = BrowserWindow.fromWebContents(e.sender);
+  if (!win) return;
+
+  const sendAction = (action) => win.webContents.send('ctx-action', action);
+
+  const items = [];
+
+  items.push(
+    { label: params.pinned ? 'Открепить вкладку' : 'Закрепить вкладку', click: () => sendAction('tab-pin') },
+    { label: params.muted ? 'Включить звук' : 'Отключить звук', click: () => sendAction('tab-mute') },
+    { type: 'separator' },
+  );
+
+  // Group color submenu
+  const groupColors = [
+    { label: 'Красная', color: 'red' },
+    { label: 'Оранжевая', color: 'orange' },
+    { label: 'Жёлтая', color: 'yellow' },
+    { label: 'Зелёная', color: 'green' },
+    { label: 'Синяя', color: 'blue' },
+    { label: 'Фиолетовая', color: 'purple' },
+  ];
+
+  const groupSubmenu = groupColors.map(gc => ({
+    label: gc.label,
+    click: () => sendAction({ action: 'tab-group', color: gc.color }),
+  }));
+  groupSubmenu.push({ type: 'separator' });
+  groupSubmenu.push({ label: 'Без группы', click: () => sendAction({ action: 'tab-group', color: null }) });
+
+  items.push({ label: 'Цвет группы', submenu: groupSubmenu });
+  items.push({ type: 'separator' });
+
+  items.push(
+    { label: 'Закрыть другие', click: () => sendAction('tab-close-others') },
+    { label: 'Закрыть справа', click: () => sendAction('tab-close-right') },
+    { label: 'Закрыть вкладку', click: () => sendAction('tab-close') },
+  );
+
+  const menu = Menu.buildFromTemplate(items);
+  menu.popup(win, Math.round(params.x), Math.round(params.y));
+});
+
+// ── IPC: Native Context Menu for Bookmarks Bar ─────────────────
+ipcMain.on('show-bm-context-menu', (e, params) => {
+  const win = BrowserWindow.fromWebContents(e.sender);
+  if (!win) return;
+
+  const sendAction = (action) => win.webContents.send('ctx-action', action);
+
+  const items = [];
+  items.push(
+    { label: 'Открыть', click: () => sendAction({ action: 'bm-open', url: params.url }) },
+    { label: 'Открыть в новой вкладке', click: () => sendAction({ action: 'bm-open-new', url: params.url }) },
+    { type: 'separator' },
+    { label: 'Копировать URL', click: () => { clipboard.writeText(params.url || ''); sendAction('copied'); } },
+    { label: 'Удалить', click: () => sendAction({ action: 'bm-delete', id: params.id }) },
+  );
+
+  const menu = Menu.buildFromTemplate(items);
+  menu.popup(win, Math.round(params.x), Math.round(params.y));
+});
+
 // ── IPC: Native Context Menu for Webview ─────────────────────
 ipcMain.on('show-page-context-menu', (e, params) => {
   const win = BrowserWindow.fromWebContents(e.sender);

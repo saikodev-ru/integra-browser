@@ -49,8 +49,10 @@ contextBridge.exposeInMainWorld('integra', {
   cacheGetSize: () => ipcRenderer.invoke('cache-get-size'),
   cacheClear: () => ipcRenderer.invoke('cache-clear'),
 
-  // Native context menu for webview
+  // Native context menus
   showContextMenu: (params) => ipcRenderer.send('show-page-context-menu', params),
+  showTabContextMenu: (params) => ipcRenderer.send('show-tab-context-menu', params),
+  showBmContextMenu: (params) => ipcRenderer.send('show-bm-context-menu', params),
 
   // State
   getState: () => ipcRenderer.invoke('get-state'),

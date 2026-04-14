@@ -40,7 +40,6 @@ body.transparent-mode {
   background: var(--chrome);
   display: flex; align-items: center;
   gap: 0; padding: 0;
-  border-bottom: 1px solid var(--b);
   z-index: 100;
   /* Entire tabbar is draggable — child interactive elements opt out */
   -webkit-app-region: drag;
@@ -161,7 +160,6 @@ body.transparent-mode {
   background: var(--chrome);
   display: flex; align-items: center;
   gap: 4px; padding: 0 10px;
-  border-bottom: 1px solid var(--b);
   z-index: 100;
   transition: background .3s;
   /* Entire navbar is draggable */
@@ -231,7 +229,6 @@ body.transparent-mode {
   background: var(--chrome);
   display: flex; align-items: center;
   gap: 4px; padding: 0 10px;
-  border-bottom: 1px solid var(--b);
   z-index: 99; overflow: hidden;
   transition: background .3s;
 }
@@ -252,25 +249,6 @@ body.transparent-mode {
 .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(8px); background: var(--solid3); border: 1px solid var(--b3); color: var(--t1); font-size: 13px; font-weight: 600; padding: 10px 18px; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,.5); opacity: 0; transition: opacity .2s var(--ease), transform .2s var(--ease); z-index: 9999; pointer-events: none; white-space: nowrap; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 .toast.hidden { display: none; }
-
-/* ── Context Menus ────────────────────────────────────────── */
-.ctx-menu { position: fixed; background: var(--solid2); border: 1px solid var(--b3); border-radius: 12px; padding: 5px; box-shadow: 0 12px 40px rgba(0,0,0,.6); z-index: 9998; min-width: 200px; animation: ctxIn .12s var(--ease); }
-@keyframes ctxIn { from { opacity: 0; transform: scale(.96) translateY(-4px); } to { opacity: 1; transform: none; } }
-.ctx-menu.hidden { display: none; }
-
-.ctx-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 7px 12px; background: transparent; border: none; border-radius: 8px; color: var(--t1); font-family: var(--font); font-size: 13px; font-weight: 500; text-align: left; cursor: pointer; transition: background .1s; white-space: nowrap; }
-.ctx-item svg { flex-shrink: 0; opacity: .7; }
-.ctx-item:hover svg { opacity: 1; }
-.ctx-item:hover { background: var(--s2); }
-.ctx-sep { height: 1px; background: var(--b); margin: 4px 0; }
-
-/* Submenu */
-.ctx-submenu-wrap { position: relative; }
-.ctx-submenu-trigger::after { content: ''; position: absolute; right: 12px; top: 50%; width: 0; height: 0; border: 4px solid transparent; border-left-color: var(--t3); transform: translateY(-50%); }
-.ctx-submenu-wrap:hover > .ctx-submenu { display: block; }
-.ctx-submenu { display: none; position: absolute; left: 100%; top: -5px; background: var(--solid2); border: 1px solid var(--b3); border-radius: 12px; padding: 5px; box-shadow: 0 12px 40px rgba(0,0,0,.6); min-width: 160px; z-index: 9999; }
-.ctx-color-item { display: flex !important; align-items: center; gap: 8px; }
-.ctx-color-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 
 /* ── Panels ────────────────────────────────────────────────── */
 .panel { position: fixed; inset: 0; z-index: 500; display: flex; align-items: flex-end; justify-content: center; animation: panelIn .25s var(--ease); }
@@ -349,9 +327,9 @@ body.transparent-mode {
 body.incognito-mode #tabbar::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, #8b5cf6, #0ea5e9); }
 
 /* ── Transparent chrome mode ──────────────────────────────── */
-body.transparent-mode #tabbar { background: rgba(20, 20, 20, 0.75); box-shadow: 0 1px 0 0 rgba(255,255,255,.04); }
-body.transparent-mode #navbar { background: rgba(20, 20, 20, 0.70); box-shadow: 0 1px 0 0 rgba(255,255,255,.03); }
-body.transparent-mode #bookmarks-bar { background: rgba(20, 20, 20, 0.70); box-shadow: 0 1px 0 0 rgba(255,255,255,.03); }
+body.transparent-mode #tabbar { background: rgba(20, 20, 20, 0.75); }
+body.transparent-mode #navbar { background: rgba(20, 20, 20, 0.70); }
+body.transparent-mode #bookmarks-bar { background: rgba(20, 20, 20, 0.70); }
 
 /* ── Webviews Container (flex: 1 fills remaining space) ──── */
 #webviews-container {

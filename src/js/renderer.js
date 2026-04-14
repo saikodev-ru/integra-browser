@@ -36,11 +36,6 @@ const $bookmarksPanelList = document.getElementById('bookmarks-panel-list');
 const $bookmarksSearchInput = document.getElementById('bookmarks-search-input');
 const $bookmarksEmpty = document.getElementById('bookmarks-empty');
 
-const $tabCtxMenu     = document.getElementById('tab-ctx-menu');
-const $pageCtxMenu    = document.getElementById('page-ctx-menu');
-const $groupColorMenu = document.getElementById('group-color-menu');
-const $bmCtxMenu      = document.getElementById('bm-ctx-menu');
-
 const $webviewsContainer = document.getElementById('webviews-container');
 
 const $loadingBar = document.createElement('div');
@@ -58,8 +53,6 @@ let bookmarks = [];
 let settings = {};
 let isBookmarked = false;
 let ctxTabId = null;
-let ctxBmId = null;
-let ctxBmUrl = null;
 let isIncognito = false;
 let NEWTAB_URL = '';
 let SETTINGS_URL = '';
@@ -140,12 +133,32 @@ api.on('ctx-action', (action) => {
     else if (action === 'bookmark-toggle') $btnBookmark.click();
     else if (action === 'new-tab') createTab(NEWTAB_URL);
     else if (action === 'copied') showToast('Скопировано');
+    // Tab context menu actions
+    else if (action === 'tab-pin' && ctxTabId) pinTab(ctxTabId);
+    else if (action === 'tab-mute' && ctxTabId) muteTab(ctxTabId);
+    else if (action === 'tab-close-others' && ctxTabId) closeOtherTabs(ctxTabId);
+    else if (action === 'tab-close-right' && ctxTabId) closeTabsToRight(ctxTabId);
+    else if (action === 'tab-close' && ctxTabId) closeTab(ctxTabId);
   } else if (action && typeof action === 'object') {
     if (action.action === 'open-link') {
       const t = getActiveTab();
       if (t) { t.url = action.url; t.webview.loadURL(action.url); }
     } else if (action.action === 'open-link-tab') {
       createTab(action.url);
+    }
+    // Tab group action
+    else if (action.action === 'tab-group' && ctxTabId) {
+      setTabGroup(ctxTabId, action.color || null);
+    }
+    // Bookmark context menu actions
+    else if (action.action === 'bm-open' && action.url) {
+      createTab(action.url);
+    }
+    else if (action.action === 'bm-open-new' && action.url) {
+      createTab(action.url);
+    }
+    else if (action.action === 'bm-delete' && action.id) {
+      api.removeBookmark(action.id).then(() => showToast('Закладка удалена'));
     }
   }
 });
@@ -564,7 +577,7 @@ function buildTabEl(tab) {
     setActiveTab(tab.id);
   });
   el.querySelector('.tab-close').addEventListener('click', (e) => { e.stopPropagation(); closeTab(tab.id); });
-  el.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); showTabCtxMenu(tab.id, e.clientX, e.clientY); });
+  el.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); ctxTabId = tab.id; api.showTabContextMenu({ x: e.clientX, y: e.clientY, pinned: tab.pinned, muted: tab.muted }); });
 
   // ── Drag-n-drop with animations ──
   el.addEventListener('dragstart', (e) => {
@@ -1025,86 +1038,10 @@ function handleInternalMessage(tabId, msg) {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  CONTEXT MENUS
+//  CONTEXT MENUS (all native via Electron Menu)
 // ══════════════════════════════════════════════════════════════
 
-function hideAllMenus() {
-  $tabCtxMenu.classList.add('hidden');
-  $pageCtxMenu.classList.add('hidden');
-  $bmCtxMenu.classList.add('hidden');
-  if ($groupColorMenu) $groupColorMenu.style.display = '';
-}
-
-document.addEventListener('mousedown', (e) => {
-  if (!$tabCtxMenu.contains(e.target)) $tabCtxMenu.classList.add('hidden');
-  if (!$pageCtxMenu.contains(e.target)) $pageCtxMenu.classList.add('hidden');
-  if (!$bmCtxMenu.contains(e.target)) $bmCtxMenu.classList.add('hidden');
-});
-
-// ── Tab Context Menu ────────────────────────────────────────
-function showTabCtxMenu(tabId, x, y) {
-  ctxTabId = tabId;
-  const tab = getTab(tabId); if (!tab) return;
-
-  const pinBtn = $tabCtxMenu.querySelector('[data-action="pin"]');
-  pinBtn.querySelector('.pin-cross').style.display = tab.pinned ? '' : 'none';
-  pinBtn.querySelector('span').textContent = tab.pinned ? 'Открепить вкладку' : 'Закрепить вкладку';
-
-  const muteBtn = $tabCtxMenu.querySelector('[data-action="mute"]');
-  muteBtn.querySelector('.ico-mute-off').style.display = tab.muted ? 'none' : '';
-  muteBtn.querySelector('.ico-mute-on').style.display = tab.muted ? '' : 'none';
-  muteBtn.querySelector('span').textContent = tab.muted ? 'Включить звук' : 'Отключить звук';
-
-  $tabCtxMenu.style.left = x + 'px';
-  $tabCtxMenu.style.top = y + 'px';
-  $tabCtxMenu.classList.remove('hidden');
-
-  requestAnimationFrame(() => {
-    const rect = $tabCtxMenu.getBoundingClientRect();
-    if (rect.right > window.innerWidth) $tabCtxMenu.style.left = (window.innerWidth - rect.width - 4) + 'px';
-    if (rect.bottom > window.innerHeight) $tabCtxMenu.style.top = (window.innerHeight - rect.height - 4) + 'px';
-  });
-}
-
-$tabCtxMenu.addEventListener('click', (e) => {
-  const btn = e.target.closest('.ctx-item');
-  if (!btn || !ctxTabId) return;
-  e.stopPropagation();
-  const action = btn.dataset.action;
-  const color = btn.dataset.color;
-  if (action === 'pin') pinTab(ctxTabId);
-  else if (action === 'mute') muteTab(ctxTabId);
-  else if (action === 'group') return;
-  else if (color !== undefined) setTabGroup(ctxTabId, color || null);
-  else if (action === 'close-others') closeOtherTabs(ctxTabId);
-  else if (action === 'close-right') closeTabsToRight(ctxTabId);
-  else if (action === 'close') closeTab(ctxTabId);
-  hideAllMenus();
-});
-
-// ── Page Context Menu (fallback — shown if native menu fails) ─
-$pageCtxMenu.addEventListener('click', (e) => {
-  const btn = e.target.closest('.ctx-item');
-  if (!btn) return;
-  e.stopPropagation();
-  const action = btn.dataset.action;
-  const wv = getActiveWebView();
-  if (action === 'back') { if (wv) wv.goBack(); }
-  else if (action === 'forward') { if (wv) wv.goForward(); }
-  else if (action === 'reload') { if (wv) wv.reload(); }
-  else if (action === 'zoom-in') { zoomIn(); }
-  else if (action === 'zoom-out') { zoomOut(); }
-  else if (action === 'zoom-reset') { zoomReset(); }
-  else if (action === 'bookmark-toggle') $btnBookmark.click();
-  else if (action === 'new-tab') createTab(NEWTAB_URL);
-  else if (action === 'copy-url') {
-    const t = getActiveTab();
-    if (t && t.url) navigator.clipboard.writeText(t.url).then(() => showToast('URL скопирован'));
-  }
-  hideAllMenus();
-});
-
-// ── Bookmarks Bar Context Menu ───────────────────────────────
+// ── Bookmarks Bar Context Menu (native via IPC) ──────────────
 $bookmarksBar.addEventListener('contextmenu', (e) => {
   e.preventDefault(); e.stopPropagation();
   const bmItem = e.target.closest('.bm-item');
@@ -1112,26 +1049,7 @@ $bookmarksBar.addEventListener('contextmenu', (e) => {
   const idx = [...$bookmarksList.children].indexOf(bmItem);
   if (idx === -1) return;
   const bm = bookmarks[idx]; if (!bm) return;
-  ctxBmId = bm.id; ctxBmUrl = bm.url;
-  $bmCtxMenu.style.left = e.clientX + 'px';
-  $bmCtxMenu.style.top = e.clientY + 'px';
-  $bmCtxMenu.classList.remove('hidden');
-  requestAnimationFrame(() => {
-    const rect = $bmCtxMenu.getBoundingClientRect();
-    if (rect.right > window.innerWidth) $bmCtxMenu.style.left = (window.innerWidth - rect.width - 4) + 'px';
-    if (rect.bottom > window.innerHeight) $bmCtxMenu.style.top = (window.innerHeight - rect.height - 4) + 'px';
-  });
-});
-
-$bmCtxMenu.addEventListener('click', (e) => {
-  const btn = e.target.closest('.ctx-item');
-  if (!btn) return;
-  e.stopPropagation();
-  const action = btn.dataset.action;
-  if (action === 'bm-open' || action === 'bm-open-new') { if (ctxBmUrl) createTab(ctxBmUrl); }
-  else if (action === 'bm-copy-url') { if (ctxBmUrl) navigator.clipboard.writeText(ctxBmUrl).then(() => showToast('URL скопирован')); }
-  else if (action === 'bm-delete') { if (ctxBmId) api.removeBookmark(ctxBmId); showToast('Закладка удалена'); }
-  hideAllMenus();
+  api.showBmContextMenu({ x: e.clientX, y: e.clientY, url: bm.url, id: bm.id });
 });
 
 // ══════════════════════════════════════════════════════════════
@@ -1173,7 +1091,6 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     $settingsPanel.classList.add('hidden');
     $bookmarksPanel.classList.add('hidden');
-    hideAllMenus();
   }
 });
 
