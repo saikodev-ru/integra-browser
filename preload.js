@@ -10,7 +10,7 @@ contextBridge.exposeInMainWorld('integra', {
   // Bypass
   toggleBypass: () => ipcRenderer.send('bypass-toggle'),
 
-  // Paths
+  // Paths & URLs
   getWebViewPreloadPath: () => ipcRenderer.invoke('get-webview-preload-path'),
   getNewTabUrl: () => ipcRenderer.invoke('get-newtab-url'),
 
@@ -28,13 +28,17 @@ contextBridge.exposeInMainWorld('integra', {
   exportSettings: () => ipcRenderer.invoke('settings-export'),
   importSettings: () => ipcRenderer.invoke('settings-import'),
 
+  // Tabs session
+  getSavedTabs: () => ipcRenderer.invoke('get-saved-tabs'),
+  saveTabsSession: (tabData) => ipcRenderer.send('save-tabs-session', tabData),
+
   // State
   getState: () => ipcRenderer.invoke('get-state'),
   openExternal: (url) => ipcRenderer.send('open-external', url),
 
   // Listeners
   on: (channel, fn) => {
-    const allowed = ['fullscreen-change', 'bypass-no-binary', 'bookmarks-update', 'settings-changed', 'incognito-mode'];
+    const allowed = ['fullscreen-change', 'bypass-no-binary', 'bookmarks-update', 'settings-changed', 'incognito-mode', 'save-tabs'];
     if (allowed.includes(channel)) ipcRenderer.on(channel, (_, ...args) => fn(...args));
   },
 });

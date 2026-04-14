@@ -1,4 +1,4 @@
-/* ── Integra Browser · Renderer (webview-based) ──────────────── */
+/* ── Integra Browser · Renderer ───────────────────────────────── */
 'use strict';
 
 const api = window.integra;
@@ -62,14 +62,39 @@ let webviewPreloadPath = '';
 
 // ── Init ──────────────────────────────────────────────────────
 (async () => {
-  webviewPreloadPath = await api.getWebViewPreloadPath();
-  NEWTAB_URL = await api.getNewTabUrl();
-  const state = await api.getState();
-  bookmarks = state.bookmarks || [];
-  settings = state.settings || {};
-  renderBookmarksBar();
-  applySettings();
-  createTab(); // Create initial tab
+  try {
+    webviewPreloadPath = await api.getWebViewPreloadPath();
+    NEWTAB_URL = await api.getNewTabUrl();
+    console.log('[init] newtab URL:', NEWTAB_URL);
+    console.log('[init] preload path:', webviewPreloadPath);
+
+    const state = await api.getState();
+    bookmarks = state.bookmarks || [];
+    settings = state.settings || {};
+    renderBookmarksBar();
+    applySettings();
+
+    // Restore saved tabs or create a new tab
+    const savedTabs = await api.getSavedTabs();
+    if (savedTabs && savedTabs.length > 0) {
+      console.log('[init] restoring', savedTabs.length, 'saved tabs');
+      savedTabs.forEach((t, i) => {
+        const url = t.url && !t.url.startsWith('http://127.0.0.1') ? t.url : NEWTAB_URL;
+        if (i === 0) {
+          createTab(url, { title: t.title });
+        } else {
+          createTab(url, { title: t.title, active: false });
+        }
+      });
+    } else {
+      console.log('[init] no saved tabs, creating default');
+      createTab(NEWTAB_URL);
+    }
+  } catch (err) {
+    console.error('[init] FATAL:', err);
+    // Fallback: try to create at least one tab
+    createTab(NEWTAB_URL);
+  }
 })();
 
 // ── IPC listeners (main process events) ───────────────────────
@@ -78,9 +103,20 @@ api.on('bypass-no-binary', () => showToast('Бинарник не найден. 
 api.on('bookmarks-update', (bm) => { bookmarks = bm || []; renderBookmarksBar(); renderBookmarksPanel(); updateBookmarkStar(); });
 api.on('settings-changed', (s) => { settings = s || {}; applySettings(); });
 api.on('incognito-mode', (v) => { isIncognito = v; });
+api.on('save-tabs', () => {
+  // Main asks us to save tabs before window closes
+  const tabData = tabs.map(t => ({
+    url: t.url && !t.url.includes('127.0.0.1') ? t.url : '',
+    title: t.title || '',
+  })).filter(t => t.url);
+  if (tabData.length > 0) {
+    api.saveTabsSession(tabData);
+    console.log('[tabs] saved', tabData.length, 'tabs');
+  }
+});
 
 // ══════════════════════════════════════════════════════════════
-//  TAB MANAGEMENT (webview-based)
+//  TAB MANAGEMENT
 // ══════════════════════════════════════════════════════════════
 
 function getTab(id) { return tabs.find(t => t.id === id); }
@@ -88,118 +124,162 @@ function getActiveTab() { return getTab(activeTabId); }
 function getActiveWebView() { const t = getActiveTab(); return t ? t.webview : null; }
 
 function resolveTabUrl(url) {
-  if (!url || url === 'about:blank' || url === 'newtab') return NEWTAB_URL;
+  if (!url || url === 'about:blank' || url === 'newtab' || url === '') return NEWTAB_URL;
   return url;
 }
 
-function createTab(url = NEWTAB_URL, opts = {}) {
-  const id = nextTabId++;
-  const partition = isIncognito ? ('incognito-' + Date.now()) : 'persist:main';
+function createTab(url, opts = {}) {
+  try {
+    const id = nextTabId++;
+    const partition = isIncognito ? ('incognito-' + Date.now()) : 'persist:main';
 
-  const webview = document.createElement('webview');
-  webview.setAttribute('preload', webviewPreloadPath);
-  webview.setAttribute('partition', partition);
-  webview.setAttribute('allowpopups', '');
-  webview.className = 'tab-webview';
-  webview.style.display = 'none';
+    const webview = document.createElement('webview');
+    webview.setAttribute('preload', webviewPreloadPath);
+    webview.setAttribute('partition', partition);
+    webview.setAttribute('allowpopups', '');
+    webview.className = 'tab-webview';
+    webview.style.display = 'none';
 
-  // ── Webview events ──
-  webview.addEventListener('did-attach', () => {
-    console.log('[webview] did-attach, tab', id);
-  });
-  webview.addEventListener('did-start-loading', () => {
-    console.log('[webview] did-start-loading, tab', id);
-    const tab = getTab(id);
-    if (tab) { tab.loading = true; renderTabs(); if (id === activeTabId) updateNavFromTab(tab); }
-  });
-  webview.addEventListener('did-stop-loading', () => {
-    console.log('[webview] did-stop-loading, tab', id);
-    const tab = getTab(id);
-    if (tab) { tab.loading = false; renderTabs(); if (id === activeTabId) updateNavFromTab(tab); }
-  });
-  webview.addEventListener('did-fail-load', (e) => {
-    console.error('[webview] did-fail-load, tab', id, 'code:', e.errorCode, 'desc:', e.errorDescription, 'url:', e.validatedURL);
-    if (e.errorCode === -3) return; // ABORTED — ignore
-    const tab = getTab(id);
-    if (tab && tab.url && (tab.url.startsWith('integra://') || tab.url.startsWith('file://'))) {
-      // Local page failed — show blank fallback
-      tab.loading = false;
-      tab.title = 'Новая вкладка';
-      tab.url = 'about:blank';
-      webview.loadURL('about:blank');
-      renderTabs();
-      if (id === activeTabId) updateNavFromTab(tab);
+    // ── Webview events ──
+    webview.addEventListener('did-attach', () => {
+      console.log('[webview] did-attach, tab', id);
+    });
+
+    webview.addEventListener('did-start-loading', () => {
+      const tab = getTab(id);
+      if (tab) {
+        tab.loading = true;
+        renderTabs();
+        if (id === activeTabId) updateNavFromTab(tab);
+      }
+    });
+
+    webview.addEventListener('did-stop-loading', () => {
+      const tab = getTab(id);
+      if (tab) {
+        tab.loading = false;
+        renderTabs();
+        if (id === activeTabId) updateNavFromTab(tab);
+      }
+    });
+
+    webview.addEventListener('did-fail-load', (e) => {
+      console.warn('[webview] did-fail-load, tab', id, 'code:', e.errorCode, 'url:', e.validatedURL);
+      if (e.errorCode === -3) return; // ABORTED — ignore
+      const tab = getTab(id);
+      if (!tab) return;
+      // If it's a local URL that failed, just show blank
+      if (tab.url && tab.url.includes('127.0.0.1')) {
+        tab.loading = false;
+        tab.title = 'Новая вкладка';
+        tab.url = 'about:blank';
+        tab.webview.loadURL('about:blank');
+        renderTabs();
+        if (id === activeTabId) updateNavFromTab(tab);
+      }
+    });
+
+    webview.addEventListener('page-title-updated', (e) => {
+      const tab = getTab(id);
+      if (tab) {
+        tab.title = e.title || 'Новая вкладка';
+        renderTabs();
+        if (id === activeTabId) document.title = `${tab.title} — Integra`;
+      }
+    });
+
+    webview.addEventListener('page-favicon-updated', (e) => {
+      const tab = getTab(id);
+      if (tab) { tab.favicon = (e.favicons && e.favicons[0]) || null; renderTabs(); }
+    });
+
+    webview.addEventListener('did-navigate', (e) => {
+      const tab = getTab(id);
+      if (tab) {
+        tab.url = e.url;
+        if (id === activeTabId) updateNavFromTab(tab);
+      }
+    });
+
+    webview.addEventListener('did-navigate-in-page', (e) => {
+      const tab = getTab(id);
+      if (tab) {
+        tab.url = e.url;
+        if (id === activeTabId) updateNavFromTab(tab);
+      }
+    });
+
+    webview.addEventListener('context-menu', (e) => {
+      if (id === activeTabId) {
+        const rect = webview.getBoundingClientRect();
+        showPageCtxMenu(rect.left + e.params.x, rect.top + e.params.y, e.params);
+      }
+    });
+
+    webview.addEventListener('audio-state-changed', () => {
+      const tab = getTab(id);
+      if (tab) { tab.audible = webview.isCurrentlyAudible(); renderTabs(); }
+    });
+
+    webview.addEventListener('new-window', (e) => {
+      e.preventDefault();
+      createTab(e.url);
+    });
+
+    webview.addEventListener('plugin-crashed', () => {
+      console.error('[webview] plugin crashed, tab', id);
+    });
+
+    webview.addEventListener('crashed', () => {
+      console.error('[webview] CRASHED, tab', id);
+      showToast('Вкладка упала. Перезагрузите страницу.');
+    });
+
+    webview.addEventListener('render-process-gone', (e) => {
+      console.error('[webview] render process gone, tab', id, 'reason:', e.reason);
+    });
+
+    // Add to DOM
+    $webviewsContainer.appendChild(webview);
+
+    const resolvedUrl = resolveTabUrl(url);
+    const tab = {
+      id, webview, url: resolvedUrl,
+      title: opts.title || 'Новая вкладка',
+      favicon: null, loading: true,
+      pinned: opts.pinned || false,
+      muted: opts.muted || false,
+      audible: false,
+      group: opts.group || null,
+    };
+    tabs.push(tab);
+
+    if (tab.pinned) {
+      const idx = tabs.findIndex(t => t.id === id);
+      if (idx > 0) {
+        tabs.splice(idx, 1);
+        const pinnedCount = tabs.filter(t => t.pinned).length;
+        tabs.splice(pinnedCount, 0, tab);
+      }
     }
-  });
-  webview.addEventListener('page-title-updated', (e) => {
-    const tab = getTab(id);
-    if (tab) {
-      tab.title = e.title || 'Новая вкладка';
-      renderTabs();
-      if (id === activeTabId) document.title = `${tab.title} — Integra`;
+
+    // Set as active (unless opts.active === false)
+    if (opts.active !== false) {
+      setActiveTab(id);
     }
-  });
-  webview.addEventListener('page-favicon-updated', (e) => {
-    const tab = getTab(id);
-    if (tab) { tab.favicon = (e.favicons && e.favicons[0]) || null; renderTabs(); }
-  });
-  webview.addEventListener('did-navigate', (e) => {
-    const tab = getTab(id);
-    if (tab) { tab.url = e.url; if (id === activeTabId) updateNavFromTab(tab); }
-  });
-  webview.addEventListener('did-navigate-in-page', (e) => {
-    const tab = getTab(id);
-    if (tab) { tab.url = e.url; if (id === activeTabId) updateNavFromTab(tab); }
-  });
-  webview.addEventListener('context-menu', (e) => {
-    // Only show custom menu for the active tab
-    if (id === activeTabId) {
-      const rect = webview.getBoundingClientRect();
-      showPageCtxMenu(rect.left + e.params.x, rect.top + e.params.y, e.params);
-    }
-  });
-  webview.addEventListener('audio-state-changed', () => {
-    const tab = getTab(id);
-    if (tab) { tab.audible = webview.isCurrentlyAudible(); renderTabs(); }
-  });
 
-  // Handle new windows / popups → open in new tab
-  webview.addEventListener('new-window', (e) => {
-    e.preventDefault();
-    createTab(e.url);
-  });
-
-  // Add to DOM
-  $webviewsContainer.appendChild(webview);
-
-  const tab = {
-    id, webview, url: resolveTabUrl(url), title: 'Новая вкладка',
-    favicon: null, loading: true,
-    pinned: opts.pinned || false,
-    muted: opts.muted || false,
-    audible: false,
-    group: opts.group || null,
-  };
-  tabs.push(tab);
-
-  // If pinned, insert at beginning
-  if (tab.pinned) {
-    const idx = tabs.findIndex(t => t.id === id);
-    if (idx > 0) {
-      tabs.splice(idx, 1);
-      const pinnedCount = tabs.filter(t => t.pinned).length;
-      tabs.splice(pinnedCount, 0, tab);
-    }
+    // Load URL after webview is in DOM
+    webview.src = resolvedUrl;
+    console.log('[tab] created', id, 'url:', resolvedUrl);
+    return id;
+  } catch (err) {
+    console.error('[tab] FATAL createTab error:', err);
+    return null;
   }
-
-  setActiveTab(id);
-  webview.src = resolveTabUrl(tab.url);
-  return id;
 }
 
 function setActiveTab(id) {
   activeTabId = id;
-  // Hide all webviews, show active
   tabs.forEach(t => { t.webview.style.display = 'none'; });
   const tab = getTab(id);
   if (tab) {
@@ -267,7 +347,7 @@ function reorderTab(tabId, newIndex) {
 }
 
 function isBookmarkedUrl(url) {
-  return url && !url.includes('newtab.html') && !url.startsWith('integra://') && bookmarks.some(b => b.url === url);
+  return url && !url.includes('newtab') && !url.includes('127.0.0.1') && !url.startsWith('about:') && bookmarks.some(b => b.url === url);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -313,7 +393,6 @@ function buildTabEl(tab) {
   el.querySelector('.tab-close').addEventListener('click', (e) => { e.stopPropagation(); closeTab(tab.id); });
   el.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); showTabCtxMenu(tab.id, e.clientX, e.clientY); });
 
-  // Drag-N-Drop
   el.addEventListener('dragstart', (e) => { el.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', tab.id); });
   el.addEventListener('dragend', () => { el.classList.remove('dragging'); $tabsList.querySelectorAll('.drag-over-left,.drag-over-right').forEach(t => t.classList.remove('drag-over-left','drag-over-right')); });
   el.addEventListener('dragover', (e) => {
@@ -362,22 +441,26 @@ function updateTabEl(el, tab) {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  NAVIGATION (direct webview methods)
+//  NAVIGATION
 // ══════════════════════════════════════════════════════════════
 
 function updateNavFromTab(tab) {
   if (!tab) return;
-  const wv = tab.webview;
-  if (!urlbarFocused) $urlbar.value = formatUrl(tab.url);
-  $btnBack.disabled = !wv.canGoBack();
-  $btnForward.disabled = !wv.canGoForward();
-  isLoading = tab.loading;
-  $icoReload.style.display = isLoading ? 'none' : '';
-  $icoStop.style.display = isLoading ? '' : 'none';
-  $spinner.classList.toggle('hidden', !isLoading);
-  $secureIcon.classList.toggle('hidden', !(tab.url && tab.url.startsWith('https://')));
-  if (isLoading) startLoadBar(); else finishLoadBar();
-  updateBookmarkStarState(isBookmarkedUrl(tab.url));
+  try {
+    const wv = tab.webview;
+    if (!urlbarFocused) $urlbar.value = formatUrl(tab.url);
+    $btnBack.disabled = !wv.canGoBack();
+    $btnForward.disabled = !wv.canGoForward();
+    isLoading = tab.loading;
+    $icoReload.style.display = isLoading ? 'none' : '';
+    $icoStop.style.display = isLoading ? '' : 'none';
+    $spinner.classList.toggle('hidden', !isLoading);
+    $secureIcon.classList.toggle('hidden', !(tab.url && tab.url.startsWith('https://')));
+    if (isLoading) startLoadBar(); else finishLoadBar();
+    updateBookmarkStarState(isBookmarkedUrl(tab.url));
+  } catch (e) {
+    console.error('[nav] updateNavFromTab error:', e);
+  }
 }
 
 function updateBookmarkStar() {
@@ -397,7 +480,7 @@ function applyBypassState(e) { $btnBypass.classList.toggle('active', e); $bypass
 // ── URL helpers ───────────────────────────────────────────────
 function formatUrl(url) {
   if (!url || url === 'about:blank') return '';
-  if (url.includes('newtab.html') || url.startsWith('file://') || url.startsWith('integra://')) return '';
+  if (url.includes('newtab') || url.includes('127.0.0.1') || url.startsWith('file://')) return '';
   try { const u = new URL(url); return u.hostname + (u.pathname !== '/' ? u.pathname : '') + u.search; } catch { return url; }
 }
 
@@ -409,13 +492,17 @@ function resolveInput(raw) {
   return (engines[settings.searchEngine] || engines.yandex) + encodeURIComponent(v);
 }
 
+function isNewtabUrl(url) {
+  return !url || url === 'about:blank' || url.includes('newtab') || url.includes('127.0.0.1');
+}
+
 // ── Loading bar ───────────────────────────────────────────────
 let loadBarValue = 0;
 function startLoadBar() { $loadingBar.classList.add('active'); loadBarValue = 10; $loadingBar.style.transition = 'width .3s ease, opacity .2s'; $loadingBar.style.width = loadBarValue + '%'; clearInterval(loadBarTimer); loadBarTimer = setInterval(() => { if (loadBarValue < 85) { loadBarValue += Math.random() * 8; $loadingBar.style.width = Math.min(loadBarValue, 85) + '%'; } }, 400); }
 function finishLoadBar() { clearInterval(loadBarTimer); $loadingBar.style.transition = 'width .15s ease, opacity .4s .3s'; $loadingBar.style.width = '100%'; setTimeout(() => { $loadingBar.classList.remove('active'); $loadingBar.style.width = '0'; }, 350); }
 
 // ── URL bar ───────────────────────────────────────────────────
-$urlbar.addEventListener('focus', () => { urlbarFocused = true; const t = getActiveTab(); if (t) $urlbar.value = (t.url === 'about:blank' || t.url.startsWith('integra://')) ? '' : t.url; $urlbar.select(); });
+$urlbar.addEventListener('focus', () => { urlbarFocused = true; const t = getActiveTab(); if (t) $urlbar.value = isNewtabUrl(t.url) ? '' : t.url; $urlbar.select(); });
 $urlbar.addEventListener('blur', () => { urlbarFocused = false; const t = getActiveTab(); if (t) $urlbar.value = formatUrl(t.url); });
 $urlbar.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
@@ -425,7 +512,6 @@ $urlbar.addEventListener('keydown', (e) => {
       if (t) {
         t.url = u;
         t.loading = true;
-        console.log('[nav] loadURL:', u);
         try {
           t.webview.loadURL(u);
         } catch (err) {
@@ -441,7 +527,7 @@ $urlbar.addEventListener('keydown', (e) => {
 });
 document.getElementById('urlbar-wrap').addEventListener('click', () => $urlbar.focus());
 
-// ── Nav buttons (direct webview calls) ────────────────────────
+// ── Nav buttons ───────────────────────────────────────────────
 $btnBack.addEventListener('click', () => { const wv = getActiveWebView(); if (wv) wv.goBack(); });
 $btnForward.addEventListener('click', () => { const wv = getActiveWebView(); if (wv) wv.goForward(); });
 $btnReload.addEventListener('click', () => {
@@ -455,7 +541,10 @@ $newTabBtn.id = 'btn-new-tab';
 $newTabBtn.className = 'tab-new-btn';
 $newTabBtn.title = 'Новая вкладка (Ctrl+T)';
 $newTabBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
-$newTabBtn.addEventListener('click', () => createTab());
+$newTabBtn.addEventListener('click', () => {
+  console.log('[+] new tab clicked');
+  createTab(NEWTAB_URL);
+});
 $tabsList.appendChild($newTabBtn);
 
 // ── Window controls ───────────────────────────────────────────
@@ -471,7 +560,7 @@ $btnIncognito.addEventListener('click', () => api.newIncognitoWindow());
 
 $btnBookmark.addEventListener('click', async () => {
   const t = getActiveTab();
-  if (!t || !t.url || t.url.includes('newtab.html')) return;
+  if (!t || !t.url || isNewtabUrl(t.url)) return;
   const r = await api.toggleBookmark(t.url, t.title, t.favicon);
   showToast(r.action === 'added' ? 'Закладка добавлена' : 'Закладка удалена');
 });
@@ -562,7 +651,7 @@ function closePanel(p) { p.classList.add('hidden'); }
 document.querySelectorAll('.panel-backdrop').forEach(b => b.addEventListener('click', () => b.closest('.panel').classList.add('hidden')));
 
 // ══════════════════════════════════════════════════════════════
-//  CONTEXT MENUS (HTML overlays — naturally on top of webview!)
+//  CONTEXT MENUS
 // ══════════════════════════════════════════════════════════════
 
 function hideAllMenus() {
@@ -711,7 +800,7 @@ function showToast(msg) {
 document.addEventListener('keydown', (e) => {
   const ctrl = e.ctrlKey || e.metaKey;
   const shift = e.shiftKey;
-  if (ctrl && e.key === 't') { e.preventDefault(); createTab(); }
+  if (ctrl && e.key === 't') { e.preventDefault(); createTab(NEWTAB_URL); }
   if (ctrl && e.key === 'w') { e.preventDefault(); if (activeTabId) closeTab(activeTabId); }
   if (ctrl && (e.key === 'l' || e.key === 'L')) { e.preventDefault(); $urlbar.focus(); }
   if ((ctrl && e.key === 'r') || e.key === 'F5') {

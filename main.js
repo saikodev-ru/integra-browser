@@ -1,7 +1,8 @@
-const { app, BrowserWindow, ipcMain, session, shell, Menu, nativeTheme, dialog, protocol } = require('electron');
+const { app, BrowserWindow, ipcMain, session, shell, Menu, nativeTheme, dialog } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs');
+const http = require('http');
 
 // ── No telemetry ──────────────────────────────────────────────
 app.setPath('crashDumps', path.join(app.getPath('temp'), 'integra-noop'));
@@ -12,18 +13,57 @@ app.commandLine.appendSwitch('no-report-upload');
 app.commandLine.appendSwitch('disable-component-update');
 app.commandLine.appendSwitch('disable-background-networking');
 
-// ── Register custom protocol for local pages (avoids file:// restrictions in webviews with partition) ──
-protocol.registerSchemesAsPrivileged([
-  {
-    scheme: 'integra',
-    privileges: {
-      secure: true,
-      standard: true,
-      supportFetchAPI: true,
-      corsEnabled: true,
-    },
-  },
-]);
+// ── Local HTTP Server (for serving local pages to webviews with partition) ──
+let localServerPort = 0;
+const localServer = http.createServer((req, res) => {
+  try {
+    // Decode and sanitize path
+    const urlPath = decodeURIComponent(req.url.split('?')[0]).replace(/^\//, '');
+    // Security: prevent directory traversal
+    const safePath = path.normalize(urlPath).replace(/^(\.\.[\/\\])+/, '');
+    const filePath = path.join(__dirname, 'src', safePath);
+
+    if (!filePath.startsWith(path.join(__dirname, 'src'))) {
+      res.writeHead(403); res.end('Forbidden'); return;
+    }
+    if (!fs.existsSync(filePath)) {
+      res.writeHead(404); res.end('Not Found'); return;
+    }
+    const stat = fs.statSync(filePath);
+    if (stat.isDirectory()) {
+      res.writeHead(403); res.end('Forbidden'); return;
+    }
+
+    const ext = path.extname(filePath).toLowerCase();
+    const mimeTypes = {
+      '.html': 'text/html; charset=utf-8', '.htm': 'text/html; charset=utf-8',
+      '.css': 'text/css; charset=utf-8', '.js': 'application/javascript; charset=utf-8',
+      '.json': 'application/json; charset=utf-8',
+      '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+      '.gif': 'image/gif', '.svg': 'image/svg+xml', '.ico': 'image/x-icon',
+      '.woff': 'font/woff', '.woff2': 'font/woff2', '.ttf': 'font/ttf',
+    };
+    res.writeHead(200, { 'Content-Type': mimeTypes[ext] || 'application/octet-stream' });
+    fs.createReadStream(filePath).pipe(res);
+  } catch (e) {
+    console.error('[local-server] error:', e);
+    res.writeHead(500); res.end('Internal Error');
+  }
+});
+
+function startLocalServer() {
+  return new Promise((resolve) => {
+    localServer.listen(0, '127.0.0.1', () => {
+      localServerPort = localServer.address().port;
+      console.log('[local-server] listening on 127.0.0.1:' + localServerPort);
+      resolve();
+    });
+  });
+}
+
+function getLocalUrl(filename) {
+  return `http://127.0.0.1:${localServerPort}/${filename}`;
+}
 
 // ── Persistent Data Paths ────────────────────────────────────
 const userDataPath = app.getPath('userData');
@@ -32,6 +72,7 @@ if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 
 const settingsFile = path.join(dataDir, 'settings.json');
 const bookmarksFile = path.join(dataDir, 'bookmarks.json');
+const tabsFile = path.join(dataDir, 'tabs.json');
 
 // ── Default Settings ─────────────────────────────────────────
 const DEFAULT_SETTINGS = {
@@ -43,11 +84,6 @@ const DEFAULT_SETTINGS = {
   clearOnExit: false,
   fontSize: 14,
   transparentChrome: false,
-  languages: [
-    { name: 'Яндекс', value: 'yandex', url: 'https://yandex.ru/search/?text=' },
-    { name: 'Google',  value: 'google',  url: 'https://www.google.com/search?q=' },
-    { name: 'DuckDuckGo', value: 'duckduckgo', url: 'https://duckduckgo.com/?q=' },
-  ],
 };
 
 // ── Settings CRUD ────────────────────────────────────────────
@@ -79,6 +115,22 @@ function removeBookmark(id) { const i = bookmarks.findIndex(b => b.id === id); i
 function isBookmarked(url) { return bookmarks.some(b => b.url === url); }
 function getBookmarkForUrl(url) { return bookmarks.find(b => b.url === url) || null; }
 function broadcastBookmarks() { if (mainWindow) mainWindow.webContents.send('bookmarks-update', bookmarks); }
+
+// ── Tabs Session (save/restore) ──────────────────────────────
+function loadTabSession() {
+  try {
+    if (fs.existsSync(tabsFile)) {
+      const data = JSON.parse(fs.readFileSync(tabsFile, 'utf-8'));
+      if (Array.isArray(data) && data.length > 0) return data;
+    }
+  } catch (e) { console.error('[tabs] load error:', e); }
+  return null;
+}
+function saveTabSession(tabData) {
+  try {
+    fs.writeFileSync(tabsFile, JSON.stringify(tabData, null, 2), 'utf-8');
+  } catch (e) { console.error('[tabs] save error:', e); }
+}
 
 // ── Theme ────────────────────────────────────────────────────
 nativeTheme.themeSource = currentSettings.theme === 'system' ? 'system' : 'dark';
@@ -138,17 +190,24 @@ function createWindow(incognito = false) {
   });
   win.on('enter-full-screen', () => win.webContents.send('fullscreen-change', true));
   win.on('leave-full-screen', () => win.webContents.send('fullscreen-change', false));
-  win.on('closed', () => {
-    if (!incognito) { stopBypass(); mainWindow = null; }
-    else { incognitoWindows = incognitoWindows.filter(w => w !== win); }
-  });
+
+  if (!incognito) {
+    // Save tabs before closing
+    win.on('close', () => {
+      try {
+        win.webContents.send('save-tabs');
+        // sync save-tabs is not possible, but we have an IPC from renderer
+      } catch (e) {}
+    });
+    win.on('closed', () => { stopBypass(); mainWindow = null; });
+  } else {
+    win.on('closed', () => { incognitoWindows = incognitoWindows.filter(w => w !== win); });
+  }
+
   Menu.setApplicationMenu(null);
 
   if (incognito) {
     incognitoWindows.push(win);
-    win.on('closed', () => {
-      incognitoWindows = incognitoWindows.filter(w => w !== win);
-    });
   } else {
     mainWindow = win;
   }
@@ -168,9 +227,9 @@ ipcMain.on('window-close', (e) => {
 });
 ipcMain.on('window-incognito', () => createWindow(true));
 
-// ── IPC: Paths ───────────────────────────────────────────────
+// ── IPC: Paths & URLs ────────────────────────────────────────
 ipcMain.handle('get-webview-preload-path', () => path.join(__dirname, 'webview-preload.js'));
-ipcMain.handle('get-newtab-url', () => 'integra://app/newtab.html');
+ipcMain.handle('get-newtab-url', () => getLocalUrl('newtab.html'));
 
 // ── IPC: Bypass ──────────────────────────────────────────────
 ipcMain.on('bypass-toggle', (e) => {
@@ -228,78 +287,40 @@ ipcMain.handle('settings-import', (e) => {
   } catch (ex) { return { success: false, error: ex.message }; }
 });
 
+// ── IPC: Tabs Session ────────────────────────────────────────
+ipcMain.handle('get-saved-tabs', () => loadTabSession());
+ipcMain.on('save-tabs-session', (_, tabData) => saveTabSession(tabData));
+
 // ── IPC: State ───────────────────────────────────────────────
 ipcMain.handle('get-state', () => ({
   bookmarks,
   settings: currentSettings,
   bypassEnabled,
   bypassAvailable: !!getBypassBinaryPath(),
+  localPort: localServerPort,
 }));
 
 ipcMain.on('open-external', (_, url) => shell.openExternal(url));
 
 // ── App lifecycle ─────────────────────────────────────────────
-app.whenReady().then(() => {
-  // ── Serve local files via integra:// protocol ───────────────
-  // URL format: integra://app/<filename>  →  src/<filename>
-  protocol.handle('integra', (request) => {
-    try {
-      // With standard:true, URL is integra://app/newtab.html
-      // new URL gives pathname = '/newtab.html', host = 'app'
-      const parsed = new URL(request.url);
-      const relativePath = parsed.pathname.replace(/^\//, '');
-      const filePath = path.join(__dirname, 'src', relativePath);
-      console.log('[protocol] integra:// request:', request.url, '→', filePath);
-
-      if (!fs.existsSync(filePath)) {
-        console.error('[protocol] file not found:', filePath);
-        return new Response('Not Found', { status: 404, headers: { 'Content-Type': 'text/plain' } });
-      }
-
-      const stat = fs.statSync(filePath);
-      if (stat.isDirectory()) {
-        return new Response('Forbidden', { status: 403, headers: { 'Content-Type': 'text/plain' } });
-      }
-
-      const ext = path.extname(filePath).toLowerCase();
-      const mimeTypes = {
-        '.html': 'text/html; charset=utf-8',
-        '.htm':  'text/html; charset=utf-8',
-        '.css':  'text/css; charset=utf-8',
-        '.js':   'application/javascript; charset=utf-8',
-        '.json': 'application/json; charset=utf-8',
-        '.png':  'image/png',
-        '.jpg':  'image/jpeg',
-        '.jpeg': 'image/jpeg',
-        '.gif':  'image/gif',
-        '.svg':  'image/svg+xml',
-        '.ico':  'image/x-icon',
-        '.woff': 'font/woff',
-        '.woff2':'font/woff2',
-        '.ttf':  'font/ttf',
-        '.eot':  'application/vnd.ms-fontobject',
-      };
-      const contentType = mimeTypes[ext] || 'application/octet-stream';
-      const buffer = fs.readFileSync(filePath);
-      return new Response(buffer, {
-        headers: {
-          'Content-Type': contentType,
-          'Content-Length': buffer.length,
-        },
-      });
-    } catch (e) {
-      console.error('[protocol] handler error:', e);
-      return new Response('Internal Error', { status: 500, headers: { 'Content-Type': 'text/plain' } });
-    }
-  });
+app.whenReady().then(async () => {
+  await startLocalServer();
 
   session.defaultSession.webRequest.onBeforeRequest(
     { urls: ['*://*.google-analytics.com/*', '*://*.doubleclick.net/*', '*://ssl.gstatic.com/safebrowsing/*', '*://*.googleapis.com/safebrowsing/*'] },
     (_, cb) => cb({ cancel: true })
   );
+
   createWindow(false);
   if (currentSettings.bypassOnStart) startBypass();
 });
 
-app.on('window-all-closed', () => { stopBypass(); app.quit(); });
-app.on('before-quit', () => stopBypass());
+app.on('window-all-closed', () => {
+  localServer.close();
+  stopBypass();
+  app.quit();
+});
+app.on('before-quit', () => {
+  localServer.close();
+  stopBypass();
+});
