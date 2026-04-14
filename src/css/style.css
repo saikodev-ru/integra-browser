@@ -20,12 +20,17 @@
 }
 
 /* ── Flex Layout ──────────────────────────────────────────── */
-html, body {
+html {
+  height: 100%; overflow: hidden;
+}
+
+body {
   height: 100%; overflow: hidden;
   background: var(--chrome); color: var(--t1);
   font-family: var(--font); font-size: 14px; font-weight: 500;
   -webkit-font-smoothing: antialiased; user-select: none;
   display: flex; flex-direction: column;
+  min-height: 0;
 }
 
 /* ── Transparent mode: body must be transparent for acrylic to show ── */
@@ -336,7 +341,8 @@ body.transparent-mode #bookmarks-bar { background: rgba(20, 20, 20, 0.70); }
 
 /* ── Webviews Container (flex: 1 fills remaining space) ──── */
 #webviews-container {
-  flex: 1;
+  flex: 1 1 0%;
+  min-height: 0;
   position: relative;
   overflow: hidden;
 }
