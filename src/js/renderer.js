@@ -94,10 +94,15 @@ function renderTabs() {
 
   tabs.forEach((tab, idx) => {
     let el = existing.get(tab.id);
-    if (!el) { el = buildTabEl(tab); $tabsList.appendChild(el); }
+    if (!el) { el = buildTabEl(tab); }
     else updateTabEl(el, tab);
-    // Insert the + button will always be last
-    if ($tabsList.children[idx] !== el) $tabsList.insertBefore(el, $tabsList.children[idx]);
+    // Insert before the + button (always last child)
+    const beforeEl = $tabsList.children[idx];
+    if (beforeEl && beforeEl !== $newTabBtn) {
+      if ($tabsList.children[idx] !== el) $tabsList.insertBefore(el, $tabsList.children[idx]);
+    } else {
+      $tabsList.insertBefore(el, $newTabBtn);
+    }
   });
 }
 
@@ -253,7 +258,14 @@ document.getElementById('urlbar-wrap').addEventListener('click', () => $urlbar.f
 $btnBack.addEventListener('click', () => api.back());
 $btnForward.addEventListener('click', () => api.forward());
 $btnReload.addEventListener('click', () => isLoading ? api.stop() : api.reload());
-document.getElementById('btn-new-tab').addEventListener('click', () => api.newTab());
+// ── New Tab button (dynamic, always last in tabs-list) ──
+const $newTabBtn = document.createElement('button');
+$newTabBtn.id = 'btn-new-tab';
+$newTabBtn.className = 'tab-new-btn';
+$newTabBtn.title = 'Новая вкладка (Ctrl+T)';
+$newTabBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+$newTabBtn.addEventListener('click', () => api.newTab());
+$tabsList.appendChild($newTabBtn);
 
 // ── Window controls ───────────────────────────────────────────
 document.getElementById('btn-min').addEventListener('click', () => api.minimize());
@@ -357,9 +369,19 @@ document.querySelectorAll('.panel-backdrop').forEach(b => b.addEventListener('cl
 //  CONTEXT MENUS
 // ══════════════════════════════════════════════════════════════
 
-function hideAllMenus() { $tabCtxMenu.classList.add('hidden'); $pageCtxMenu.classList.add('hidden'); }
+function hideAllMenus() { $tabCtxMenu.classList.add('hidden'); $pageCtxMenu.classList.add('hidden'); $bmCtxMenu.classList.add('hidden'); if ($groupColorMenu) $groupColorMenu.style.display = ''; }
+document.addEventListener('mousedown', (e) => {
+  // Close context menus on any click outside them
+  if (!$tabCtxMenu.contains(e.target)) $tabCtxMenu.classList.add('hidden');
+  if (!$pageCtxMenu.contains(e.target)) $pageCtxMenu.classList.add('hidden');
+  if (!$bmCtxMenu.contains(e.target)) $bmCtxMenu.classList.add('hidden');
+});
 document.addEventListener('click', hideAllMenus);
-document.addEventListener('contextmenu', (e) => e.preventDefault());
+// Only prevent default contextmenu on the chrome area (not on web content)
+document.addEventListener('contextmenu', (e) => {
+  // Allow default on webview area; prevent on chrome UI
+  e.preventDefault();
+});
 
 // ── Tab Context Menu ────────────────────────────────────────
 function showTabCtxMenu(tabId, x, y) {
@@ -367,9 +389,16 @@ function showTabCtxMenu(tabId, x, y) {
   const tab = tabs.find(t => t.id === tabId);
   if (!tab) return;
 
-  // Update text based on state
-  $tabCtxMenu.querySelector('[data-action="pin"]').textContent = tab.pinned ? '📌 Открепить вкладку' : '📌 Закрепить вкладку';
-  $tabCtxMenu.querySelector('[data-action="mute"]').textContent = tab.muted ? '🔊 Включить звук' : '🔇 Отключить звук';
+  // Update pin icon/text
+  const pinBtn = $tabCtxMenu.querySelector('[data-action="pin"]');
+  pinBtn.querySelector('.pin-cross').style.display = tab.pinned ? '' : 'none';
+  pinBtn.querySelector('span').textContent = tab.pinned ? 'Открепить вкладку' : 'Закрепить вкладку';
+
+  // Update mute icons/text
+  const muteBtn = $tabCtxMenu.querySelector('[data-action="mute"]');
+  muteBtn.querySelector('.ico-mute-off').style.display = tab.muted ? 'none' : '';
+  muteBtn.querySelector('.ico-mute-on').style.display = tab.muted ? '' : 'none';
+  muteBtn.querySelector('span').textContent = tab.muted ? 'Включить звук' : 'Отключить звук';
 
   $tabCtxMenu.style.left = x + 'px';
   $tabCtxMenu.style.top = y + 'px';
@@ -392,7 +421,7 @@ $tabCtxMenu.addEventListener('click', (e) => {
 
   if (action === 'pin') api.pinTab(ctxTabId);
   else if (action === 'mute') api.muteTab(ctxTabId);
-  else if (action === 'group') { /* submenu toggle - handled by CSS */ }
+  else if (action === 'group') { /* submenu toggle - handled by CSS */ return; }
   else if (color !== undefined) api.setTabGroup(ctxTabId, color || null);
   else if (action === 'close-others') api.closeOtherTabs(ctxTabId);
   else if (action === 'close-right') api.closeTabsToRight(ctxTabId);
@@ -403,7 +432,15 @@ $tabCtxMenu.addEventListener('click', (e) => {
 
 // ── Page Context Menu ───────────────────────────────────────
 function showPageCtxMenu(x, y, params) {
-  $pageCtxMenu.querySelector('[data-action="bookmark-toggle"]').textContent = isBookmarked ? '✦ Убрать из закладок' : '★ Добавить в закладки';
+  const bmBtn = $pageCtxMenu.querySelector('[data-action="bookmark-toggle"]');
+  const bmIcon = bmBtn.querySelector('.ico-page-bm');
+  if (isBookmarked) {
+    bmBtn.querySelector('span').textContent = 'Убрать из закладок';
+    bmIcon.querySelector('path').setAttribute('fill', 'currentColor');
+  } else {
+    bmBtn.querySelector('span').textContent = 'Добавить в закладки';
+    bmIcon.querySelector('path').setAttribute('fill', 'none');
+  }
 
   $pageCtxMenu.style.left = x + 'px';
   $pageCtxMenu.style.top = y + 'px';
@@ -421,6 +458,7 @@ function showPageCtxMenu(x, y, params) {
 $pageCtxMenu.addEventListener('click', (e) => {
   const btn = e.target.closest('.ctx-item');
   if (!btn) return;
+  e.stopPropagation();
   const action = btn.dataset.action;
   if (action === 'back') api.back();
   else if (action === 'forward') api.forward();
@@ -468,3 +506,47 @@ document.addEventListener('keydown', (e) => {
 //  HELPERS
 // ══════════════════════════════════════════════════════════════
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+// ══════════════════════════════════════════════════════════════
+//  BOOKMARKS BAR CONTEXT MENU
+// ══════════════════════════════════════════════════════════════
+
+const $bmCtxMenu = document.getElementById('bm-ctx-menu');
+let ctxBmId = null;
+let ctxBmUrl = null;
+
+$bookmarksBar.addEventListener('contextmenu', (e) => {
+  e.preventDefault(); e.stopPropagation();
+  const bmItem = e.target.closest('.bm-item');
+  if (!bmItem) return;
+  const idx = [...$bookmarksList.children].indexOf(bmItem);
+  if (idx === -1) return;
+  const bm = bookmarks[idx];
+  if (!bm) return;
+  ctxBmId = bm.id;
+  ctxBmUrl = bm.url;
+  showBmCtxMenu(bm, e.clientX, e.clientY);
+});
+
+function showBmCtxMenu(bm, x, y) {
+  $bmCtxMenu.style.left = x + 'px';
+  $bmCtxMenu.style.top = y + 'px';
+  $bmCtxMenu.classList.remove('hidden');
+  requestAnimationFrame(() => {
+    const rect = $bmCtxMenu.getBoundingClientRect();
+    if (rect.right > window.innerWidth) $bmCtxMenu.style.left = (window.innerWidth - rect.width - 4) + 'px';
+    if (rect.bottom > window.innerHeight) $bmCtxMenu.style.top = (window.innerHeight - rect.height - 4) + 'px';
+  });
+}
+
+$bmCtxMenu.addEventListener('click', (e) => {
+  const btn = e.target.closest('.ctx-item');
+  if (!btn) return;
+  e.stopPropagation();
+  const action = btn.dataset.action;
+  if (action === 'bm-open') { if (ctxBmUrl) api.newTab(ctxBmUrl); }
+  else if (action === 'bm-open-new') { if (ctxBmUrl) api.newTab(ctxBmUrl); }
+  else if (action === 'bm-copy-url') { if (ctxBmUrl) navigator.clipboard.writeText(ctxBmUrl).then(() => showToast('URL скопирован')); }
+  else if (action === 'bm-delete') { if (ctxBmId) api.removeBookmark(ctxBmId); showToast('Закладка удалена'); }
+  hideAllMenus();
+});

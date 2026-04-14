@@ -145,7 +145,9 @@ html, body { height: 100%; overflow: hidden; background: var(--chrome); color: v
 @keyframes ctxIn { from { opacity: 0; transform: scale(.96) translateY(-4px); } to { opacity: 1; transform: none; } }
 .ctx-menu.hidden { display: none; }
 
-.ctx-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 12px; background: transparent; border: none; border-radius: 8px; color: var(--t1); font-family: var(--font); font-size: 13px; font-weight: 500; text-align: left; cursor: pointer; transition: background .1s; }
+.ctx-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 7px 12px; background: transparent; border: none; border-radius: 8px; color: var(--t1); font-family: var(--font); font-size: 13px; font-weight: 500; text-align: left; cursor: pointer; transition: background .1s; white-space: nowrap; }
+.ctx-item svg { flex-shrink: 0; opacity: .7; }
+.ctx-item:hover svg { opacity: 1; }
 .ctx-item:hover { background: var(--s2); }
 .ctx-sep { height: 1px; background: var(--b); margin: 4px 0; }
 
