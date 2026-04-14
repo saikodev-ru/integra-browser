@@ -1,32 +1,18 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('integra', {
-  // Navigation
-  go: (url) => ipcRenderer.send('nav-go', { url }),
-  back: () => ipcRenderer.send('nav-back'),
-  forward: () => ipcRenderer.send('nav-forward'),
-  reload: () => ipcRenderer.send('nav-reload'),
-  stop: () => ipcRenderer.send('nav-stop'),
-
-  // Tabs
-  newTab: (url) => ipcRenderer.send('tab-new', { url }),
-  closeTab: (id) => ipcRenderer.send('tab-close', { id }),
-  activateTab: (id) => ipcRenderer.send('tab-activate', { id }),
-  reorderTab: (id, newIndex) => ipcRenderer.send('tab-reorder', { id, newIndex }),
-  pinTab: (id) => ipcRenderer.send('tab-pin', { id }),
-  muteTab: (id) => ipcRenderer.send('tab-mute', { id }),
-  setTabGroup: (id, group) => ipcRenderer.send('tab-group', { id, group }),
-  closeOtherTabs: (id) => ipcRenderer.send('tab-close-others', { id }),
-  closeTabsToRight: (id) => ipcRenderer.send('tab-close-right', { id }),
-
   // Window controls
   minimize: () => ipcRenderer.send('window-minimize'),
   maximize: () => ipcRenderer.send('window-maximize'),
   close: () => ipcRenderer.send('window-close'),
-  newIncognitoWindow: (url) => ipcRenderer.send('window-incognito', { url }),
+  newIncognitoWindow: () => ipcRenderer.send('window-incognito'),
 
   // Bypass
   toggleBypass: () => ipcRenderer.send('bypass-toggle'),
+
+  // Paths
+  getWebViewPreloadPath: () => ipcRenderer.invoke('get-webview-preload-path'),
+  getNewTabUrl: () => ipcRenderer.invoke('get-newtab-url'),
 
   // Bookmarks
   getBookmarks: () => ipcRenderer.invoke('bookmarks-get'),
@@ -34,7 +20,6 @@ contextBridge.exposeInMainWorld('integra', {
   removeBookmark: (id) => ipcRenderer.invoke('bookmark-remove', { id }),
   toggleBookmark: (url, title, favicon) => ipcRenderer.invoke('bookmark-toggle', { url, title, favicon }),
   checkBookmark: (url) => ipcRenderer.invoke('bookmark-check', { url }),
-  updateBookmark: (id, updates) => ipcRenderer.invoke('bookmark-update', { id, updates }),
 
   // Settings
   getSettings: () => ipcRenderer.invoke('settings-get'),
@@ -43,18 +28,13 @@ contextBridge.exposeInMainWorld('integra', {
   exportSettings: () => ipcRenderer.invoke('settings-export'),
   importSettings: () => ipcRenderer.invoke('settings-import'),
 
-  // View control (hide/show BrowserView for overlays)
-  hideActiveView: () => ipcRenderer.send('view-hide'),
-  showActiveView: () => ipcRenderer.send('view-show'),
-
   // State
   getState: () => ipcRenderer.invoke('get-state'),
   openExternal: (url) => ipcRenderer.send('open-external', url),
 
   // Listeners
   on: (channel, fn) => {
-    const allowed = ['tabs-update', 'nav-state', 'fullscreen-change', 'context-menu', 'bypass-no-binary', 'bookmarks-update', 'settings-changed', 'bookmarks-bar-visibility'];
+    const allowed = ['fullscreen-change', 'bypass-no-binary', 'bookmarks-update', 'settings-changed', 'incognito-mode'];
     if (allowed.includes(channel)) ipcRenderer.on(channel, (_, ...args) => fn(...args));
   },
-  off: (channel, fn) => ipcRenderer.removeListener(channel, fn),
 });

@@ -240,6 +240,28 @@ body.transparent-mode #tabbar { background: rgba(20, 20, 20, 0.75); backdrop-fil
 body.transparent-mode #navbar { background: rgba(20, 20, 20, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
 body.transparent-mode #bookmarks-bar { background: rgba(20, 20, 20, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
 
+/* ── Webviews Container ───────────────────────────────────── */
+#webviews-container {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: calc(var(--tabbar-h) + var(--navbar-h));
+  z-index: 1;
+}
+body.show-bookmarks #webviews-container {
+  top: calc(var(--tabbar-h) + var(--navbar-h) + var(--bookmarksbar-h));
+}
+.tab-webview {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #111111;
+}
+
 /* ── Loading bar ──────────────────────────────────────────── */
 #loading-bar { position: fixed; top: calc(var(--tabbar-h) + var(--navbar-h)); left: 0; height: 2px; background: var(--accent-grad); border-radius: 0 2px 2px 0; z-index: 200; width: 0; opacity: 0; transition: width .3s var(--ease), opacity .2s; }
 #loading-bar.active { opacity: 1; }

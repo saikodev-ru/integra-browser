@@ -1,4 +1,4 @@
-/* ── Integra Browser · Renderer ──────────────────────────────── */
+/* ── Integra Browser · Renderer (webview-based) ──────────────── */
 'use strict';
 
 const api = window.integra;
@@ -35,6 +35,9 @@ const $bookmarksEmpty = document.getElementById('bookmarks-empty');
 const $tabCtxMenu     = document.getElementById('tab-ctx-menu');
 const $pageCtxMenu    = document.getElementById('page-ctx-menu');
 const $groupColorMenu = document.getElementById('group-color-menu');
+const $bmCtxMenu      = document.getElementById('bm-ctx-menu');
+
+const $webviewsContainer = document.getElementById('webviews-container');
 
 const $loadingBar = document.createElement('div');
 $loadingBar.id = 'loading-bar';
@@ -43,6 +46,7 @@ document.body.appendChild($loadingBar);
 // ── State ─────────────────────────────────────────────────────
 let tabs = [];
 let activeTabId = null;
+let nextTabId = 1;
 let isLoading = false;
 let loadBarTimer = null;
 let urlbarFocused = false;
@@ -50,36 +54,202 @@ let bookmarks = [];
 let settings = {};
 let isBookmarked = false;
 let ctxTabId = null;
+let ctxBmId = null;
+let ctxBmUrl = null;
+let isIncognito = false;
+let NEWTAB_URL = '';
+let webviewPreloadPath = '';
 
 // ── Init ──────────────────────────────────────────────────────
 (async () => {
+  webviewPreloadPath = await api.getWebViewPreloadPath();
+  NEWTAB_URL = await api.getNewTabUrl();
   const state = await api.getState();
-  tabs = state.tabs;
-  activeTabId = state.activeId;
   bookmarks = state.bookmarks || [];
   settings = state.settings || {};
-  renderTabs();
-  applyNavState(state.navState);
-  applyBypassAvailability(state.bypassAvailable);
   renderBookmarksBar();
   applySettings();
-  if (state.bookmarksBarVisible) {
-    $bookmarksBar.classList.remove('hidden');
-  }
+  createTab(); // Create initial tab
 })();
 
-// ── IPC listeners ─────────────────────────────────────────────
-api.on('tabs-update', ({ tabs: newTabs, activeId }) => { tabs = newTabs; activeTabId = activeId; renderTabs(); });
-api.on('nav-state', (state) => applyNavState(state));
+// ── IPC listeners (main process events) ───────────────────────
 api.on('fullscreen-change', (fs) => document.body.classList.toggle('fullscreen', fs));
 api.on('bypass-no-binary', () => showToast('Бинарник не найден. Положи winws.exe или goodbyedpi.exe в папку bypass/'));
-api.on('context-menu', ({ x, y, params }) => showPageCtxMenu(x, y, params));
 api.on('bookmarks-update', (bm) => { bookmarks = bm || []; renderBookmarksBar(); renderBookmarksPanel(); updateBookmarkStar(); });
 api.on('settings-changed', (s) => { settings = s || {}; applySettings(); });
-api.on('bookmarks-bar-visibility', (visible) => {
-  if (visible) $bookmarksBar.classList.remove('hidden');
-  else $bookmarksBar.classList.add('hidden');
-});
+api.on('incognito-mode', (v) => { isIncognito = v; });
+
+// ══════════════════════════════════════════════════════════════
+//  TAB MANAGEMENT (webview-based)
+// ══════════════════════════════════════════════════════════════
+
+function getTab(id) { return tabs.find(t => t.id === id); }
+function getActiveTab() { return getTab(activeTabId); }
+function getActiveWebView() { const t = getActiveTab(); return t ? t.webview : null; }
+
+function resolveTabUrl(url) {
+  if (!url || url === 'about:blank' || url === 'newtab') return NEWTAB_URL;
+  return url;
+}
+
+function createTab(url = NEWTAB_URL, opts = {}) {
+  const id = nextTabId++;
+  const partition = isIncognito ? ('incognito-' + Date.now()) : 'persist:main';
+
+  const webview = document.createElement('webview');
+  webview.setAttribute('preload', webviewPreloadPath);
+  webview.setAttribute('partition', partition);
+  webview.setAttribute('allowpopups', '');
+  webview.className = 'tab-webview';
+  webview.style.display = 'none';
+
+  // ── Webview events ──
+  webview.addEventListener('did-start-loading', () => {
+    const tab = getTab(id);
+    if (tab) { tab.loading = true; renderTabs(); if (id === activeTabId) updateNavFromTab(tab); }
+  });
+  webview.addEventListener('did-stop-loading', () => {
+    const tab = getTab(id);
+    if (tab) { tab.loading = false; renderTabs(); if (id === activeTabId) updateNavFromTab(tab); }
+  });
+  webview.addEventListener('page-title-updated', (e) => {
+    const tab = getTab(id);
+    if (tab) {
+      tab.title = e.title || 'Новая вкладка';
+      renderTabs();
+      if (id === activeTabId) document.title = `${tab.title} — Integra`;
+    }
+  });
+  webview.addEventListener('page-favicon-updated', (e) => {
+    const tab = getTab(id);
+    if (tab) { tab.favicon = (e.favicons && e.favicons[0]) || null; renderTabs(); }
+  });
+  webview.addEventListener('did-navigate', (e) => {
+    const tab = getTab(id);
+    if (tab) { tab.url = e.url; if (id === activeTabId) updateNavFromTab(tab); }
+  });
+  webview.addEventListener('did-navigate-in-page', (e) => {
+    const tab = getTab(id);
+    if (tab) { tab.url = e.url; if (id === activeTabId) updateNavFromTab(tab); }
+  });
+  webview.addEventListener('context-menu', (e) => {
+    // Only show custom menu for the active tab
+    if (id === activeTabId) {
+      const rect = webview.getBoundingClientRect();
+      showPageCtxMenu(rect.left + e.params.x, rect.top + e.params.y, e.params);
+    }
+  });
+  webview.addEventListener('audio-state-changed', () => {
+    const tab = getTab(id);
+    if (tab) { tab.audible = webview.isCurrentlyAudible(); renderTabs(); }
+  });
+
+  // Handle new windows / popups → open in new tab
+  webview.addEventListener('new-window', (e) => {
+    e.preventDefault();
+    createTab(e.url);
+  });
+
+  // Add to DOM
+  $webviewsContainer.appendChild(webview);
+
+  const tab = {
+    id, webview, url: resolveTabUrl(url), title: 'Новая вкладка',
+    favicon: null, loading: true,
+    pinned: opts.pinned || false,
+    muted: opts.muted || false,
+    audible: false,
+    group: opts.group || null,
+  };
+  tabs.push(tab);
+
+  // If pinned, insert at beginning
+  if (tab.pinned) {
+    const idx = tabs.findIndex(t => t.id === id);
+    if (idx > 0) {
+      tabs.splice(idx, 1);
+      const pinnedCount = tabs.filter(t => t.pinned).length;
+      tabs.splice(pinnedCount, 0, tab);
+    }
+  }
+
+  setActiveTab(id);
+  webview.src = resolveTabUrl(tab.url);
+  return id;
+}
+
+function setActiveTab(id) {
+  activeTabId = id;
+  // Hide all webviews, show active
+  tabs.forEach(t => { t.webview.style.display = 'none'; });
+  const tab = getTab(id);
+  if (tab) {
+    tab.webview.style.display = 'block';
+    updateNavFromTab(tab);
+    document.title = `${tab.title} — Integra`;
+    updateBookmarkStarState(isBookmarkedUrl(tab.url));
+  }
+  renderTabs();
+}
+
+function closeTab(id) {
+  const idx = tabs.findIndex(t => t.id === id);
+  if (idx === -1) return;
+  const tab = tabs[idx];
+  tab.webview.remove();
+  tabs.splice(idx, 1);
+  if (tabs.length === 0) { createTab(NEWTAB_URL); return; }
+  if (activeTabId === id) setActiveTab(tabs[Math.min(idx, tabs.length - 1)].id);
+  else renderTabs();
+}
+
+function pinTab(id) {
+  const tab = getTab(id); if (!tab) return;
+  tab.pinned = !tab.pinned;
+  if (tab.pinned) {
+    const idx = tabs.findIndex(t => t.id === id);
+    tabs.splice(idx, 1);
+    const pinnedCount = tabs.filter(t => t.pinned).length;
+    tabs.splice(tab.pinned ? pinnedCount - 1 : pinnedCount, 0, tab);
+  }
+  renderTabs();
+}
+
+function muteTab(id) {
+  const tab = getTab(id); if (!tab) return;
+  tab.muted = !tab.muted;
+  tab.webview.setAudioMuted(tab.muted);
+  renderTabs();
+}
+
+function setTabGroup(id, group) {
+  const tab = getTab(id); if (!tab) return;
+  tab.group = group;
+  renderTabs();
+}
+
+function closeOtherTabs(id) {
+  const toClose = tabs.filter(t => t.id !== id).map(t => t.id);
+  toClose.forEach(tid => closeTab(tid));
+}
+
+function closeTabsToRight(id) {
+  const idx = tabs.findIndex(t => t.id === id);
+  if (idx === -1) return;
+  tabs.slice(idx + 1).map(t => t.id).forEach(tid => closeTab(tid));
+}
+
+function reorderTab(tabId, newIndex) {
+  const old = tabs.findIndex(t => t.id === tabId);
+  if (old === -1 || newIndex < 0 || newIndex >= tabs.length || old === newIndex) return;
+  const [moved] = tabs.splice(old, 1);
+  tabs.splice(newIndex, 0, moved);
+  renderTabs();
+}
+
+function isBookmarkedUrl(url) {
+  return url && !url.includes('newtab.html') && bookmarks.some(b => b.url === url);
+}
 
 // ══════════════════════════════════════════════════════════════
 //  TAB RENDERING & DRAG-N-DROP
@@ -88,15 +258,12 @@ api.on('bookmarks-bar-visibility', (visible) => {
 function renderTabs() {
   const existing = new Map([...$tabsList.querySelectorAll('.tab')].map(el => [+el.dataset.id, el]));
   const newIds = new Set(tabs.map(t => t.id));
-
-  // Remove gone tabs
   existing.forEach((el, id) => { if (!newIds.has(id)) el.remove(); });
 
   tabs.forEach((tab, idx) => {
     let el = existing.get(tab.id);
-    if (!el) { el = buildTabEl(tab); }
+    if (!el) el = buildTabEl(tab);
     else updateTabEl(el, tab);
-    // Insert before the + button (always last child)
     const beforeEl = $tabsList.children[idx];
     if (beforeEl && beforeEl !== $newTabBtn) {
       if ($tabsList.children[idx] !== el) $tabsList.insertBefore(el, $tabsList.children[idx]);
@@ -111,56 +278,42 @@ function buildTabEl(tab) {
   el.className = 'tab';
   el.dataset.id = tab.id;
   el.setAttribute('draggable', 'true');
-
   el.innerHTML = `
     <div class="tab-favicon"></div>
     <div class="tab-title"></div>
     <div class="tab-mute-indicator ${tab.muted ? '' : 'hidden'}"></div>
     <button class="tab-close" title="Закрыть вкладку">
       <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1 1l7 7M8 1L1 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-    </button>
-  `;
+    </button>`;
 
-  // Click
   el.addEventListener('mousedown', (e) => {
-    if (e.button === 1) { api.closeTab(tab.id); return; }
+    if (e.button === 1) { closeTab(tab.id); return; }
     if (e.target.closest('.tab-close')) return;
-    api.activateTab(tab.id);
+    setActiveTab(tab.id);
   });
-
-  // Close
-  el.querySelector('.tab-close').addEventListener('click', (e) => { e.stopPropagation(); api.closeTab(tab.id); });
-
-  // Right-click context menu on tab
-  el.addEventListener('contextmenu', (e) => {
-    e.preventDefault(); e.stopPropagation();
-    showTabCtxMenu(tab.id, e.clientX, e.clientY);
-  });
+  el.querySelector('.tab-close').addEventListener('click', (e) => { e.stopPropagation(); closeTab(tab.id); });
+  el.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); showTabCtxMenu(tab.id, e.clientX, e.clientY); });
 
   // Drag-N-Drop
   el.addEventListener('dragstart', (e) => { el.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', tab.id); });
   el.addEventListener('dragend', () => { el.classList.remove('dragging'); $tabsList.querySelectorAll('.drag-over-left,.drag-over-right').forEach(t => t.classList.remove('drag-over-left','drag-over-right')); });
   el.addEventListener('dragover', (e) => {
     e.preventDefault(); e.dataTransfer.dropEffect = 'move';
-    if (String(tab.id) === e.dataTransfer.types.length ? true : false) return; // skip self handled elsewhere
     $tabsList.querySelectorAll('.drag-over-left,.drag-over-right').forEach(t => t.classList.remove('drag-over-left','drag-over-right'));
     const rect = el.getBoundingClientRect();
-    const midX = rect.left + rect.width / 2;
-    el.classList.add(e.clientX < midX ? 'drag-over-left' : 'drag-over-right');
+    el.classList.add(e.clientX < rect.left + rect.width / 2 ? 'drag-over-left' : 'drag-over-right');
   });
-  el.addEventListener('dragleave', () => { el.classList.remove('drag-over-left','drag-over-right'); });
+  el.addEventListener('dragleave', () => el.classList.remove('drag-over-left','drag-over-right'));
   el.addEventListener('drop', (e) => {
     e.preventDefault();
     const draggedId = parseInt(e.dataTransfer.getData('text/plain'));
     if (!draggedId || draggedId === tab.id) return;
     const targetIdx = tabs.findIndex(t => t.id === tab.id);
     const rect = el.getBoundingClientRect();
-    const midX = rect.left + rect.width / 2;
-    let newIdx = e.clientX < midX ? targetIdx : targetIdx + 1;
-    // If dragging pinned to non-pinned, clamp
+    let newIdx = e.clientX < rect.left + rect.width / 2 ? targetIdx : targetIdx + 1;
     const draggedTab = tabs.find(t => t.id === draggedId);
     if (draggedTab && draggedTab.pinned && !tab.pinned) newIdx = tabs.filter(t => t.pinned).length;
-    api.reorderTab(draggedId, newIdx);
+    reorderTab(draggedId, newIdx);
     el.classList.remove('drag-over-left','drag-over-right');
   });
 
@@ -173,10 +326,7 @@ function updateTabEl(el, tab) {
   el.classList.toggle('active', isActive);
   el.classList.toggle('pinned', tab.pinned);
   el.classList.toggle('audible', tab.audible && !tab.muted);
-
-  // Group color
-  const groupColors = ['red','orange','yellow','green','blue','purple'];
-  groupColors.forEach(c => el.classList.toggle('group-' + c, tab.group === c));
+  ['red','orange','yellow','green','blue','purple'].forEach(c => el.classList.toggle('group-' + c, tab.group === c));
 
   const faviconEl = el.querySelector('.tab-favicon');
   if (tab.loading) {
@@ -188,33 +338,31 @@ function updateTabEl(el, tab) {
   }
 
   el.querySelector('.tab-title').textContent = tab.title || tab.url || 'Новая вкладка';
-
-  // Mute indicator
   const muteEl = el.querySelector('.tab-mute-indicator');
   muteEl.classList.toggle('hidden', !tab.muted);
 }
 
 // ══════════════════════════════════════════════════════════════
-//  NAV STATE
+//  NAVIGATION (direct webview methods)
 // ══════════════════════════════════════════════════════════════
 
-function applyNavState(state) {
-  if (!state) return;
-  if (!urlbarFocused) $urlbar.value = formatUrl(state.url);
-  $btnBack.disabled = !state.canGoBack;
-  $btnForward.disabled = !state.canGoForward;
-  isLoading = state.loading;
+function updateNavFromTab(tab) {
+  if (!tab) return;
+  const wv = tab.webview;
+  if (!urlbarFocused) $urlbar.value = formatUrl(tab.url);
+  $btnBack.disabled = !wv.canGoBack();
+  $btnForward.disabled = !wv.canGoForward();
+  isLoading = tab.loading;
   $icoReload.style.display = isLoading ? 'none' : '';
   $icoStop.style.display = isLoading ? '' : 'none';
   $spinner.classList.toggle('hidden', !isLoading);
-  $secureIcon.classList.toggle('hidden', !(state.url && state.url.startsWith('https://')));
+  $secureIcon.classList.toggle('hidden', !(tab.url && tab.url.startsWith('https://')));
   if (isLoading) startLoadBar(); else finishLoadBar();
-  applyBypassState(state.bypassEnabled);
-  updateBookmarkStarState(state.bookmarked);
+  updateBookmarkStarState(isBookmarkedUrl(tab.url));
 }
 
 function updateBookmarkStar() {
-  const t = tabs.find(t => t.id === activeTabId); if (!t) return;
+  const t = getActiveTab(); if (!t) return;
   api.checkBookmark(t.url).then(b => updateBookmarkStarState(b));
 }
 
@@ -225,10 +373,9 @@ function updateBookmarkStarState(bookmarked) {
   $btnBookmark.classList.toggle('active', isBookmarked);
 }
 
-function applyBypassAvailability(a) { if (!a) $btnBypass.style.display = 'none'; }
 function applyBypassState(e) { $btnBypass.classList.toggle('active', e); $bypassLbl.textContent = e ? 'Обход вкл' : 'Обход'; }
 
-// ── URL ───────────────────────────────────────────────────────
+// ── URL helpers ───────────────────────────────────────────────
 function formatUrl(url) {
   if (!url || url === 'about:blank') return '';
   if (url.includes('newtab.html') || url.startsWith('file://')) return '';
@@ -249,22 +396,36 @@ function startLoadBar() { $loadingBar.classList.add('active'); loadBarValue = 10
 function finishLoadBar() { clearInterval(loadBarTimer); $loadingBar.style.transition = 'width .15s ease, opacity .4s .3s'; $loadingBar.style.width = '100%'; setTimeout(() => { $loadingBar.classList.remove('active'); $loadingBar.style.width = '0'; }, 350); }
 
 // ── URL bar ───────────────────────────────────────────────────
-$urlbar.addEventListener('focus', () => { urlbarFocused = true; const t = tabs.find(t => t.id === activeTabId); if (t) $urlbar.value = t.url === 'about: blank' ? '' : t.url; $urlbar.select(); });
-$urlbar.addEventListener('blur', () => { urlbarFocused = false; const t = tabs.find(t => t.id === activeTabId); if (t) $urlbar.value = formatUrl(t.url); });
-$urlbar.addEventListener('keydown', (e) => { if (e.key === 'Enter') { const u = resolveInput($urlbar.value); if (u) { api.go(u); $urlbar.blur(); } } if (e.key === 'Escape') $urlbar.blur(); });
+$urlbar.addEventListener('focus', () => { urlbarFocused = true; const t = getActiveTab(); if (t) $urlbar.value = t.url === 'about: blank' ? '' : t.url; $urlbar.select(); });
+$urlbar.addEventListener('blur', () => { urlbarFocused = false; const t = getActiveTab(); if (t) $urlbar.value = formatUrl(t.url); });
+$urlbar.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    const raw = $urlbar.value; const u = resolveInput(raw);
+    if (u) {
+      const wv = getActiveWebView();
+      if (wv) wv.loadURL(u);
+      $urlbar.blur();
+    }
+  }
+  if (e.key === 'Escape') $urlbar.blur();
+});
 document.getElementById('urlbar-wrap').addEventListener('click', () => $urlbar.focus());
 
-// ── Nav buttons ───────────────────────────────────────────────
-$btnBack.addEventListener('click', () => api.back());
-$btnForward.addEventListener('click', () => api.forward());
-$btnReload.addEventListener('click', () => isLoading ? api.stop() : api.reload());
-// ── New Tab button (dynamic, always last in tabs-list) ──
+// ── Nav buttons (direct webview calls) ────────────────────────
+$btnBack.addEventListener('click', () => { const wv = getActiveWebView(); if (wv) wv.goBack(); });
+$btnForward.addEventListener('click', () => { const wv = getActiveWebView(); if (wv) wv.goForward(); });
+$btnReload.addEventListener('click', () => {
+  const wv = getActiveWebView();
+  if (isLoading) { if (wv) wv.stop(); } else { if (wv) wv.reload(); }
+});
+
+// ── New Tab button ────────────────────────────────────────────
 const $newTabBtn = document.createElement('button');
 $newTabBtn.id = 'btn-new-tab';
 $newTabBtn.className = 'tab-new-btn';
 $newTabBtn.title = 'Новая вкладка (Ctrl+T)';
 $newTabBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
-$newTabBtn.addEventListener('click', () => api.newTab());
+$newTabBtn.addEventListener('click', () => createTab());
 $tabsList.appendChild($newTabBtn);
 
 // ── Window controls ───────────────────────────────────────────
@@ -279,7 +440,7 @@ $btnIncognito.addEventListener('click', () => api.newIncognitoWindow());
 // ══════════════════════════════════════════════════════════════
 
 $btnBookmark.addEventListener('click', async () => {
-  const t = tabs.find(t => t.id === activeTabId);
+  const t = getActiveTab();
   if (!t || !t.url || t.url.includes('newtab.html')) return;
   const r = await api.toggleBookmark(t.url, t.title, t.favicon);
   showToast(r.action === 'added' ? 'Закладка добавлена' : 'Закладка удалена');
@@ -287,15 +448,20 @@ $btnBookmark.addEventListener('click', async () => {
 
 function renderBookmarksBar() {
   $bookmarksList.innerHTML = '';
-  if (!settings.showBookmarksBar || bookmarks.length === 0) { $bookmarksBar.classList.add('hidden'); return; }
+  if (!settings.showBookmarksBar || bookmarks.length === 0) {
+    $bookmarksBar.classList.add('hidden');
+    document.body.classList.remove('show-bookmarks');
+    return;
+  }
   $bookmarksBar.classList.remove('hidden');
+  document.body.classList.add('show-bookmarks');
   bookmarks.slice(0, 10).forEach(bm => {
     const el = document.createElement('button');
     el.className = 'bm-item';
     el.title = bm.title + '\n' + bm.url;
     const fav = bm.favicon ? `<img src="${bm.favicon}" alt="" draggable="false">` : '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1l1.5 3 3.3.5-2.4 2.3.6 3.3L6 8.5 2.6 10.1l.6-3.3L1.2 4.5l3.3-.5z" stroke="currentColor" stroke-width="1" fill="none"/></svg>';
     el.innerHTML = `<div class="bm-item-favicon">${fav}</div><div class="bm-item-title">${esc(bm.title)}</div>`;
-    el.addEventListener('click', () => api.newTab(bm.url));
+    el.addEventListener('click', () => createTab(bm.url));
     $bookmarksList.appendChild(el);
   });
 }
@@ -318,7 +484,7 @@ function renderBookmarksPanel(filter = '') {
     let displayUrl = bm.url;
     try { const u = new URL(bm.url); displayUrl = u.hostname + (u.pathname !== '/' ? u.pathname : ''); } catch {}
     el.innerHTML = `<div class="bm-panel-item-icon">${icon}</div><div class="bm-panel-item-info"><div class="bm-panel-item-title">${esc(bm.title)}</div><div class="bm-panel-item-url">${esc(displayUrl)}</div></div><button class="bm-panel-item-delete" title="Удалить"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>`;
-    el.addEventListener('click', (e) => { if (e.target.closest('.bm-panel-item-delete')) return; api.newTab(bm.url); closePanel($bookmarksPanel); });
+    el.addEventListener('click', (e) => { if (e.target.closest('.bm-panel-item-delete')) return; createTab(bm.url); closePanel($bookmarksPanel); });
     el.querySelector('.bm-panel-item-delete').addEventListener('click', (e) => { e.stopPropagation(); api.removeBookmark(bm.id); el.style.transition = 'opacity .15s, transform .15s'; el.style.opacity = '0'; el.style.transform = 'translateX(20px)'; setTimeout(() => { el.remove(); if (!$bookmarksPanelList.children.length) renderBookmarksPanel(q); }, 150); });
     $bookmarksPanelList.appendChild(el);
   });
@@ -361,30 +527,12 @@ document.getElementById('btn-export-settings').addEventListener('click', async (
 document.getElementById('btn-import-settings').addEventListener('click', async () => { const r = await api.importSettings(); if (r.success) { showToast('Настройки импортированы'); applySettings(); } else showToast('Ошибка: ' + (r.error || '')); });
 document.getElementById('btn-reset-settings').addEventListener('click', async () => { await api.resetSettings(); settings = await api.getSettings(); applySettings(); showToast('Настройки сброшены'); });
 
-// ── View sync: BrowserView is a native element that renders ON TOP
-//    of HTML. We must hide it when showing any overlay, and restore
-//    it when ALL overlays are closed.
-function isAnyOverlayVisible() {
-  return !$settingsPanel.classList.contains('hidden') ||
-         !$bookmarksPanel.classList.contains('hidden') ||
-         !$tabCtxMenu.classList.contains('hidden') ||
-         !$pageCtxMenu.classList.contains('hidden') ||
-         !$bmCtxMenu.classList.contains('hidden');
-}
-function syncViewVisibility() {
-  if (isAnyOverlayVisible()) api.hideActiveView();
-  else api.showActiveView();
-}
-
-function openPanel(p) { p.classList.remove('hidden'); syncViewVisibility(); }
-function closePanel(p) { p.classList.add('hidden'); syncViewVisibility(); }
-document.querySelectorAll('.panel-backdrop').forEach(b => b.addEventListener('click', () => {
-  b.closest('.panel').classList.add('hidden');
-  syncViewVisibility();
-}));
+function openPanel(p) { p.classList.remove('hidden'); }
+function closePanel(p) { p.classList.add('hidden'); }
+document.querySelectorAll('.panel-backdrop').forEach(b => b.addEventListener('click', () => b.closest('.panel').classList.add('hidden')));
 
 // ══════════════════════════════════════════════════════════════
-//  CONTEXT MENUS
+//  CONTEXT MENUS (HTML overlays — naturally on top of webview!)
 // ══════════════════════════════════════════════════════════════
 
 function hideAllMenus() {
@@ -392,33 +540,25 @@ function hideAllMenus() {
   $pageCtxMenu.classList.add('hidden');
   $bmCtxMenu.classList.add('hidden');
   if ($groupColorMenu) $groupColorMenu.style.display = '';
-  syncViewVisibility();
 }
+
 document.addEventListener('mousedown', (e) => {
-  // Close context menus on any click outside them
   if (!$tabCtxMenu.contains(e.target)) $tabCtxMenu.classList.add('hidden');
   if (!$pageCtxMenu.contains(e.target)) $pageCtxMenu.classList.add('hidden');
   if (!$bmCtxMenu.contains(e.target)) $bmCtxMenu.classList.add('hidden');
- // After potential closes, sync view
-  syncViewVisibility();
 });
 document.addEventListener('click', hideAllMenus);
-document.addEventListener('contextmenu', (e) => {
-  e.preventDefault();
-});
+document.addEventListener('contextmenu', (e) => { e.preventDefault(); });
 
 // ── Tab Context Menu ────────────────────────────────────────
 function showTabCtxMenu(tabId, x, y) {
   ctxTabId = tabId;
-  const tab = tabs.find(t => t.id === tabId);
-  if (!tab) return;
+  const tab = getTab(tabId); if (!tab) return;
 
-  // Update pin icon/text
   const pinBtn = $tabCtxMenu.querySelector('[data-action="pin"]');
   pinBtn.querySelector('.pin-cross').style.display = tab.pinned ? '' : 'none';
   pinBtn.querySelector('span').textContent = tab.pinned ? 'Открепить вкладку' : 'Закрепить вкладку';
 
-  // Update mute icons/text
   const muteBtn = $tabCtxMenu.querySelector('[data-action="mute"]');
   muteBtn.querySelector('.ico-mute-off').style.display = tab.muted ? 'none' : '';
   muteBtn.querySelector('.ico-mute-on').style.display = tab.muted ? '' : 'none';
@@ -427,9 +567,7 @@ function showTabCtxMenu(tabId, x, y) {
   $tabCtxMenu.style.left = x + 'px';
   $tabCtxMenu.style.top = y + 'px';
   $tabCtxMenu.classList.remove('hidden');
-  syncViewVisibility();
 
-  // Clamp position
   requestAnimationFrame(() => {
     const rect = $tabCtxMenu.getBoundingClientRect();
     if (rect.right > window.innerWidth) $tabCtxMenu.style.left = (window.innerWidth - rect.width - 4) + 'px';
@@ -443,15 +581,13 @@ $tabCtxMenu.addEventListener('click', (e) => {
   e.stopPropagation();
   const action = btn.dataset.action;
   const color = btn.dataset.color;
-
-  if (action === 'pin') api.pinTab(ctxTabId);
-  else if (action === 'mute') api.muteTab(ctxTabId);
-  else if (action === 'group') { /* submenu toggle - handled by CSS */ return; }
-  else if (color !== undefined) api.setTabGroup(ctxTabId, color || null);
-  else if (action === 'close-others') api.closeOtherTabs(ctxTabId);
-  else if (action === 'close-right') api.closeTabsToRight(ctxTabId);
-  else if (action === 'close') api.closeTab(ctxTabId);
-
+  if (action === 'pin') pinTab(ctxTabId);
+  else if (action === 'mute') muteTab(ctxTabId);
+  else if (action === 'group') return;
+  else if (color !== undefined) setTabGroup(ctxTabId, color || null);
+  else if (action === 'close-others') closeOtherTabs(ctxTabId);
+  else if (action === 'close-right') closeTabsToRight(ctxTabId);
+  else if (action === 'close') closeTab(ctxTabId);
   hideAllMenus();
 });
 
@@ -470,14 +606,12 @@ function showPageCtxMenu(x, y, params) {
   $pageCtxMenu.style.left = x + 'px';
   $pageCtxMenu.style.top = y + 'px';
   $pageCtxMenu.classList.remove('hidden');
-  syncViewVisibility();
 
   requestAnimationFrame(() => {
     const rect = $pageCtxMenu.getBoundingClientRect();
     if (rect.right > window.innerWidth) $pageCtxMenu.style.left = (window.innerWidth - rect.width - 4) + 'px';
     if (rect.bottom > window.innerHeight) $pageCtxMenu.style.top = (window.innerHeight - rect.height - 4) + 'px';
   });
-
   $pageCtxMenu._params = params;
 }
 
@@ -486,15 +620,46 @@ $pageCtxMenu.addEventListener('click', (e) => {
   if (!btn) return;
   e.stopPropagation();
   const action = btn.dataset.action;
-  if (action === 'back') api.back();
-  else if (action === 'forward') api.forward();
-  else if (action === 'reload') api.reload();
+  const wv = getActiveWebView();
+  if (action === 'back') { if (wv) wv.goBack(); }
+  else if (action === 'forward') { if (wv) wv.goForward(); }
+  else if (action === 'reload') { if (wv) wv.reload(); }
   else if (action === 'bookmark-toggle') $btnBookmark.click();
-  else if (action === 'new-tab') api.newTab();
+  else if (action === 'new-tab') createTab();
   else if (action === 'copy-url') {
-    const t = tabs.find(t => t.id === activeTabId);
+    const t = getActiveTab();
     if (t && t.url) navigator.clipboard.writeText(t.url).then(() => showToast('URL скопирован'));
   }
+  hideAllMenus();
+});
+
+// ── Bookmarks Bar Context Menu ───────────────────────────────
+$bookmarksBar.addEventListener('contextmenu', (e) => {
+  e.preventDefault(); e.stopPropagation();
+  const bmItem = e.target.closest('.bm-item');
+  if (!bmItem) return;
+  const idx = [...$bookmarksList.children].indexOf(bmItem);
+  if (idx === -1) return;
+  const bm = bookmarks[idx]; if (!bm) return;
+  ctxBmId = bm.id; ctxBmUrl = bm.url;
+  $bmCtxMenu.style.left = e.clientX + 'px';
+  $bmCtxMenu.style.top = e.clientY + 'px';
+  $bmCtxMenu.classList.remove('hidden');
+  requestAnimationFrame(() => {
+    const rect = $bmCtxMenu.getBoundingClientRect();
+    if (rect.right > window.innerWidth) $bmCtxMenu.style.left = (window.innerWidth - rect.width - 4) + 'px';
+    if (rect.bottom > window.innerHeight) $bmCtxMenu.style.top = (window.innerHeight - rect.height - 4) + 'px';
+  });
+});
+
+$bmCtxMenu.addEventListener('click', (e) => {
+  const btn = e.target.closest('.ctx-item');
+  if (!btn) return;
+  e.stopPropagation();
+  const action = btn.dataset.action;
+  if (action === 'bm-open' || action === 'bm-open-new') { if (ctxBmUrl) createTab(ctxBmUrl); }
+  else if (action === 'bm-copy-url') { if (ctxBmUrl) navigator.clipboard.writeText(ctxBmUrl).then(() => showToast('URL скопирован')); }
+  else if (action === 'bm-delete') { if (ctxBmId) api.removeBookmark(ctxBmId); showToast('Закладка удалена'); }
   hideAllMenus();
 });
 
@@ -516,64 +681,27 @@ function showToast(msg) {
 document.addEventListener('keydown', (e) => {
   const ctrl = e.ctrlKey || e.metaKey;
   const shift = e.shiftKey;
-  if (ctrl && e.key === 't') { e.preventDefault(); api.newTab(); }
-  if (ctrl && e.key === 'w') { e.preventDefault(); api.closeTab(activeTabId); }
+  if (ctrl && e.key === 't') { e.preventDefault(); createTab(); }
+  if (ctrl && e.key === 'w') { e.preventDefault(); if (activeTabId) closeTab(activeTabId); }
   if (ctrl && (e.key === 'l' || e.key === 'L')) { e.preventDefault(); $urlbar.focus(); }
-  if ((ctrl && e.key === 'r') || e.key === 'F5') { e.preventDefault(); api.reload(); }
-  if (ctrl && e.key >= '1' && e.key <= '9') { const i = parseInt(e.key) - 1; if (tabs[i]) api.activateTab(tabs[i].id); }
+  if ((ctrl && e.key === 'r') || e.key === 'F5') {
+    e.preventDefault();
+    const wv = getActiveWebView();
+    if (wv) wv.reload();
+  }
+  if (ctrl && e.key >= '1' && e.key <= '9') { const i = parseInt(e.key) - 1; if (tabs[i]) setActiveTab(tabs[i].id); }
   if (ctrl && e.key === 'd') { e.preventDefault(); $btnBookmark.click(); }
   if (ctrl && e.key === 'b') { e.preventDefault(); api.setSetting('showBookmarksBar', !settings.showBookmarksBar); }
   if (ctrl && e.key === ',') { e.preventDefault(); $btnSettings.click(); }
   if (ctrl && shift && e.key === 'N') { e.preventDefault(); api.newIncognitoWindow(); }
-  if (e.key === 'Escape') { $settingsPanel.classList.add('hidden'); $bookmarksPanel.classList.add('hidden'); hideAllMenus(); syncViewVisibility(); }
+  if (e.key === 'Escape') {
+    $settingsPanel.classList.add('hidden');
+    $bookmarksPanel.classList.add('hidden');
+    hideAllMenus();
+  }
 });
 
 // ══════════════════════════════════════════════════════════════
 //  HELPERS
 // ══════════════════════════════════════════════════════════════
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-
-// ══════════════════════════════════════════════════════════════
-//  BOOKMARKS BAR CONTEXT MENU
-// ══════════════════════════════════════════════════════════════
-
-const $bmCtxMenu = document.getElementById('bm-ctx-menu');
-let ctxBmId = null;
-let ctxBmUrl = null;
-
-$bookmarksBar.addEventListener('contextmenu', (e) => {
-  e.preventDefault(); e.stopPropagation();
-  const bmItem = e.target.closest('.bm-item');
-  if (!bmItem) return;
-  const idx = [...$bookmarksList.children].indexOf(bmItem);
-  if (idx === -1) return;
-  const bm = bookmarks[idx];
-  if (!bm) return;
-  ctxBmId = bm.id;
-  ctxBmUrl = bm.url;
-  showBmCtxMenu(bm, e.clientX, e.clientY);
-});
-
-function showBmCtxMenu(bm, x, y) {
-  $bmCtxMenu.style.left = x + 'px';
-  $bmCtxMenu.style.top = y + 'px';
-  $bmCtxMenu.classList.remove('hidden');
-  syncViewVisibility();
-  requestAnimationFrame(() => {
-    const rect = $bmCtxMenu.getBoundingClientRect();
-    if (rect.right > window.innerWidth) $bmCtxMenu.style.left = (window.innerWidth - rect.width - 4) + 'px';
-    if (rect.bottom > window.innerHeight) $bmCtxMenu.style.top = (window.innerHeight - rect.height - 4) + 'px';
-  });
-}
-
-$bmCtxMenu.addEventListener('click', (e) => {
-  const btn = e.target.closest('.ctx-item');
-  if (!btn) return;
-  e.stopPropagation();
-  const action = btn.dataset.action;
-  if (action === 'bm-open') { if (ctxBmUrl) api.newTab(ctxBmUrl); }
-  else if (action === 'bm-open-new') { if (ctxBmUrl) api.newTab(ctxBmUrl); }
-  else if (action === 'bm-copy-url') { if (ctxBmUrl) navigator.clipboard.writeText(ctxBmUrl).then(() => showToast('URL скопирован')); }
-  else if (action === 'bm-delete') { if (ctxBmId) api.removeBookmark(ctxBmId); showToast('Закладка удалена'); }
-  hideAllMenus();
-});
