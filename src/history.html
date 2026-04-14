@@ -6,144 +6,169 @@
   <title>История</title>
   <base target="_self">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:      #0d0d0f;
-      --solid1:  #1a1a1b;
-      --solid2:  #222223;
-      --solid3:  #2d2d2f;
-      --b:       rgba(255,255,255,.05);
-      --b2:      rgba(255,255,255,.09);
-      --b3:      rgba(255,255,255,.15);
-      --s1:      rgba(255,255,255,.05);
-      --s2:      rgba(255,255,255,.08);
-      --s3:      rgba(255,255,255,.14);
-      --t1:      #efefef;
-      --t2:      rgba(239,239,239,.55);
-      --t3:      rgba(239,239,239,.25);
-      --y:       #8b5cf6;
-      --y2:      #a78bfa;
-      --y3:      #0ea5e9;
-      --ybg:     rgba(139,92,246,.13);
-      --yb:      rgba(139,92,246,.36);
-      --red:     #ff453a;
-      --green:   #34c759;
-      --font:    'Google Sans', -apple-system, sans-serif;
-      --ease:    cubic-bezier(.16,1,.3,1);
-      --sp:      cubic-bezier(.34,1.56,.64,1);
+      --bg: #0a0a0c;
+      --bg-subtle: #0e0e11;
+      --surface: #141416;
+      --surface-hover: #1a1a1d;
+      --surface-active: #202024;
+      --border: rgba(255,255,255,.06);
+      --border-hover: rgba(255,255,255,.1);
+      --text: #f0f0f2;
+      --text-secondary: rgba(240,240,242,.55);
+      --text-tertiary: rgba(240,240,242,.28);
+      --accent: #8b5cf6;
+      --accent-secondary: #a78bfa;
+      --accent-glow: rgba(139,92,246,.15);
+      --accent-border: rgba(139,92,246,.25);
       --accent-grad: linear-gradient(135deg, #8b5cf6, #0ea5e9);
+      --red: #ff453a;
+      --green: #30d158;
+      --font: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+      --ease: cubic-bezier(.16,1,.3,1);
+      --spring: cubic-bezier(.34,1.56,.64,1);
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
     }
 
+    html { height: 100%; }
+
     html, body {
-      height: 100%;
       background: var(--bg);
-      color: var(--t1);
+      color: var(--text);
       font-family: var(--font);
       font-size: 14px;
       font-weight: 500;
       -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
       overflow-x: hidden;
     }
 
     body {
       display: flex;
       flex-direction: column;
+      min-height: 100vh;
     }
 
-    .top-accent {
+    .accent-bar {
       width: 100%;
-      height: 3px;
+      height: 2px;
       background: var(--accent-grad);
       flex-shrink: 0;
+      opacity: .8;
     }
 
-    /* ── Header ── */
-    .page-header {
+    /* ── Hero ── */
+    .hero {
+      position: relative;
+      padding: 36px 48px 24px;
+      flex-shrink: 0;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 24px 36px 0;
-      flex-shrink: 0;
-      animation: fadeUp .4s var(--ease) both;
+      gap: 16px;
+      overflow: hidden;
+      animation: heroIn .5s var(--ease) both;
     }
 
-    .page-header-left {
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -60%;
+      right: 5%;
+      width: 300px;
+      height: 300px;
+      background: var(--accent-glow);
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      opacity: .5;
+    }
+
+    .hero-left {
+      position: relative;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 16px;
     }
 
-    .page-header-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      background: var(--ybg);
-      border: 1px solid var(--yb);
+    .hero-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 13px;
+      background: var(--accent-glow);
+      border: 1px solid var(--accent-border);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--y2);
+      color: var(--accent-secondary);
       flex-shrink: 0;
     }
 
-    .page-header h1 {
-      font-size: 22px;
-      font-weight: 700;
+    .hero h1 {
+      font-size: 24px;
+      font-weight: 800;
       letter-spacing: -.3px;
     }
 
-    .btn-clear-history {
-      height: 34px;
+    .btn-clear {
+      position: relative;
+      height: 36px;
       padding: 0 16px;
-      border-radius: 10px;
-      background: rgba(255,69,58,.08);
-      border: 1px solid rgba(255,69,58,.2);
+      border-radius: var(--radius-sm);
+      background: rgba(255,69,58,.06);
+      border: 1px solid rgba(255,69,58,.15);
       color: var(--red);
       font-family: var(--font);
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
-      transition: background .15s, border-color .15s, transform .1s var(--sp);
+      transition: background .15s, border-color .15s, transform .1s var(--spring);
       white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    .btn-clear-history:hover {
-      background: rgba(255,69,58,.15);
-      border-color: rgba(255,69,58,.35);
+    .btn-clear:hover {
+      background: rgba(255,69,58,.12);
+      border-color: rgba(255,69,58,.3);
     }
 
-    .btn-clear-history:active { transform: scale(.97); }
+    .btn-clear:active { transform: scale(.97); }
 
-    /* ── Search bar ── */
-    .search-wrap {
-      padding: 20px 36px 0;
+    /* ── Search ── */
+    .search-area {
+      padding: 0 48px 8px;
       flex-shrink: 0;
-      animation: fadeUp .4s .05s var(--ease) both;
+      animation: fadeUp .4s .04s var(--ease) both;
     }
 
     .search-box {
       display: flex;
       align-items: center;
       gap: 10px;
-      background: var(--solid1);
-      border: 1px solid var(--b2);
-      border-radius: 12px;
-      padding: 0 14px;
-      height: 42px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0 16px;
+      height: 44px;
       transition: border-color .2s, box-shadow .2s, background .2s;
     }
 
     .search-box:focus-within {
-      border-color: rgba(139,92,246,.5);
-      background: rgba(255,255,255,.04);
-      box-shadow: 0 0 0 3px rgba(139,92,246,.1);
+      border-color: var(--accent-border);
+      background: var(--surface-hover);
+      box-shadow: 0 0 0 3px var(--accent-glow);
     }
 
     .search-ico {
-      color: var(--t3);
+      color: var(--text-tertiary);
       flex-shrink: 0;
       display: flex;
     }
@@ -153,56 +178,73 @@
       background: transparent;
       border: none;
       outline: none;
-      color: var(--t1);
+      color: var(--text);
       font-family: var(--font);
       font-size: 14px;
       font-weight: 500;
-      caret-color: var(--y2);
+      caret-color: var(--accent-secondary);
     }
 
-    .search-input::placeholder { color: var(--t3); }
+    .search-input::placeholder { color: var(--text-tertiary); }
 
     .search-clear {
-      width: 26px;
-      height: 26px;
-      border-radius: 6px;
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
       background: transparent;
       border: none;
       cursor: pointer;
       display: none;
       align-items: center;
       justify-content: center;
-      color: var(--t3);
+      color: var(--text-tertiary);
       transition: background .12s, color .12s;
       flex-shrink: 0;
     }
 
     .search-clear.visible { display: flex; }
-    .search-clear:hover { background: var(--s2); color: var(--t1); }
+    .search-clear:hover { background: var(--surface-active); color: var(--text); }
 
-    /* ── Results info ── */
-    .results-info {
-      padding: 14px 36px 0;
+    /* ── Stats bar ── */
+    .stats-bar {
+      padding: 10px 48px 0;
       font-size: 12px;
-      color: var(--t3);
+      color: var(--text-tertiary);
       font-weight: 500;
       flex-shrink: 0;
-      animation: fadeUp .4s .08s var(--ease) both;
+      animation: fadeUp .4s .06s var(--ease) both;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
-    .results-info.hidden { display: none; }
+    .stats-bar.hidden { display: none; }
+
+    .stats-bar .result-count {
+      color: var(--accent-secondary);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
 
     /* ── History list ── */
     .history-list {
       flex: 1;
       overflow-y: auto;
-      padding: 16px 36px 40px;
+      padding: 16px 48px 60px;
     }
 
     /* ── Date group ── */
     .date-group {
-      margin-bottom: 20px;
+      margin-bottom: 24px;
       animation: fadeUp .4s var(--ease) both;
+    }
+
+    .date-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 10px;
+      padding: 0 2px;
     }
 
     .date-label {
@@ -210,53 +252,66 @@
       font-weight: 700;
       letter-spacing: .7px;
       text-transform: uppercase;
-      color: var(--t3);
-      margin-bottom: 8px;
-      padding-left: 4px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      color: var(--text-tertiary);
+      white-space: nowrap;
     }
 
-    .date-label::after {
-      content: '';
+    .date-line {
       flex: 1;
       height: 1px;
-      background: var(--b);
+      background: var(--border);
+    }
+
+    .date-count {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      background: var(--surface);
+      padding: 2px 8px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      font-variant-numeric: tabular-nums;
     }
 
     /* ── History item ── */
     .h-item {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 10px 14px;
-      border-radius: 11px;
+      gap: 14px;
+      padding: 11px 16px;
+      border-radius: var(--radius-md);
       cursor: pointer;
-      transition: background .12s;
+      transition: background .12s, transform .12s;
       margin-bottom: 2px;
       position: relative;
     }
 
     .h-item:hover {
-      background: var(--s2);
+      background: var(--surface);
     }
 
     .h-item:active {
-      background: var(--s3);
+      background: var(--surface-hover);
+      transform: scale(.998);
     }
 
     .h-favicon {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      background: var(--s1);
-      border: 1px solid var(--b);
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: var(--surface-hover);
+      border: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
       overflow: hidden;
+      transition: border-color .15s, background .15s;
+    }
+
+    .h-item:hover .h-favicon {
+      border-color: var(--border-hover);
+      background: var(--surface-active);
     }
 
     .h-favicon img {
@@ -266,9 +321,7 @@
       object-fit: contain;
     }
 
-    .h-favicon .default-ico {
-      opacity: .4;
-    }
+    .h-favicon .def-ico { opacity: .35; }
 
     .h-info {
       flex: 1;
@@ -278,28 +331,35 @@
     .h-title {
       font-size: 13px;
       font-weight: 600;
-      color: var(--t1);
+      color: var(--text);
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
-      line-height: 1.3;
+      line-height: 1.35;
     }
 
     .h-url {
       font-size: 11px;
-      color: var(--t3);
+      color: var(--text-tertiary);
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
       margin-top: 1px;
+      font-weight: 500;
+    }
+
+    .h-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
     }
 
     .h-time {
       font-size: 11px;
-      color: var(--t3);
-      font-weight: 500;
+      color: var(--text-tertiary);
+      font-weight: 600;
       font-variant-numeric: tabular-nums;
-      flex-shrink: 0;
     }
 
     .h-delete {
@@ -312,99 +372,100 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--t3);
+      color: var(--text-tertiary);
       flex-shrink: 0;
       opacity: 0;
-      transition: opacity .12s, background .12s, color .12s;
+      transition: opacity .12s, background .12s, color .12s, transform .12s var(--spring);
     }
 
     .h-item:hover .h-delete { opacity: 1; }
     .h-delete:hover {
-      background: rgba(255,69,58,.15);
+      background: rgba(255,69,58,.12);
       color: var(--red);
+      transform: scale(1.08);
     }
 
     /* ── Empty state ── */
-    .empty-state {
+    .empty {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 60px 20px;
+      padding: 80px 24px;
       text-align: center;
       animation: fadeUp .5s var(--ease) both;
     }
 
-    .empty-state.hidden { display: none; }
+    .empty.hidden { display: none; }
 
-    .empty-illustration {
-      width: 100px;
-      height: 100px;
-      border-radius: 24px;
-      background: var(--solid1);
-      border: 1px solid var(--b);
+    .empty-icon {
+      width: 88px;
+      height: 88px;
+      border-radius: 22px;
+      background: var(--surface);
+      border: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 20px;
+      margin-bottom: 22px;
       position: relative;
     }
 
-    .empty-illustration::before {
+    .empty-icon::after {
       content: '';
       position: absolute;
       inset: -1px;
-      border-radius: 24px;
+      border-radius: 22px;
       background: var(--accent-grad);
-      opacity: .15;
+      opacity: .1;
       z-index: -1;
     }
 
     .empty-title {
-      font-size: 16px;
+      font-size: 17px;
       font-weight: 700;
-      color: var(--t1);
+      color: var(--text);
       margin-bottom: 6px;
     }
 
     .empty-desc {
       font-size: 13px;
-      color: var(--t3);
+      color: var(--text-tertiary);
       max-width: 280px;
-      line-height: 1.5;
+      line-height: 1.6;
     }
 
     /* ── Toast ── */
     .toast {
       position: fixed;
-      bottom: 24px;
+      bottom: 28px;
       left: 50%;
-      transform: translateX(-50%) translateY(8px);
-      background: var(--solid3);
-      border: 1px solid var(--b3);
-      color: var(--t1);
+      transform: translateX(-50%) translateY(10px);
+      background: var(--surface-active);
+      border: 1px solid var(--border-hover);
+      color: var(--text);
+      font-family: var(--font);
       font-size: 13px;
       font-weight: 600;
-      padding: 10px 20px;
-      border-radius: 12px;
-      box-shadow: 0 8px 32px rgba(0,0,0,.5);
+      padding: 10px 22px;
+      border-radius: var(--radius-md);
+      box-shadow: 0 12px 40px rgba(0,0,0,.5);
       opacity: 0;
-      transition: opacity .2s var(--ease), transform .2s var(--ease);
+      transition: opacity .25s var(--ease), transform .25s var(--ease);
       z-index: 9999;
       pointer-events: none;
       white-space: nowrap;
-      font-family: var(--font);
     }
 
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     .toast.hidden { display: none; }
 
     /* ── Modal ── */
-    .modal-overlay {
+    .modal-bg {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,.6);
-      backdrop-filter: blur(4px);
+      background: rgba(0,0,0,.65);
+      backdrop-filter: blur(6px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -412,41 +473,51 @@
       animation: fadeIn .15s var(--ease);
     }
 
-    .modal-overlay.hidden { display: none; }
+    .modal-bg.hidden { display: none; }
 
-    .modal {
-      background: var(--solid2);
-      border: 1px solid var(--b3);
+    .modal-box {
+      background: var(--surface);
+      border: 1px solid var(--border-hover);
       border-radius: 20px;
       padding: 28px;
       width: 100%;
       max-width: 380px;
-      box-shadow: 0 20px 60px rgba(0,0,0,.6);
-      animation: modalIn .2s var(--ease);
+      box-shadow: 0 24px 80px rgba(0,0,0,.6);
+      animation: modalPop .25s var(--ease);
     }
 
-    .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
-    .modal p { font-size: 13px; color: var(--t2); line-height: 1.5; margin-bottom: 20px; }
-    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .modal-box h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .modal-box p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 22px; }
+    .modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
 
     .m-btn {
-      height: 36px;
+      height: 38px;
       padding: 0 18px;
-      border-radius: 10px;
-      background: var(--s1);
-      border: 1px solid var(--b2);
-      color: var(--t1);
+      border-radius: var(--radius-sm);
+      background: var(--surface-hover);
+      border: 1px solid var(--border);
+      color: var(--text);
       font-family: var(--font);
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
-      transition: background .15s, border-color .15s, transform .1s var(--sp);
+      transition: background .15s, border-color .15s, transform .1s var(--spring);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 90px;
     }
 
-    .m-btn:hover { background: var(--s2); border-color: var(--b3); }
+    .m-btn:hover { background: var(--surface-active); border-color: var(--border-hover); }
     .m-btn:active { transform: scale(.97); }
-    .m-btn-danger { color: var(--red); border-color: rgba(255,69,58,.2); }
-    .m-btn-danger:hover { background: rgba(255,69,58,.1); border-color: rgba(255,69,58,.35); }
+    .m-btn-danger { color: var(--red); border-color: rgba(255,69,58,.15); }
+    .m-btn-danger:hover { background: rgba(255,69,58,.08); border-color: rgba(255,69,58,.3); }
+
+    /* ── Animations ── */
+    @keyframes heroIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: none; }
+    }
 
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(12px); }
@@ -458,56 +529,56 @@
       to   { opacity: 1; }
     }
 
-    @keyframes modalIn {
-      from { opacity: 0; transform: scale(.95) translateY(8px); }
+    @keyframes modalPop {
+      from { opacity: 0; transform: scale(.94) translateY(10px); }
       to   { opacity: 1; transform: none; }
     }
 
-    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(128,128,128,.2); border-radius: 99px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(128,128,128,.35); }
+    ::-webkit-scrollbar-thumb { background: rgba(128,128,128,.15); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(128,128,128,.25); }
 
-    @media (max-width: 600px) {
-      .page-header { padding: 20px 20px 0; }
-      .search-wrap { padding: 16px 20px 0; }
-      .results-info { padding: 12px 20px 0; }
-      .history-list { padding: 12px 20px 32px; }
+    @media (max-width: 640px) {
+      .hero { padding: 28px 24px 20px; }
+      .search-area { padding: 0 24px 8px; }
+      .stats-bar { padding: 10px 24px 0; }
+      .history-list { padding: 14px 24px 40px; }
     }
   </style>
 </head>
 <body>
 
-  <div class="top-accent"></div>
+  <div class="accent-bar"></div>
 
-  <header class="page-header">
-    <div class="page-header-left">
-      <div class="page-header-icon">
+  <header class="hero">
+    <div class="hero-left">
+      <div class="hero-icon">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+          <circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="1.8"/>
           <path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
       <h1>История</h1>
     </div>
-    <button class="btn-clear-history" id="btn-clear-all">
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="vertical-align: -1px; margin-right: 4px;">
-        <path d="M1.5 3h9M4.5 3V2h3v1M3.5 3l.5 7h4l.5-7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <button class="btn-clear" id="btn-clear-all">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+        <path d="M2 3.5h9M5 3.5V2.5h3v1M3.5 3.5l.5 7.5h5l.5-7.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
       </svg>
-      Очистить историю
+      Очистить
     </button>
   </header>
 
-  <div class="search-wrap">
+  <div class="search-area">
     <div class="search-box">
       <span class="search-ico">
-        <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-          <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.4"/>
-          <path d="M10 10l3.5 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
         </svg>
       </span>
       <input type="text" class="search-input" id="search-input" placeholder="Поиск в истории..." autocomplete="off" spellcheck="false">
-      <button class="search-clear" id="search-clear" title="Очистить поиск">
+      <button class="search-clear" id="search-clear" title="Очистить">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
           <path d="M2.5 2.5l7 7M9.5 2.5l-7 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
         </svg>
@@ -515,17 +586,18 @@
     </div>
   </div>
 
-  <div class="results-info hidden" id="results-info"></div>
+  <div class="stats-bar hidden" id="stats-bar">
+    <span>Найдено: <span class="result-count" id="result-count">0</span></span>
+  </div>
 
   <div class="history-list" id="history-list"></div>
 
   <!-- Empty state -->
-  <div class="empty-state hidden" id="empty-state">
-    <div class="empty-illustration">
-      <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-        <circle cx="20" cy="20" r="15" stroke="currentColor" stroke-width="1.5" opacity=".3"/>
-        <path d="M20 12v8l4 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity=".3"/>
-        <path d="M28 28l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity=".2"/>
+  <div class="empty hidden" id="empty-state">
+    <div class="empty-icon">
+      <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
+        <circle cx="19" cy="19" r="14" stroke="currentColor" stroke-width="1.5" opacity=".25"/>
+        <path d="M19 11v8l4 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/>
       </svg>
     </div>
     <div class="empty-title" id="empty-title">История пуста</div>
@@ -535,12 +607,12 @@
   <!-- Toast -->
   <div class="toast hidden" id="toast"></div>
 
-  <!-- Confirm modal -->
-  <div class="modal-overlay hidden" id="modal-overlay">
-    <div class="modal">
+  <!-- Modal -->
+  <div class="modal-bg hidden" id="modal-overlay">
+    <div class="modal-box">
       <h3>Очистить историю</h3>
       <p>Вся история посещений будет удалена навсегда. Это действие нельзя отменить.</p>
-      <div class="modal-actions">
+      <div class="modal-btns">
         <button class="m-btn" id="modal-cancel">Отмена</button>
         <button class="m-btn m-btn-danger" id="modal-confirm">Удалить всё</button>
       </div>
@@ -548,29 +620,21 @@
   </div>
 
   <script>
-    // ── State ────────────────────────────────────────────────
+    // ── State ──
     let allEntries = [];
     let searchTerm = '';
 
-    // ── Utility ──────────────────────────────────────────────
+    // ── Utility ──
     function postMsg(data) {
       try {
-        if (window.chrome && window.chrome.webview) {
-          window.chrome.webview.postMessage(data);
-        } else {
-          window.parent.postMessage(data, '*');
-        }
+        if (window.chrome && window.chrome.webview) window.chrome.webview.postMessage(data);
+        else window.parent.postMessage(data, '*');
       } catch {}
     }
 
     function onMsg(handler) {
-      window.addEventListener('integral-response', (e) => {
-        handler(e.detail || {});
-      });
-      // Fallback for direct window.postMessage (dev testing)
-      window.addEventListener('message', (e) => {
-        if (e.data && e.data.type) handler(e.data);
-      });
+      window.addEventListener('integral-response', (e) => handler(e.detail || {}));
+      window.addEventListener('message', (e) => { if (e.data && e.data.type) handler(e.data); });
     }
 
     function showToast(text) {
@@ -579,32 +643,42 @@
       t.classList.remove('hidden');
       requestAnimationFrame(() => t.classList.add('show'));
       clearTimeout(t._timer);
-      t._timer = setTimeout(() => {
-        t.classList.remove('show');
-        setTimeout(() => t.classList.add('hidden'), 200);
-      }, 2200);
+      t._timer = setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.classList.add('hidden'), 250); }, 2400);
     }
 
-    function escapeHtml(str) {
-      const d = document.createElement('div');
-      d.textContent = str;
-      return d.innerHTML;
-    }
+    function escapeHtml(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
 
-    function getDomain(url) {
-      try {
-        return new URL(url).hostname.replace(/^www\./, '');
-      } catch {
-        return url;
-      }
-    }
+    function getDomain(url) { try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url; } }
 
     function formatTime(ts) {
       const d = new Date(ts);
       return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
     }
 
-    // ── Date grouping ───────────────────────────────────────
+    // ── Accent color sync ──
+    const ACCENTS = {
+      violet:  { pri: '#8b5cf6', sec: '#a78bfa', grad: 'linear-gradient(135deg,#8b5cf6,#0ea5e9)',  glow: 'rgba(139,92,246,.15)', border: 'rgba(139,92,246,.25)' },
+      blue:    { pri: '#3b82f6', sec: '#60a5fa', grad: 'linear-gradient(135deg,#3b82f6,#06b6d4)',  glow: 'rgba(59,130,246,.15)', border: 'rgba(59,130,246,.25)' },
+      cyan:    { pri: '#06b6d4', sec: '#22d3ee', grad: 'linear-gradient(135deg,#06b6d4,#10b981)',  glow: 'rgba(6,182,212,.15)',  border: 'rgba(6,182,212,.25)' },
+      green:   { pri: '#10b981', sec: '#34d399', grad: 'linear-gradient(135deg,#10b981,#06b6d4)',  glow: 'rgba(16,185,129,.15)', border: 'rgba(16,185,129,.25)' },
+      orange:  { pri: '#f97316', sec: '#fb923c', grad: 'linear-gradient(135deg,#f97316,#f59e0b)',  glow: 'rgba(249,115,22,.15)', border: 'rgba(249,115,22,.25)' },
+      rose:    { pri: '#f43f5e', sec: '#fb7185', grad: 'linear-gradient(135deg,#f43f5e,#f97316)',  glow: 'rgba(244,63,94,.15)',  border: 'rgba(244,63,94,.25)' },
+      pink:    { pri: '#ec4899', sec: '#f472b6', grad: 'linear-gradient(135deg,#ec4899,#a855f7)',  glow: 'rgba(236,72,153,.15)', border: 'rgba(236,72,153,.25)' },
+      amber:   { pri: '#f59e0b', sec: '#fbbf24', grad: 'linear-gradient(135deg,#f59e0b,#f97316)',  glow: 'rgba(245,158,11,.15)', border: 'rgba(245,158,11,.25)' },
+    };
+
+    function applyAccent(key) {
+      const a = ACCENTS[key];
+      if (!a) return;
+      const r = document.documentElement.style;
+      r.setProperty('--accent', a.pri);
+      r.setProperty('--accent-secondary', a.sec);
+      r.setProperty('--accent-grad', a.grad);
+      r.setProperty('--accent-glow', a.glow);
+      r.setProperty('--accent-border', a.border);
+    }
+
+    // ── Date grouping ──
     function getDateGroup(ts) {
       const now = new Date();
       const d = new Date(ts);
@@ -615,19 +689,19 @@
 
       if (entryDate.getTime() === today.getTime()) return 'Сегодня';
       if (entryDate.getTime() === yesterday.getTime()) return 'Вчера';
-      if (entryDate >= weekAgo) return '7 дней назад';
+      if (entryDate >= weekAgo) return 'Эта неделя';
       return 'Раньше';
     }
 
-    const groupOrder = ['Сегодня', 'Вчера', '7 дней назад', 'Раньше'];
+    const groupOrder = ['Сегодня', 'Вчера', 'Эта неделя', 'Раньше'];
 
-    // ── Render ───────────────────────────────────────────────
+    // ── Render ──
     function render() {
       const list = document.getElementById('history-list');
       const empty = document.getElementById('empty-state');
-      const resultsInfo = document.getElementById('results-info');
+      const statsBar = document.getElementById('stats-bar');
+      const resultCount = document.getElementById('result-count');
 
-      // Filter
       let filtered = allEntries;
       if (searchTerm) {
         const q = searchTerm.toLowerCase();
@@ -637,15 +711,13 @@
         );
       }
 
-      // Show results info when searching
       if (searchTerm) {
-        resultsInfo.classList.remove('hidden');
-        resultsInfo.textContent = `Найдено: ${filtered.length}`;
+        statsBar.classList.remove('hidden');
+        resultCount.textContent = filtered.length;
       } else {
-        resultsInfo.classList.add('hidden');
+        statsBar.classList.add('hidden');
       }
 
-      // Empty state
       if (filtered.length === 0) {
         list.innerHTML = '';
         empty.classList.remove('hidden');
@@ -661,7 +733,6 @@
 
       empty.classList.add('hidden');
 
-      // Group by date
       const groups = {};
       filtered.forEach(e => {
         const label = getDateGroup(e.timestamp);
@@ -669,23 +740,30 @@
         groups[label].push(e);
       });
 
-      // Sort within each group by timestamp (newest first)
       for (const key of Object.keys(groups)) {
         groups[key].sort((a, b) => b.timestamp - a.timestamp);
       }
 
       let html = '';
       let delay = 0;
+
       for (const label of groupOrder) {
         if (!groups[label]) continue;
-        html += `<div class="date-group" style="animation-delay: ${delay * .03}s">`;
-        html += `<div class="date-label">${escapeHtml(label)}</div>`;
+        const count = groups[label].length;
+
+        html += `<div class="date-group" style="animation-delay: ${delay * .04}s">`;
+        html += `<div class="date-header">
+          <span class="date-label">${escapeHtml(label)}</span>
+          <span class="date-line"></span>
+          <span class="date-count">${count}</span>
+        </div>`;
+
         for (const entry of groups[label]) {
           const domain = getDomain(entry.url);
           const time = formatTime(entry.timestamp);
           const faviconHtml = entry.favicon
             ? `<img src="${escapeHtml(entry.favicon)}" alt="">`
-            : `<svg class="default-ico" width="14" height="14" viewBox="0 0 14 14" fill="none">
+            : `<svg class="def-ico" width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/>
                 <path d="M5 7h4M7 5v4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
                </svg>`;
@@ -697,12 +775,14 @@
                 <div class="h-title">${escapeHtml(entry.title || domain)}</div>
                 <div class="h-url">${escapeHtml(domain)}</div>
               </div>
-              <div class="h-time">${time}</div>
-              <button class="h-delete" data-id="${escapeHtml(entry.id)}" title="Удалить">
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-                </svg>
-              </button>
+              <div class="h-meta">
+                <span class="h-time">${time}</span>
+                <button class="h-delete" data-id="${escapeHtml(entry.id)}" title="Удалить">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                  </svg>
+                </button>
+              </div>
             </div>`;
         }
         html += '</div>';
@@ -711,7 +791,7 @@
 
       list.innerHTML = html;
 
-      // Wire click events
+      // Wire events
       list.querySelectorAll('.h-item').forEach(item => {
         item.addEventListener('click', (e) => {
           if (e.target.closest('.h-delete')) return;
@@ -726,15 +806,24 @@
           const id = btn.dataset.id;
           if (id) {
             postMsg({ type: 'history-delete', id });
-            allEntries = allEntries.filter(e => String(e.id) !== String(id));
-            render();
-            showToast('Запись удалена');
+            // Animate removal
+            const item = btn.closest('.h-item');
+            if (item) {
+              item.style.transition = 'opacity .15s, transform .15s';
+              item.style.opacity = '0';
+              item.style.transform = 'translateX(16px)';
+              setTimeout(() => {
+                allEntries = allEntries.filter(e => String(e.id) !== String(id));
+                render();
+                showToast('Запись удалена');
+              }, 150);
+            }
           }
         });
       });
     }
 
-    // ── Search ──────────────────────────────────────────────
+    // ── Search ──
     const searchInput = document.getElementById('search-input');
     const searchClear = document.getElementById('search-clear');
 
@@ -752,26 +841,25 @@
       render();
     });
 
-    // ── Clear all history ───────────────────────────────────
+    // ── Clear all ──
     document.getElementById('btn-clear-all').addEventListener('click', async () => {
-      if (allEntries.length === 0) {
-        showToast('История уже пуста');
-        return;
-      }
+      if (allEntries.length === 0) { showToast('История уже пуста'); return; }
+
       const overlay = document.getElementById('modal-overlay');
       overlay.classList.remove('hidden');
 
       const confirmed = await new Promise(resolve => {
-        function onCancel() { cleanup(); resolve(false); }
-        function onConfirm() { cleanup(); resolve(true); }
-        function onBg(e) { if (e.target === overlay) { cleanup(); resolve(false); } }
-        function cleanup() {
-          document.getElementById('modal-cancel').removeEventListener('click', onCancel);
-          document.getElementById('modal-confirm').removeEventListener('click', onConfirm);
+        function done(r) { overlay.classList.add('hidden'); clean(); resolve(r); }
+        function clean() {
+          document.getElementById('modal-cancel').removeEventListener('click', onC);
+          document.getElementById('modal-confirm').removeEventListener('click', onOk);
           overlay.removeEventListener('click', onBg);
         }
-        document.getElementById('modal-cancel').addEventListener('click', onCancel);
-        document.getElementById('modal-confirm').addEventListener('click', onConfirm);
+        function onC() { done(false); }
+        function onOk() { done(true); }
+        function onBg(e) { if (e.target === overlay) done(false); }
+        document.getElementById('modal-cancel').addEventListener('click', onC);
+        document.getElementById('modal-confirm').addEventListener('click', onOk);
         overlay.addEventListener('click', onBg);
       });
 
@@ -785,7 +873,7 @@
       }
     });
 
-    // ── Listen for parent messages ──────────────────────────
+    // ── Listen for parent ──
     onMsg((d) => {
       if (!d || typeof d !== 'object') return;
 
@@ -793,10 +881,16 @@
         allEntries = d.entries;
         render();
       }
+
+      // Sync accent color from settings
+      if (d.type === 'init-settings' && d.settings && d.settings.accentColor) {
+        applyAccent(d.settings.accentColor);
+      }
     });
 
-    // ── Request initial history ─────────────────────────────
+    // ── Request initial ──
     postMsg({ type: 'history-get' });
+    postMsg({ type: 'settings-get' });
   </script>
 </body>
 </html>

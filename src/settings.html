@@ -6,195 +6,249 @@
   <title>Настройки</title>
   <base target="_self">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:      #0d0d0f;
-      --solid1:  #1a1a1b;
-      --solid2:  #222223;
-      --solid3:  #2d2d2f;
-      --b:       rgba(255,255,255,.05);
-      --b2:      rgba(255,255,255,.09);
-      --b3:      rgba(255,255,255,.15);
-      --s1:      rgba(255,255,255,.05);
-      --s2:      rgba(255,255,255,.08);
-      --s3:      rgba(255,255,255,.14);
-      --t1:      #efefef;
-      --t2:      rgba(239,239,239,.55);
-      --t3:      rgba(239,239,239,.25);
-      --y:       #8b5cf6;
-      --y2:      #a78bfa;
-      --y3:      #0ea5e9;
-      --ybg:     rgba(139,92,246,.13);
-      --yb:      rgba(139,92,246,.36);
-      --red:     #ff453a;
-      --green:   #34c759;
-      --font:    'Google Sans', -apple-system, sans-serif;
-      --ease:    cubic-bezier(.16,1,.3,1);
-      --sp:      cubic-bezier(.34,1.56,.64,1);
+      --bg: #0a0a0c;
+      --bg-subtle: #0e0e11;
+      --surface: #141416;
+      --surface-hover: #1a1a1d;
+      --surface-active: #202024;
+      --border: rgba(255,255,255,.06);
+      --border-hover: rgba(255,255,255,.1);
+      --text: #f0f0f2;
+      --text-secondary: rgba(240,240,242,.55);
+      --text-tertiary: rgba(240,240,242,.28);
+      --accent: #8b5cf6;
+      --accent-secondary: #a78bfa;
+      --accent-glow: rgba(139,92,246,.15);
+      --accent-border: rgba(139,92,246,.25);
       --accent-grad: linear-gradient(135deg, #8b5cf6, #0ea5e9);
+      --red: #ff453a;
+      --green: #30d158;
+      --font: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+      --ease: cubic-bezier(.16,1,.3,1);
+      --spring: cubic-bezier(.34,1.56,.64,1);
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
     }
 
+    html { height: 100%; }
+
     html, body {
-      height: 100%;
       background: var(--bg);
-      color: var(--t1);
+      color: var(--text);
       font-family: var(--font);
       font-size: 14px;
       font-weight: 500;
       -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
       overflow-x: hidden;
     }
 
     body {
       display: flex;
       flex-direction: column;
+      min-height: 100vh;
     }
 
-    /* ── Gradient accent bar at top ── */
-    .top-accent {
+    /* ── Accent bar ── */
+    .accent-bar {
       width: 100%;
-      height: 3px;
+      height: 2px;
       background: var(--accent-grad);
       flex-shrink: 0;
+      opacity: .8;
     }
 
-    /* ── Header ── */
-    .page-header {
+    /* ── Hero header ── */
+    .hero {
+      position: relative;
+      padding: 40px 48px 32px;
+      flex-shrink: 0;
+      overflow: hidden;
+      animation: heroIn .6s var(--ease) both;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -40%;
+      right: -10%;
+      width: 340px;
+      height: 340px;
+      background: var(--accent-glow);
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      opacity: .6;
+    }
+
+    .hero-content {
+      position: relative;
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 28px 36px 0;
-      flex-shrink: 0;
-      animation: fadeUp .4s var(--ease) both;
+      gap: 18px;
     }
 
-    .page-header-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      background: var(--ybg);
-      border: 1px solid var(--yb);
+    .hero-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: var(--accent-glow);
+      border: 1px solid var(--accent-border);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--y2);
+      color: var(--accent-secondary);
       flex-shrink: 0;
+      backdrop-filter: blur(12px);
     }
 
-    .page-header h1 {
-      font-size: 22px;
-      font-weight: 700;
-      letter-spacing: -.3px;
-      color: var(--t1);
+    .hero-text h1 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -.4px;
+      background: var(--accent-grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.2;
     }
 
-    .page-header-sub {
+    .hero-text p {
       font-size: 13px;
       font-weight: 500;
-      color: var(--t3);
-      margin-top: 2px;
+      color: var(--text-tertiary);
+      margin-top: 3px;
     }
 
-    /* ── Scrollable content ── */
+    /* ── Content area ── */
     .content {
       flex: 1;
       overflow-y: auto;
-      padding: 24px 36px 40px;
+      padding: 8px 48px 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
-    /* ── Settings cards ── */
-    .settings-card {
-      background: var(--solid1);
-      border: 1px solid var(--b);
-      border-radius: 14px;
-      padding: 20px 24px;
-      margin-bottom: 12px;
-      transition: border-color .2s, background .2s;
-      animation: fadeUp .4s var(--ease) both;
+    /* ── Glass card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 22px 24px;
+      backdrop-filter: blur(20px);
+      transition: border-color .2s, background .2s, transform .2s;
+      animation: cardIn .45s var(--ease) both;
     }
 
-    .settings-card:nth-child(1) { animation-delay: .03s; }
-    .settings-card:nth-child(2) { animation-delay: .06s; }
-    .settings-card:nth-child(3) { animation-delay: .09s; }
-    .settings-card:nth-child(4) { animation-delay: .12s; }
-    .settings-card:nth-child(5) { animation-delay: .15s; }
-    .settings-card:nth-child(6) { animation-delay: .18s; }
-    .settings-card:nth-child(7) { animation-delay: .21s; }
+    .card:hover {
+      border-color: var(--border-hover);
+    }
 
-    .settings-card:hover {
-      border-color: var(--b2);
+    .card:nth-child(1) { animation-delay: .04s; }
+    .card:nth-child(2) { animation-delay: .07s; }
+    .card:nth-child(3) { animation-delay: .10s; }
+    .card:nth-child(4) { animation-delay: .13s; }
+    .card:nth-child(5) { animation-delay: .16s; }
+    .card:nth-child(6) { animation-delay: .19s; }
+    .card:nth-child(7) { animation-delay: .22s; }
+    .card:nth-child(8) { animation-delay: .25s; }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .card-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      background: var(--accent-glow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-secondary);
+      flex-shrink: 0;
     }
 
     .card-title {
-      font-size: 11px;
+      font-size: 15px;
       font-weight: 700;
-      letter-spacing: .7px;
-      text-transform: uppercase;
-      color: var(--t3);
-      margin-bottom: 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      letter-spacing: -.1px;
+      color: var(--text);
     }
 
-    .card-title svg {
-      opacity: .5;
-      flex-shrink: 0;
+    .card-desc {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      font-weight: 500;
     }
 
     /* ── Settings row ── */
-    .s-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 10px;
-    }
-
-    .s-row:last-child { margin-bottom: 0; }
-
-    /* ── Toggle ── */
-    .toggle-label {
+    .row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      width: 100%;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--t2);
-      cursor: pointer;
-      padding: 4px 0;
-      transition: color .15s;
+      gap: 12px;
+      padding: 6px 0;
     }
 
-    .toggle-label:hover { color: var(--t1); }
+    .row + .row {
+      border-top: 1px solid var(--border);
+      margin-top: 4px;
+      padding-top: 14px;
+    }
 
-    .toggle-switch {
+    .row:last-child { margin-bottom: 0; }
+
+    .row-label {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .row-label span:first-child {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .row-label span:last-child {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      font-weight: 500;
+    }
+
+    /* ── Toggle switch ── */
+    .toggle {
       position: relative;
-      width: 40px;
-      height: 22px;
+      width: 44px;
+      height: 24px;
       flex-shrink: 0;
     }
 
-    .toggle-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-      position: absolute;
-    }
+    .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
 
-    .toggle-slider {
+    .toggle-track {
       position: absolute;
       inset: 0;
-      background: var(--s2);
-      border-radius: 12px;
-      transition: background .2s;
+      background: var(--surface-active);
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      transition: background .25s var(--ease), border-color .25s, box-shadow .25s;
       cursor: pointer;
     }
 
-    .toggle-slider::before {
+    .toggle-track::before {
       content: '';
       position: absolute;
       top: 3px;
@@ -202,29 +256,198 @@
       width: 16px;
       height: 16px;
       border-radius: 50%;
-      background: var(--t3);
-      transition: transform .2s var(--sp), background .2s;
+      background: var(--text-tertiary);
+      transition: transform .25s var(--spring), background .25s, box-shadow .25s;
     }
 
-    .toggle-switch input:checked + .toggle-slider {
-      background: var(--ybg);
-      border: 1px solid var(--yb);
+    .toggle input:checked + .toggle-track {
+      background: var(--accent-glow);
+      border-color: var(--accent-border);
+      box-shadow: 0 0 12px var(--accent-glow);
     }
 
-    .toggle-switch input:checked + .toggle-slider::before {
-      transform: translateX(18px);
-      background: var(--y2);
+    .toggle input:checked + .toggle-track::before {
+      transform: translateX(20px);
+      background: var(--accent-secondary);
+      box-shadow: 0 0 8px var(--accent-glow);
     }
 
-    /* ── Select dropdown ── */
-    .s-select {
-      flex: 1;
+    /* ── Theme picker ── */
+    .theme-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      width: 100%;
+    }
+
+    .theme-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 12px 14px;
+      border-radius: var(--radius-md);
+      border: 1.5px solid var(--border);
+      background: var(--bg-subtle);
+      cursor: pointer;
+      transition: border-color .2s, background .2s, transform .15s var(--spring);
+      user-select: none;
+    }
+
+    .theme-card:hover {
+      border-color: var(--border-hover);
+      background: var(--surface);
+    }
+
+    .theme-card:active { transform: scale(.97); }
+
+    .theme-card.active {
+      border-color: var(--accent-border);
+      background: var(--accent-glow);
+    }
+
+    .theme-preview {
+      width: 56px;
       height: 38px;
-      padding: 0 14px;
-      background: var(--solid2);
-      border: 1px solid var(--b2);
-      border-radius: 10px;
-      color: var(--t1);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .theme-preview-dark {
+      background: #1a1a1b;
+    }
+
+    .theme-preview-dark::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 12px;
+      background: #111;
+      border-top: 1px solid rgba(255,255,255,.06);
+    }
+
+    .theme-preview-light {
+      background: #f5f5f7;
+    }
+
+    .theme-preview-light::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 12px;
+      background: #e5e5e7;
+      border-top: 1px solid rgba(0,0,0,.06);
+    }
+
+    .theme-preview-system {
+      background: linear-gradient(135deg, #f5f5f7 50%, #1a1a1b 50%);
+    }
+
+    .theme-preview-system::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 12px;
+      background: linear-gradient(135deg, #e5e5e7 50%, #111 50%);
+      border-top: 1px solid rgba(128,128,128,.15);
+    }
+
+    .theme-preview-bar {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      right: 4px;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(139,92,246,.4);
+    }
+
+    .theme-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      transition: color .15s;
+    }
+
+    .theme-card.active .theme-name {
+      color: var(--accent-secondary);
+    }
+
+    /* ── Accent color picker ── */
+    .accent-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .accent-swatch {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      position: relative;
+      transition: transform .15s var(--spring), box-shadow .2s;
+      border: 2px solid transparent;
+    }
+
+    .accent-swatch:hover {
+      transform: scale(1.12);
+    }
+
+    .accent-swatch:active { transform: scale(.95); }
+
+    .accent-swatch.active {
+      border-color: var(--text);
+      box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--text-tertiary);
+      transform: scale(1.08);
+    }
+
+    .accent-swatch.active::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      border: 2px solid var(--text-tertiary);
+    }
+
+    .accent-swatch-check {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      opacity: 0;
+      transition: opacity .15s;
+    }
+
+    .accent-swatch.active .accent-swatch-check { opacity: 1; }
+
+    .accent-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      margin-top: 6px;
+    }
+
+    /* ── Select ── */
+    .sel {
+      height: 38px;
+      padding: 0 36px 0 14px;
+      background: var(--surface-hover);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
       font-family: var(--font);
       font-size: 13px;
       font-weight: 500;
@@ -232,80 +455,22 @@
       cursor: pointer;
       appearance: none;
       -webkit-appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='rgba(255,255,255,.35)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='rgba(255,255,255,.3)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-position: right 12px center;
-      padding-right: 32px;
-      transition: border-color .2s, box-shadow .2s;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+      min-width: 160px;
     }
 
-    .s-select:focus {
-      border-color: rgba(139,92,246,.5);
-      box-shadow: 0 0 0 3px rgba(139,92,246,.1);
+    .sel:focus {
+      border-color: var(--accent-border);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+      background-color: var(--surface-active);
     }
 
-    .s-select option {
-      background: var(--solid2);
-      color: var(--t1);
-    }
-
-    /* ── Radio group ── */
-    .radio-group {
-      display: flex;
-      gap: 16px;
-    }
-
-    .radio-label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--t2);
-      cursor: pointer;
-      padding: 8px 16px;
-      border-radius: 10px;
-      border: 1px solid var(--b);
-      background: var(--s1);
-      transition: background .15s, border-color .15s, color .15s;
-    }
-
-    .radio-label:hover {
-      background: var(--s2);
-      color: var(--t1);
-    }
-
-    .radio-label input { display: none; }
-
-    .radio-mark {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      border: 1.5px solid var(--b3);
-      position: relative;
-      transition: border-color .2s;
-      flex-shrink: 0;
-    }
-
-    .radio-label input:checked ~ .radio-mark {
-      border-color: var(--y2);
-    }
-
-    .radio-label input:checked ~ .radio-mark::after {
-      content: '';
-      position: absolute;
-      top: 3px;
-      left: 3px;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--y2);
-    }
-
-    .radio-label:has(input:checked) {
-      border-color: rgba(139,92,246,.3);
-      background: var(--ybg);
-      color: var(--t1);
+    .sel option {
+      background: var(--surface);
+      color: var(--text);
     }
 
     /* ── Range slider ── */
@@ -313,94 +478,86 @@
       display: flex;
       align-items: center;
       gap: 14px;
-      width: 100%;
     }
 
-    .range-label {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--t2);
-      white-space: nowrap;
-    }
-
-    .range-value {
+    .range-val {
       font-size: 13px;
       font-weight: 700;
-      color: var(--y2);
-      min-width: 36px;
+      color: var(--accent-secondary);
+      min-width: 38px;
       text-align: right;
       font-variant-numeric: tabular-nums;
     }
 
-    .s-range {
+    .rng {
       flex: 1;
       height: 4px;
       -webkit-appearance: none;
       appearance: none;
-      background: var(--s2);
+      background: var(--surface-active);
+      border: 1px solid var(--border);
       border-radius: 4px;
       outline: none;
       cursor: pointer;
     }
 
-    .s-range::-webkit-slider-thumb {
+    .rng::-webkit-slider-thumb {
       -webkit-appearance: none;
       width: 18px;
       height: 18px;
       border-radius: 50%;
-      background: var(--y2);
+      background: var(--accent-secondary);
       cursor: pointer;
       border: 2px solid var(--bg);
-      box-shadow: 0 0 0 2px var(--yb);
-      transition: transform .1s var(--sp);
+      box-shadow: 0 0 0 2px var(--accent-border), 0 2px 8px rgba(0,0,0,.3);
+      transition: transform .15s var(--spring), box-shadow .15s;
     }
 
-    .s-range::-webkit-slider-thumb:hover {
+    .rng::-webkit-slider-thumb:hover {
       transform: scale(1.15);
+      box-shadow: 0 0 0 3px var(--accent-glow), 0 2px 12px rgba(0,0,0,.4);
     }
 
     /* ── Buttons ── */
-    .s-btn {
+    .btn {
       height: 38px;
-      padding: 0 20px;
-      border-radius: 10px;
-      background: var(--s1);
-      border: 1px solid var(--b2);
-      color: var(--t1);
+      padding: 0 18px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-hover);
+      border: 1px solid var(--border);
+      color: var(--text);
       font-family: var(--font);
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
-      transition: background .15s, border-color .15s, transform .1s var(--sp);
+      transition: background .15s, border-color .15s, transform .1s var(--spring);
       white-space: nowrap;
     }
 
-    .s-btn:hover {
-      background: var(--s2);
-      border-color: var(--b3);
+    .btn:hover {
+      background: var(--surface-active);
+      border-color: var(--border-hover);
     }
 
-    .s-btn:active {
-      transform: scale(.97);
-    }
+    .btn:active { transform: scale(.97); }
 
-    .s-btn-danger {
+    .btn-danger {
       color: var(--red);
-      border-color: rgba(255,69,58,.2);
+      border-color: rgba(255,69,58,.15);
     }
 
-    .s-btn-danger:hover {
-      background: rgba(255,69,58,.1);
-      border-color: rgba(255,69,58,.35);
+    .btn-danger:hover {
+      background: rgba(255,69,58,.08);
+      border-color: rgba(255,69,58,.3);
     }
 
-    .s-btn-accent {
+    .btn-accent {
       background: var(--accent-grad);
       border-color: transparent;
       color: #fff;
     }
 
-    .s-btn-accent:hover {
+    .btn-accent:hover {
       opacity: .9;
       border-color: transparent;
     }
@@ -408,108 +565,97 @@
     .btn-row {
       display: flex;
       gap: 10px;
-      flex-wrap: wrap;
     }
 
-    .btn-row .s-btn { flex: 1; min-width: 120px; }
+    .btn-row .btn { flex: 1; min-width: 100px; justify-content: center; display: flex; align-items: center; }
 
-    /* ── Cache info ── */
-    .cache-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      width: 100%;
-    }
-
+    /* ── Cache row ── */
     .cache-info {
       font-size: 12px;
-      color: var(--t3);
+      color: var(--text-tertiary);
       font-weight: 500;
     }
 
     .cache-size {
-      font-variant-numeric: tabular-nums;
-      color: var(--y2);
+      color: var(--accent-secondary);
       font-weight: 700;
+      font-variant-numeric: tabular-nums;
     }
 
-    /* ── About section ── */
-    .about-app {
+    /* ── About ── */
+    .about {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 18px;
     }
 
     .about-logo {
-      width: 52px;
-      height: 52px;
-      border-radius: 14px;
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
       background: var(--accent-grad);
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-    }
-
-    .about-info {
-      flex: 1;
+      box-shadow: 0 4px 20px var(--accent-glow);
     }
 
     .about-name {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--t1);
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -.2px;
     }
 
-    .about-version {
+    .about-ver {
       font-size: 12px;
-      color: var(--t3);
+      color: var(--text-tertiary);
       margin-top: 2px;
+      font-weight: 500;
     }
 
-    .about-credits {
-      font-size: 12px;
-      color: var(--t3);
-      margin-top: 12px;
-      line-height: 1.6;
-      opacity: .7;
+    .about-footer {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 16px;
+      line-height: 1.7;
+      opacity: .6;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
     }
 
     /* ── Toast ── */
     .toast {
       position: fixed;
-      bottom: 24px;
+      bottom: 28px;
       left: 50%;
-      transform: translateX(-50%) translateY(8px);
-      background: var(--solid3);
-      border: 1px solid var(--b3);
-      color: var(--t1);
+      transform: translateX(-50%) translateY(10px);
+      background: var(--surface-active);
+      border: 1px solid var(--border-hover);
+      color: var(--text);
+      font-family: var(--font);
       font-size: 13px;
       font-weight: 600;
-      padding: 10px 20px;
-      border-radius: 12px;
-      box-shadow: 0 8px 32px rgba(0,0,0,.5);
+      padding: 10px 22px;
+      border-radius: var(--radius-md);
+      box-shadow: 0 12px 40px rgba(0,0,0,.5);
       opacity: 0;
-      transition: opacity .2s var(--ease), transform .2s var(--ease);
+      transition: opacity .25s var(--ease), transform .25s var(--ease);
       z-index: 9999;
       pointer-events: none;
       white-space: nowrap;
-      font-family: var(--font);
+      backdrop-filter: blur(16px);
     }
 
-    .toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     .toast.hidden { display: none; }
 
-    /* ── Confirmation modal ── */
-    .modal-overlay {
+    /* ── Modal ── */
+    .modal-bg {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,.6);
-      backdrop-filter: blur(4px);
+      background: rgba(0,0,0,.65);
+      backdrop-filter: blur(6px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -517,46 +663,32 @@
       animation: fadeIn .15s var(--ease);
     }
 
-    .modal-overlay.hidden { display: none; }
+    .modal-bg.hidden { display: none; }
 
-    .modal {
-      background: var(--solid2);
-      border: 1px solid var(--b3);
+    .modal-box {
+      background: var(--surface);
+      border: 1px solid var(--border-hover);
       border-radius: 20px;
       padding: 28px;
       width: 100%;
       max-width: 380px;
-      box-shadow: 0 20px 60px rgba(0,0,0,.6);
-      animation: modalIn .2s var(--ease);
+      box-shadow: 0 24px 80px rgba(0,0,0,.6);
+      animation: modalPop .25s var(--ease);
     }
 
-    .modal h3 {
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 8px;
-      color: var(--t1);
+    .modal-box h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .modal-box p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 22px; }
+    .modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
+    .modal-btns .btn { min-width: 90px; text-align: center; justify-content: center; display: flex; }
+
+    /* ── Animations ── */
+    @keyframes heroIn {
+      from { opacity: 0; transform: translateY(-12px); }
+      to   { opacity: 1; transform: none; }
     }
 
-    .modal p {
-      font-size: 13px;
-      color: var(--t2);
-      line-height: 1.5;
-      margin-bottom: 20px;
-    }
-
-    .modal-actions {
-      display: flex;
-      gap: 10px;
-      justify-content: flex-end;
-    }
-
-    .modal-actions .s-btn {
-      min-width: 100px;
-      text-align: center;
-    }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(12px); }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(14px) scale(.99); }
       to   { opacity: 1; transform: none; }
     }
 
@@ -565,58 +697,121 @@
       to   { opacity: 1; }
     }
 
-    @keyframes modalIn {
-      from { opacity: 0; transform: scale(.95) translateY(8px); }
+    @keyframes modalPop {
+      from { opacity: 0; transform: scale(.94) translateY(10px); }
       to   { opacity: 1; transform: none; }
     }
 
     /* ── Scrollbar ── */
-    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(128,128,128,.2); border-radius: 99px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(128,128,128,.35); }
+    ::-webkit-scrollbar-thumb { background: rgba(128,128,128,.15); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(128,128,128,.25); }
 
     /* ── Responsive ── */
-    @media (max-width: 600px) {
-      .page-header { padding: 20px 20px 0; }
-      .content { padding: 20px 20px 32px; }
-      .settings-card { padding: 16px 18px; }
-      .radio-group { flex-direction: column; gap: 8px; }
+    @media (max-width: 640px) {
+      .hero { padding: 28px 24px 24px; }
+      .content { padding: 8px 24px 40px; }
+      .card { padding: 18px 18px; }
+      .theme-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
       .btn-row { flex-direction: column; }
-      .btn-row .s-btn { min-width: 0; }
+      .btn-row .btn { min-width: 0; }
     }
   </style>
 </head>
 <body>
 
-  <div class="top-accent"></div>
+  <div class="accent-bar"></div>
 
-  <header class="page-header">
-    <div class="page-header-icon">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
-        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" stroke="currentColor" stroke-width="1.7" fill="none"/>
-      </svg>
-    </div>
-    <div>
-      <h1>Настройки</h1>
-      <div class="page-header-sub">Управление браузером Integral.</div>
+  <!-- Hero -->
+  <header class="hero">
+    <div class="hero-content">
+      <div class="hero-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" stroke="currentColor" stroke-width="1.8" fill="none"/>
+        </svg>
+      </div>
+      <div class="hero-text">
+        <h1>Настройки</h1>
+        <p>Персонализация браузера Integral.</p>
+      </div>
     </div>
   </header>
 
   <div class="content">
 
-    <!-- 1. Search Engine -->
-    <div class="settings-card">
-      <div class="card-title">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.3"/>
-          <path d="M9.5 9.5L13 13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-        </svg>
-        Поисковая система
+    <!-- Theme -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M8 3.5v2M8 10.5v2M3.5 8h2M10.5 8h2M4.8 4.8l1.4 1.4M9.8 9.8l1.4 1.4M11.2 4.8l-1.4 1.4M6.2 9.8l-1.4 1.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="card-title">Тема оформления</div>
+          <div class="card-desc">Выберите цветовую схему интерфейса</div>
+        </div>
       </div>
-      <div class="s-row">
-        <select class="s-select" id="sel-engine">
+      <div class="theme-grid">
+        <div class="theme-card" data-theme="dark">
+          <div class="theme-preview theme-preview-dark">
+            <div class="theme-preview-bar"></div>
+          </div>
+          <span class="theme-name">Тёмная</span>
+        </div>
+        <div class="theme-card" data-theme="light">
+          <div class="theme-preview theme-preview-light">
+            <div class="theme-preview-bar" style="background:rgba(139,92,246,.5)"></div>
+          </div>
+          <span class="theme-name">Светлая</span>
+        </div>
+        <div class="theme-card" data-theme="system">
+          <div class="theme-preview theme-preview-system">
+            <div class="theme-preview-bar"></div>
+          </div>
+          <span class="theme-name">Системная</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Accent color -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/>
+            <circle cx="8" cy="8" r="3" fill="currentColor" opacity=".4"/>
+          </svg>
+        </div>
+        <div>
+          <div class="card-title">Цвет акцента</div>
+          <div class="card-desc">Подсветка кнопок, переключателей и ссылок</div>
+        </div>
+      </div>
+      <div class="accent-grid" id="accent-grid"></div>
+      <div class="accent-label" id="accent-label" style="margin-top: 12px;">Фиолетовый</div>
+    </div>
+
+    <!-- Search engine -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="card-title">Поисковая система</div>
+          <div class="card-desc">По умолчанию из адресной строки</div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="row-label"><span>Поисковик</span></div>
+        <select class="sel" id="sel-engine">
           <option value="yandex">Яндекс</option>
           <option value="google">Google</option>
           <option value="duckduckgo">DuckDuckGo</option>
@@ -624,186 +819,149 @@
       </div>
     </div>
 
-    <!-- 2. Theme -->
-    <div class="settings-card">
-      <div class="card-title">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.3"/>
-          <path d="M7 2v2M7 10v2M2 7h2M10 7h2M3.5 3.5l1.4 1.4M9.1 9.1l1.4 1.4M10.5 3.5l-1.4 1.4M4.9 9.1l-1.4 1.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-        </svg>
-        Тема оформления
-      </div>
-      <div class="s-row">
-        <div class="radio-group">
-          <label class="radio-label">
-            <input type="radio" name="theme" value="dark" checked>
-            <span class="radio-mark"></span>
-            Тёмная
-          </label>
-          <label class="radio-label">
-            <input type="radio" name="theme" value="system">
-            <span class="radio-mark"></span>
-            Системная
-          </label>
+    <!-- Appearance -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <rect x="2" y="2" width="12" height="12" rx="3" stroke="currentColor" stroke-width="1.4" fill="none"/>
+            <path d="M5 6h6M5 8.5h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="card-title">Внешний вид</div>
+          <div class="card-desc">Настройка элементов интерфейса</div>
         </div>
       </div>
-    </div>
-
-    <!-- 3. Appearance -->
-    <div class="settings-card">
-      <div class="card-title">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <rect x="1" y="1" width="12" height="12" rx="3" stroke="currentColor" stroke-width="1.3" fill="none"/>
-          <path d="M4 5h6M4 7h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-        </svg>
-        Внешний вид
+      <div class="row">
+        <div class="row-label"><span>Панель закладок</span><span>Показать под адресной строкой</span></div>
+        <div class="toggle"><input type="checkbox" id="tog-bookmarks-bar" checked><span class="toggle-track"></span></div>
       </div>
-      <div class="s-row">
-        <label class="toggle-label">
-          <span>Панель закладок</span>
-          <div class="toggle-switch">
-            <input type="checkbox" id="tog-bookmarks-bar" checked>
-            <span class="toggle-slider"></span>
-          </div>
-        </label>
+      <div class="row">
+        <div class="row-label"><span>Прозрачная панель</span><span>Эффект матового стекла</span></div>
+        <div class="toggle"><input type="checkbox" id="tog-transparent-chrome"><span class="toggle-track"></span></div>
       </div>
-      <div class="s-row">
-        <label class="toggle-label">
-          <span>Прозрачная панель</span>
-          <div class="toggle-switch">
-            <input type="checkbox" id="tog-transparent-chrome">
-            <span class="toggle-slider"></span>
-          </div>
-        </label>
-      </div>
-      <div class="s-row">
+      <div class="row">
+        <div class="row-label"><span>Размер шрифта</span><span>Базовый размер текста в интерфейсе</span></div>
         <div class="range-wrap">
-          <span class="range-label">Размер шрифта</span>
-          <input type="range" class="s-range" id="rng-font-size" min="12" max="18" value="14" step="1">
-          <span class="range-value" id="font-size-val">14px</span>
+          <input type="range" class="rng" id="rng-font-size" min="12" max="18" value="14" step="1">
+          <span class="range-val" id="font-size-val">14px</span>
         </div>
       </div>
     </div>
 
-    <!-- 4. Privacy -->
-    <div class="settings-card">
-      <div class="card-title">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <rect x="1.5" y="6" width="11" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
-          <path d="M4 6V4.5a3 3 0 0 1 6 0V6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-          <circle cx="7" cy="9.5" r="1" fill="currentColor"/>
-        </svg>
-        Приватность
+    <!-- Privacy -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <rect x="2" y="7" width="12" height="8" rx="1.5" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M5 7V5a3 3 0 0 1 6 0V7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            <circle cx="8" cy="11" r="1" fill="currentColor"/>
+          </svg>
+        </div>
+        <div>
+          <div class="card-title">Приватность</div>
+          <div class="card-desc">Защита и блокировка</div>
+        </div>
       </div>
-      <div class="s-row">
-        <label class="toggle-label">
-          <span>Блокировка трекеров</span>
-          <div class="toggle-switch">
-            <input type="checkbox" id="tog-block-trackers" checked>
-            <span class="toggle-slider"></span>
-          </div>
-        </label>
+      <div class="row">
+        <div class="row-label"><span>Блокировка трекеров</span><span>Блокировать known-трекеры</span></div>
+        <div class="toggle"><input type="checkbox" id="tog-block-trackers" checked><span class="toggle-track"></span></div>
       </div>
-      <div class="s-row">
-        <label class="toggle-label">
-          <span>Блокировать сторонние куки</span>
-          <div class="toggle-switch">
-            <input type="checkbox" id="tog-block-3p-cookies" checked>
-            <span class="toggle-slider"></span>
-          </div>
-        </label>
+      <div class="row">
+        <div class="row-label"><span>Сторонние куки</span><span>Блокировать куки от других сайтов</span></div>
+        <div class="toggle"><input type="checkbox" id="tog-block-3p-cookies" checked><span class="toggle-track"></span></div>
       </div>
-      <div class="s-row">
-        <label class="toggle-label">
-          <span>Обход DPI при запуске</span>
-          <div class="toggle-switch">
-            <input type="checkbox" id="tog-bypass-start">
-            <span class="toggle-slider"></span>
-          </div>
-        </label>
+      <div class="row">
+        <div class="row-label"><span>Обход DPI при запуске</span><span>Автоматически включать</span></div>
+        <div class="toggle"><input type="checkbox" id="tog-bypass-start"><span class="toggle-track"></span></div>
       </div>
-      <div class="s-row">
-        <label class="toggle-label">
-          <span>Очищать данные при выходе</span>
-          <div class="toggle-switch">
-            <input type="checkbox" id="tog-clear-exit">
-            <span class="toggle-slider"></span>
-          </div>
-        </label>
+      <div class="row">
+        <div class="row-label"><span>Очищать данные при выходе</span><span>Кэш, куки, история</span></div>
+        <div class="toggle"><input type="checkbox" id="tog-clear-exit"><span class="toggle-track"></span></div>
       </div>
     </div>
 
-    <!-- 5. Cache -->
-    <div class="settings-card">
-      <div class="card-title">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <path d="M2 7a5 5 0 0 1 9.3-2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-          <path d="M12 7a5 5 0 0 1-9.3 2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-          <path d="M9 1v3.5h-3.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M5 13V9.5h3.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        Кэширование
+    <!-- Cache -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M2.5 8a5.5 5.5 0 0 1 10-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            <path d="M13.5 8a5.5 5.5 0 0 1-10 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            <path d="M10.5 1.5v3.5H7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M5.5 14.5V11H9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="card-title">Кэширование</div>
+          <div class="card-desc">Управление кэшем браузера</div>
+        </div>
       </div>
-      <div class="s-row">
-        <div class="cache-row">
-          <button class="s-btn s-btn-danger" id="btn-clear-cache">Очистить кэш</button>
+      <div class="row">
+        <div class="row-label"><span>Очистить кэш</span></div>
+        <div style="display:flex;align-items:center;gap:14px;">
           <span class="cache-info">Размер: <span class="cache-size" id="cache-size-display">...</span></span>
+          <button class="btn btn-danger" id="btn-clear-cache">Очистить</button>
         </div>
-      </div>
-      <div class="s-row">
-        <label class="toggle-label">
-          <span>Умное предзагрузка</span>
-          <div class="toggle-switch">
-            <input type="checkbox" id="tog-prefetch">
-            <span class="toggle-slider"></span>
-          </div>
-        </label>
       </div>
     </div>
 
-    <!-- 6. Data -->
-    <div class="settings-card">
-      <div class="card-title">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <path d="M7 1v5l3 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.3"/>
-        </svg>
-        Данные
+    <!-- Data -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 2v5l3 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/>
+          </svg>
+        </div>
+        <div>
+          <div class="card-title">Данные</div>
+          <div class="card-desc">Экспорт, импорт и сброс</div>
+        </div>
       </div>
-      <div class="s-row">
+      <div class="row">
+        <div class="row-label"><span>Перенос настроек</span><span>Сохранить или загрузить конфигурацию</span></div>
         <div class="btn-row">
-          <button class="s-btn" id="btn-export">Экспорт</button>
-          <button class="s-btn" id="btn-import">Импорт</button>
+          <button class="btn" id="btn-export">Экспорт</button>
+          <button class="btn" id="btn-import">Импорт</button>
         </div>
       </div>
-      <div class="s-row" style="margin-top: 4px;">
-        <button class="s-btn s-btn-danger" id="btn-reset" style="width: 100%;">Сбросить настройки</button>
+      <div class="row">
+        <div class="row-label"><span>Сбросить настройки</span><span>Вернуть значения по умолчанию</span></div>
+        <button class="btn btn-danger" id="btn-reset">Сбросить</button>
       </div>
     </div>
 
-    <!-- 7. About -->
-    <div class="settings-card">
-      <div class="card-title">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.3"/>
-          <path d="M7 6.5v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <circle cx="7" cy="4.5" r=".8" fill="currentColor"/>
-        </svg>
-        О программе
+    <!-- About -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M8 7v3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            <circle cx="8" cy="5" r=".9" fill="currentColor"/>
+          </svg>
+        </div>
+        <div>
+          <div class="card-title">О программе</div>
+        </div>
       </div>
-      <div class="about-app">
+      <div class="about">
         <div class="about-logo">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="1.8"/>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="2"/>
             <path d="M6 12h12M12 6v12" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
           </svg>
         </div>
-        <div class="about-info">
+        <div>
           <div class="about-name">Integral. Browser</div>
-          <div class="about-version" id="app-version">Версия 1.0.0</div>
+          <div class="about-ver" id="app-version">Версия 1.0.0</div>
         </div>
       </div>
-      <div class="about-credits">
+      <div class="about-footer">
         Построен на базе Chromium и Electron.<br>
         Разработан с ♥ для быстрого и безопасного серфинга.
       </div>
@@ -814,38 +972,44 @@
   <!-- Toast -->
   <div class="toast hidden" id="toast"></div>
 
-  <!-- Confirmation modal -->
-  <div class="modal-overlay hidden" id="modal-overlay">
-    <div class="modal">
+  <!-- Modal -->
+  <div class="modal-bg hidden" id="modal-overlay">
+    <div class="modal-box">
       <h3 id="modal-title">Подтверждение</h3>
       <p id="modal-text">Вы уверены?</p>
-      <div class="modal-actions">
-        <button class="s-btn" id="modal-cancel">Отмена</button>
-        <button class="s-btn s-btn-danger" id="modal-confirm">Подтвердить</button>
+      <div class="modal-btns">
+        <button class="btn" id="modal-cancel">Отмена</button>
+        <button class="btn btn-danger" id="modal-confirm">Подтвердить</button>
       </div>
     </div>
   </div>
 
   <script>
-    // ── Utility ──────────────────────────────────────────────
+    // ── Accent colors palette ──
+    const ACCENTS = {
+      violet:  { name: 'Фиолетовый', pri: '#8b5cf6', sec: '#a78bfa', grad: 'linear-gradient(135deg,#8b5cf6,#0ea5e9)',  glow: 'rgba(139,92,246,.15)', border: 'rgba(139,92,246,.25)' },
+      blue:    { name: 'Синий',      pri: '#3b82f6', sec: '#60a5fa', grad: 'linear-gradient(135deg,#3b82f6,#06b6d4)',  glow: 'rgba(59,130,246,.15)', border: 'rgba(59,130,246,.25)' },
+      cyan:    { name: 'Бирюзовый',  pri: '#06b6d4', sec: '#22d3ee', grad: 'linear-gradient(135deg,#06b6d4,#10b981)',  glow: 'rgba(6,182,212,.15)',  border: 'rgba(6,182,212,.25)' },
+      green:   { name: 'Зелёный',    pri: '#10b981', sec: '#34d399', grad: 'linear-gradient(135deg,#10b981,#06b6d4)',  glow: 'rgba(16,185,129,.15)', border: 'rgba(16,185,129,.25)' },
+      orange:  { name: 'Оранжевый',  pri: '#f97316', sec: '#fb923c', grad: 'linear-gradient(135deg,#f97316,#f59e0b)',  glow: 'rgba(249,115,22,.15)', border: 'rgba(249,115,22,.25)' },
+      rose:    { name: 'Розовый',    pri: '#f43f5e', sec: '#fb7185', grad: 'linear-gradient(135deg,#f43f5e,#f97316)',  glow: 'rgba(244,63,94,.15)',  border: 'rgba(244,63,94,.25)' },
+      pink:    { name: 'Пурпурный',  pri: '#ec4899', sec: '#f472b6', grad: 'linear-gradient(135deg,#ec4899,#a855f7)',  glow: 'rgba(236,72,153,.15)', border: 'rgba(236,72,153,.25)' },
+      amber:   { name: 'Янтарный',   pri: '#f59e0b', sec: '#fbbf24', grad: 'linear-gradient(135deg,#f59e0b,#f97316)',  glow: 'rgba(245,158,11,.15)', border: 'rgba(245,158,11,.25)' },
+    };
+
+    let currentAccent = 'violet';
+
+    // ── Utility ──
     function postMsg(data) {
       try {
-        if (window.chrome && window.chrome.webview) {
-          window.chrome.webview.postMessage(data);
-        } else {
-          window.parent.postMessage(data, '*');
-        }
+        if (window.chrome && window.chrome.webview) window.chrome.webview.postMessage(data);
+        else window.parent.postMessage(data, '*');
       } catch {}
     }
 
     function onMsg(handler) {
-      window.addEventListener('integral-response', (e) => {
-        handler(e.detail || {});
-      });
-      // Fallback for direct window.postMessage (dev testing)
-      window.addEventListener('message', (e) => {
-        if (e.data && e.data.type) handler(e.data);
-      });
+      window.addEventListener('integral-response', (e) => handler(e.detail || {}));
+      window.addEventListener('message', (e) => { if (e.data && e.data.type) handler(e.data); });
     }
 
     function showToast(text) {
@@ -854,198 +1018,164 @@
       t.classList.remove('hidden');
       requestAnimationFrame(() => t.classList.add('show'));
       clearTimeout(t._timer);
-      t._timer = setTimeout(() => {
-        t.classList.remove('show');
-        setTimeout(() => t.classList.add('hidden'), 200);
-      }, 2200);
+      t._timer = setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.classList.add('hidden'), 250); }, 2400);
     }
 
     function showModal(title, text) {
       return new Promise((resolve) => {
-        const overlay = document.getElementById('modal-overlay');
+        const ov = document.getElementById('modal-overlay');
         document.getElementById('modal-title').textContent = title;
         document.getElementById('modal-text').textContent = text;
-        overlay.classList.remove('hidden');
-
-        function close(result) {
-          overlay.classList.add('hidden');
-          cleanup();
-          resolve(result);
+        ov.classList.remove('hidden');
+        function done(r) { ov.classList.add('hidden'); clean(); resolve(r); }
+        function clean() {
+          document.getElementById('modal-cancel').removeEventListener('click', onC);
+          document.getElementById('modal-confirm').removeEventListener('click', onOk);
+          ov.removeEventListener('click', onBg);
         }
-
-        function cleanup() {
-          document.getElementById('modal-cancel').removeEventListener('click', onCancel);
-          document.getElementById('modal-confirm').removeEventListener('click', onConfirm);
-          overlay.removeEventListener('click', onBgClick);
-        }
-
-        function onCancel() { close(false); }
-        function onConfirm() { close(true); }
-        function onBgClick(e) { if (e.target === overlay) close(false); }
-
-        document.getElementById('modal-cancel').addEventListener('click', onCancel);
-        document.getElementById('modal-confirm').addEventListener('click', onConfirm);
-        overlay.addEventListener('click', onBgClick);
+        function onC() { done(false); }
+        function onOk() { done(true); }
+        function onBg(e) { if (e.target === ov) done(false); }
+        document.getElementById('modal-cancel').addEventListener('click', onC);
+        document.getElementById('modal-confirm').addEventListener('click', onOk);
+        ov.addEventListener('click', onBg);
       });
     }
 
-    // ── Request initial settings ─────────────────────────────
+    // ── Apply accent color ──
+    function applyAccent(key) {
+      const a = ACCENTS[key];
+      if (!a) return;
+      currentAccent = key;
+      const r = document.documentElement.style;
+      r.setProperty('--accent', a.pri);
+      r.setProperty('--accent-secondary', a.sec);
+      r.setProperty('--accent-grad', a.grad);
+      r.setProperty('--accent-glow', a.glow);
+      r.setProperty('--accent-border', a.border);
+      // Update swatches active state
+      document.querySelectorAll('.accent-swatch').forEach(s => s.classList.toggle('active', s.dataset.color === key));
+      document.getElementById('accent-label').textContent = a.name;
+    }
+
+    // ── Build accent swatches ──
+    (function buildSwatches() {
+      const grid = document.getElementById('accent-grid');
+      for (const [key, a] of Object.entries(ACCENTS)) {
+        const el = document.createElement('div');
+        el.className = 'accent-swatch';
+        el.dataset.color = key;
+        el.style.background = a.grad;
+        el.innerHTML = `<span class="accent-swatch-check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7l3 3 5-6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
+        el.addEventListener('click', () => {
+          applyAccent(key);
+          postMsg({ type: 'settings-set', key: 'accentColor', value: key });
+        });
+        grid.appendChild(el);
+      }
+    })();
+
+    // ── Theme cards ──
+    document.querySelectorAll('.theme-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        postMsg({ type: 'settings-set', key: 'theme', value: card.dataset.theme });
+      });
+    });
+
+    // ── Request initial data ──
     postMsg({ type: 'settings-get' });
     postMsg({ type: 'get-cache-size' });
 
-    // ── Listen for parent messages ──────────────────────────
+    // ── Listen for parent ──
     onMsg((d) => {
       if (!d || typeof d !== 'object') return;
 
-      // Init settings from parent
       if (d.type === 'init-settings' && d.settings) {
-        applySettings(d.settings);
+        const s = d.settings;
+        // Theme
+        const themeCard = document.querySelector(`.theme-card[data-theme="${s.theme || 'dark'}"]`);
+        if (themeCard) { document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active')); themeCard.classList.add('active'); }
+
+        // Accent
+        if (s.accentColor && ACCENTS[s.accentColor]) applyAccent(s.accentColor);
+
+        // Search engine
+        if (s.searchEngine) document.getElementById('sel-engine').value = s.searchEngine;
+
+        // Toggles
+        const tm = { showBookmarksBar: 'tog-bookmarks-bar', transparentChrome: 'tog-transparent-chrome', blockTrackers: 'tog-block-trackers', block3pCookies: 'tog-block-3p-cookies', bypassOnStart: 'tog-bypass-start', clearOnExit: 'tog-clear-exit' };
+        for (const [k, id] of Object.entries(tm)) { if (s[k] !== undefined) document.getElementById(id).checked = s[k]; }
+
+        // Font
+        if (s.fontSize) { document.getElementById('rng-font-size').value = s.fontSize; document.getElementById('font-size-val').textContent = s.fontSize + 'px'; }
+
+        // Version
+        if (s.version) document.getElementById('app-version').textContent = 'Версия ' + s.version;
       }
 
-      // Cache size update
       if (d.type === 'cache-size' && typeof d.size === 'string') {
         document.getElementById('cache-size-display').textContent = d.size;
       }
 
-      // Export data received
       if (d.type === 'export-data' && d.data) {
         const blob = new Blob([JSON.stringify(d.data, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = 'integral-settings.json';
-        a.click();
+        a.href = url; a.download = 'integral-settings.json'; a.click();
         URL.revokeObjectURL(url);
         showToast('Настройки экспортированы');
       }
     });
 
-    // ── Apply settings to UI ────────────────────────────────
-    function applySettings(s) {
-      // Search engine
-      if (s.searchEngine) {
-        document.getElementById('sel-engine').value = s.searchEngine;
-      }
-
-      // Theme
-      if (s.theme) {
-        const radio = document.querySelector(`input[name="theme"][value="${s.theme}"]`);
-        if (radio) radio.checked = true;
-      }
-
-      // Toggles
-      const toggleMap = {
-        showBookmarksBar: 'tog-bookmarks-bar',
-        transparentChrome: 'tog-transparent-chrome',
-        blockTrackers: 'tog-block-trackers',
-        block3pCookies: 'tog-block-3p-cookies',
-        bypassOnStart: 'tog-bypass-start',
-        clearOnExit: 'tog-clear-exit',
-        smartPrefetch: 'tog-prefetch',
-      };
-
-      for (const [key, id] of Object.entries(toggleMap)) {
-        if (s[key] !== undefined) {
-          document.getElementById(id).checked = s[key];
-        }
-      }
-
-      // Font size
-      if (s.fontSize) {
-        document.getElementById('rng-font-size').value = s.fontSize;
-        document.getElementById('font-size-val').textContent = s.fontSize + 'px';
-      }
-
-      // Version
-      if (s.version) {
-        document.getElementById('app-version').textContent = 'Версия ' + s.version;
-      }
-    }
-
-    // ── Wire up controls ────────────────────────────────────
-
-    // Search engine
+    // ── Controls ──
     document.getElementById('sel-engine').addEventListener('change', (e) => {
       postMsg({ type: 'settings-set', key: 'searchEngine', value: e.target.value });
     });
 
-    // Theme radio
-    document.querySelectorAll('input[name="theme"]').forEach((r) => {
-      r.addEventListener('change', (e) => {
-        postMsg({ type: 'settings-set', key: 'theme', value: e.target.value });
-      });
-    });
-
-    // Generic toggle wiring
-    const toggleToKey = {
-      'tog-bookmarks-bar': 'showBookmarksBar',
-      'tog-transparent-chrome': 'transparentChrome',
-      'tog-block-trackers': 'blockTrackers',
-      'tog-block-3p-cookies': 'block3pCookies',
-      'tog-bypass-start': 'bypassOnStart',
-      'tog-clear-exit': 'clearOnExit',
-      'tog-prefetch': 'smartPrefetch',
-    };
-
-    for (const [id, key] of Object.entries(toggleToKey)) {
+    const toggleMap = { 'tog-bookmarks-bar': 'showBookmarksBar', 'tog-transparent-chrome': 'transparentChrome', 'tog-block-trackers': 'blockTrackers', 'tog-block-3p-cookies': 'block3pCookies', 'tog-bypass-start': 'bypassOnStart', 'tog-clear-exit': 'clearOnExit' };
+    for (const [id, key] of Object.entries(toggleMap)) {
       document.getElementById(id).addEventListener('change', (e) => {
         postMsg({ type: 'settings-set', key, value: e.target.checked });
       });
     }
 
-    // Font size slider
     const fontSlider = document.getElementById('rng-font-size');
     const fontDisplay = document.getElementById('font-size-val');
-    fontSlider.addEventListener('input', () => {
-      fontDisplay.textContent = fontSlider.value + 'px';
-    });
-    fontSlider.addEventListener('change', () => {
-      postMsg({ type: 'settings-set', key: 'fontSize', value: parseInt(fontSlider.value) });
-    });
+    fontSlider.addEventListener('input', () => { fontDisplay.textContent = fontSlider.value + 'px'; });
+    fontSlider.addEventListener('change', () => { postMsg({ type: 'settings-set', key: 'fontSize', value: parseInt(fontSlider.value) }); });
 
-    // Clear cache
     document.getElementById('btn-clear-cache').addEventListener('click', async () => {
-      const ok = await showModal('Очистить кэш', 'Все кэшированные данные будут удалены. Продолжить?');
-      if (!ok) return;
-      postMsg({ type: 'clear-cache' });
-      document.getElementById('cache-size-display').textContent = '...';
-      showToast('Кэш очищается...');
+      if (await showModal('Очистить кэш', 'Все кэшированные данные будут удалены. Продолжить?')) {
+        postMsg({ type: 'clear-cache' });
+        document.getElementById('cache-size-display').textContent = '...';
+        showToast('Кэш очищается...');
+      }
     });
 
-    // Export
-    document.getElementById('btn-export').addEventListener('click', () => {
-      postMsg({ type: 'settings-export' });
-    });
+    document.getElementById('btn-export').addEventListener('click', () => postMsg({ type: 'settings-export' }));
 
-    // Import
     document.getElementById('btn-import').addEventListener('click', () => {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.json';
-      input.onchange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          try {
-            const data = JSON.parse(ev.target.result);
-            postMsg({ type: 'settings-import', data });
-            showToast('Настройки импортированы');
-          } catch {
-            showToast('Ошибка: неверный формат файла');
-          }
+      const inp = document.createElement('input');
+      inp.type = 'file'; inp.accept = '.json';
+      inp.onchange = (e) => {
+        const f = e.target.files[0]; if (!f) return;
+        const r = new FileReader();
+        r.onload = (ev) => {
+          try { postMsg({ type: 'settings-import', data: JSON.parse(ev.target.result) }); showToast('Настройки импортированы'); }
+          catch { showToast('Ошибка: неверный формат файла'); }
         };
-        reader.readAsText(file);
+        r.readAsText(f);
       };
-      input.click();
+      inp.click();
     });
 
-    // Reset
     document.getElementById('btn-reset').addEventListener('click', async () => {
-      const ok = await showModal('Сбросить настройки', 'Все настройки будут возвращены к значениям по умолчанию. Это действие нельзя отменить.');
-      if (!ok) return;
-      postMsg({ type: 'settings-reset' });
-      showToast('Настройки сброшены');
+      if (await showModal('Сбросить настройки', 'Все настройки будут возвращены к значениям по умолчанию.')) {
+        postMsg({ type: 'settings-reset' });
+        showToast('Настройки сброшены');
+      }
     });
   </script>
 </body>

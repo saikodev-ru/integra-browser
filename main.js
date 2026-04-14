@@ -80,6 +80,7 @@ const DEFAULT_SETTINGS = {
   searchEngine: 'yandex',
   homepage: 'newtab',
   theme: 'dark',
+  accentColor: 'violet',
   bypassOnStart: false,
   showBookmarksBar: true,
   clearOnExit: false,
@@ -276,7 +277,7 @@ ipcMain.handle('bookmark-check', (_, { url }) => isBookmarked(url));
 ipcMain.handle('settings-get', () => currentSettings);
 ipcMain.handle('settings-set', (_, { key, value }) => {
   currentSettings[key] = value; saveSettings(currentSettings);
-  if (key === 'theme') nativeTheme.themeSource = value === 'system' ? 'system' : 'dark';
+  if (key === 'theme') nativeTheme.themeSource = value === 'system' ? 'system' : (value === 'light' ? 'light' : 'dark');
   [mainWindow, ...incognitoWindows].forEach(w => {
     if (w) w.webContents.send('settings-changed', currentSettings);
   });
