@@ -13,12 +13,9 @@
 
 <!-- ── Tab Bar ── -->
 <div id="tabbar">
-  <div id="tabs-list"></div>
-  <button class="tab-new-btn" id="btn-new-tab" title="Новая вкладка (Ctrl+T)">
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-      <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-    </svg>
-  </button>
+  <div id="tabs-list">
+    <!-- tabs rendered here, + button is the last child -->
+  </div>
   <!-- Window controls (right side) -->
   <div id="win-controls">
     <button id="btn-min" class="wc-btn" title="Свернуть">
@@ -35,73 +32,50 @@
 
 <!-- ── Navigation Bar ── -->
 <div id="navbar">
-  <!-- Back / Forward / Reload -->
   <div class="nav-left">
     <button class="nav-btn" id="btn-back" title="Назад (Alt+←)">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
     <button class="nav-btn" id="btn-forward" title="Вперёд (Alt+→)">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
     <button class="nav-btn" id="btn-reload" title="Обновить (F5)">
-      <svg id="ico-reload" width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9L13.5 5.5V2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      <svg id="ico-stop" width="16" height="16" viewBox="0 0 16 16" fill="none" style="display:none">
-        <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-      </svg>
+      <svg id="ico-reload" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9L13.5 5.5V2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <svg id="ico-stop" width="16" height="16" viewBox="0 0 16 16" fill="none" style="display:none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
     </button>
   </div>
 
-  <!-- Address / Search bar -->
   <div class="nav-bar-wrap" id="urlbar-wrap">
     <div id="secure-icon" class="secure-icon hidden">
-      <svg width="12" height="13" viewBox="0 0 12 13" fill="none">
-        <rect x="1" y="5.5" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
-        <path d="M3.5 5.5V4a2.5 2.5 0 0 1 5 0v1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-      </svg>
+      <svg width="12" height="13" viewBox="0 0 12 13" fill="none"><rect x="1" y="5.5" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M3.5 5.5V4a2.5 2.5 0 0 1 5 0v1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
     </div>
     <input type="text" id="urlbar" placeholder="Поиск или адрес сайта" autocomplete="off" spellcheck="false"/>
     <div id="urlbar-spinner" class="spinner hidden"></div>
   </div>
 
-  <!-- Right controls -->
   <div class="nav-right">
     <!-- Bookmark star -->
     <button class="nav-btn bookmark-star-btn" id="btn-bookmark" title="Добавить в закладки (Ctrl+D)">
-      <svg id="ico-star" width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <path d="M8 1.5l2.1 4.3 4.7.7-3.4 3.3.8 4.7L8 12.2 3.8 14.5l.8-4.7L1.2 6.5l4.7-.7L8 1.5z"
-              stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" fill="none"/>
-      </svg>
-      <svg id="ico-star-filled" width="16" height="16" viewBox="0 0 16 16" fill="none" style="display:none">
-        <path d="M8 1.5l2.1 4.3 4.7.7-3.4 3.3.8 4.7L8 12.2 3.8 14.5l.8-4.7L1.2 6.5l4.7-.7L8 1.5z"
-              fill="currentColor" stroke="currentColor" stroke-width="1"/>
-      </svg>
+      <svg id="ico-star" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5l2.1 4.3 4.7.7-3.4 3.3.8 4.7L8 12.2 3.8 14.5l.8-4.7L1.2 6.5l4.7-.7L8 1.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" fill="none"/></svg>
+      <svg id="ico-star-filled" width="16" height="16" viewBox="0 0 16 16" fill="none" style="display:none"><path d="M8 1.5l2.1 4.3 4.7.7-3.4 3.3.8 4.7L8 12.2 3.8 14.5l.8-4.7L1.2 6.5l4.7-.7L8 1.5z" fill="currentColor" stroke="currentColor" stroke-width="1"/></svg>
     </button>
 
     <!-- DPI Bypass toggle -->
     <button class="nav-btn bypass-btn" id="btn-bypass" title="Обход DPI/ТСПУ">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <circle cx="8" cy="8" r="6.25" stroke="currentColor" stroke-width="1.5"/>
-        <path d="M8 4.5C6 4.5 4.5 6 4.5 8s1.5 3.5 3.5 3.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-        <path d="M8 4.5c2 0 3.5 1.5 3.5 3.5S10 11.5 8 11.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-dasharray="2 1.5"/>
-        <path d="M5.5 8h5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-        <path d="M8 5.5v5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-      </svg>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.25" stroke="currentColor" stroke-width="1.5"/><path d="M8 4.5C6 4.5 4.5 6 4.5 8s1.5 3.5 3.5 3.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M8 4.5c2 0 3.5 1.5 3.5 3.5S10 11.5 8 11.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-dasharray="2 1.5"/><path d="M5.5 8h5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M8 5.5v5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
       <span id="bypass-label">Обход</span>
     </button>
 
+    <!-- Incognito -->
+    <button class="nav-btn" id="btn-incognito" title="Инкогнито (Ctrl+Shift+N)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" stroke="currentColor" stroke-width="1.5"/><path d="M12 6c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5z" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="11" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg>
+    </button>
+
     <!-- Settings button -->
-    <button class="nav-btn" id="btn-settings" title="Настройки">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <path d="M6.5 1.5h3l.4 2 1.8 1 1.8-1 2.2 2.2-1 1.8 1 1.8-2 .4v3l-2 .4-1 1.8 1 1.8-2.2 2.2-1.8-1-1.8 1-2.2-2.2 1-1.8-1-1.8 2-.4v-3l2-.4 1-1.8-1-1.8 2.2-2.2 1.8 1 1.8-1z"
-              stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" fill="none"
-              transform="translate(-1.5,-1.5)"/>
-        <circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3" fill="none"/>
+    <button class="nav-btn" id="btn-settings" title="Настройки (Ctrl+,)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" stroke="currentColor" stroke-width="1.7" fill="none"/>
       </svg>
     </button>
   </div>
@@ -111,26 +85,46 @@
 <div id="bookmarks-bar" class="hidden">
   <div id="bookmarks-list"></div>
   <button class="bm-more-btn" id="btn-bookmarks-panel" title="Все закладки">
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-      <circle cx="3" cy="7" r="1.5" fill="currentColor"/>
-      <circle cx="7" cy="7" r="1.5" fill="currentColor"/>
-      <circle cx="11" cy="7" r="1.5" fill="currentColor"/>
-    </svg>
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="3" cy="7" r="1.5" fill="currentColor"/><circle cx="7" cy="7" r="1.5" fill="currentColor"/><circle cx="11" cy="7" r="1.5" fill="currentColor"/></svg>
   </button>
 </div>
 
-<!-- ── Bypass toast ── -->
-<div id="bypass-toast" class="toast hidden"></div>
+<!-- ── Toast ── -->
+<div id="toast" class="toast hidden"></div>
 
-<!-- ── Context menu ── -->
-<div id="ctx-menu" class="ctx-menu hidden">
+<!-- ── Tab Context Menu ── -->
+<div id="tab-ctx-menu" class="ctx-menu hidden">
+  <button class="ctx-item" data-action="pin">📌 Закрепить вкладку</button>
+  <button class="ctx-item" data-action="mute">🔇 Отключить звук</button>
+  <div class="ctx-sep"></div>
+  <div class="ctx-submenu-wrap">
+    <button class="ctx-item ctx-submenu-trigger" data-action="group">🏷️ Цвет группы ▸</button>
+    <div class="ctx-submenu" id="group-color-menu">
+      <button class="ctx-item ctx-color-item" data-color="red"><span class="ctx-color-dot" style="background:#ff453a"></span> Красная</button>
+      <button class="ctx-item ctx-color-item" data-color="orange"><span class="ctx-color-dot" style="background:#ff9f0a"></span> Оранжевая</button>
+      <button class="ctx-item ctx-color-item" data-color="yellow"><span class="ctx-color-dot" style="background:#ffd60a"></span> Жёлтая</button>
+      <button class="ctx-item ctx-color-item" data-color="green"><span class="ctx-color-dot" style="background:#30d158"></span> Зелёная</button>
+      <button class="ctx-item ctx-color-item" data-color="blue"><span class="ctx-color-dot" style="background:#0a84ff"></span> Синяя</button>
+      <button class="ctx-item ctx-color-item" data-color="purple"><span class="ctx-color-dot" style="background:#bf5af2"></span> Фиолетовая</button>
+      <div class="ctx-sep"></div>
+      <button class="ctx-item" data-color="">✕ Без группы</button>
+    </div>
+  </div>
+  <div class="ctx-sep"></div>
+  <button class="ctx-item" data-action="close-others">Закрыть другие</button>
+  <button class="ctx-item" data-action="close-right">Закрыть справа</button>
+  <button class="ctx-item" data-action="close">Закрыть вкладку</button>
+</div>
+
+<!-- ── Page Context Menu ── -->
+<div id="page-ctx-menu" class="ctx-menu hidden">
   <button class="ctx-item" data-action="back">← Назад</button>
   <button class="ctx-item" data-action="forward">→ Вперёд</button>
   <button class="ctx-item" data-action="reload">↺ Обновить</button>
   <div class="ctx-sep"></div>
-  <button class="ctx-item" data-action="new-tab">Новая вкладка</button>
   <button class="ctx-item" data-action="bookmark-toggle">★ Добавить в закладки</button>
-  <button class="ctx-item" data-action="open-external">Открыть в браузере</button>
+  <button class="ctx-item" data-action="new-tab">Новая вкладка</button>
+  <button class="ctx-item" data-action="copy-url">📋 Копировать URL</button>
 </div>
 
 <!-- ── Settings Panel ── -->
@@ -139,14 +133,9 @@
   <div class="panel-container">
     <div class="panel-header">
       <h2 class="panel-title">Настройки</h2>
-      <button class="panel-close" id="settings-close">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-        </svg>
-      </button>
+      <button class="panel-close" id="settings-close"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
     </div>
     <div class="panel-body">
-      <!-- Search Engine -->
       <div class="settings-section">
         <div class="settings-section-title">Поисковая система</div>
         <div class="settings-row">
@@ -158,36 +147,23 @@
         </div>
       </div>
 
-      <!-- Theme -->
       <div class="settings-section">
         <div class="settings-section-title">Тема оформления</div>
         <div class="settings-row">
           <div class="settings-radio-group">
-            <label class="settings-radio">
-              <input type="radio" name="theme" value="dark" checked>
-              <span class="settings-radio-mark"></span>
-              <span>Тёмная</span>
-            </label>
-            <label class="settings-radio">
-              <input type="radio" name="theme" value="system">
-              <span class="settings-radio-mark"></span>
-              <span>Системная</span>
-            </label>
+            <label class="settings-radio"><input type="radio" name="theme" value="dark" checked><span class="settings-radio-mark"></span><span>Тёмная</span></label>
+            <label class="settings-radio"><input type="radio" name="theme" value="system"><span class="settings-radio-mark"></span><span>Системная</span></label>
           </div>
         </div>
       </div>
 
-      <!-- Appearance -->
       <div class="settings-section">
         <div class="settings-section-title">Внешний вид</div>
         <div class="settings-row">
-          <label class="settings-toggle">
-            <span>Панель закладок</span>
-            <div class="toggle-switch">
-              <input type="checkbox" id="setting-show-bookmarks" checked>
-              <span class="toggle-slider"></span>
-            </div>
-          </label>
+          <label class="settings-toggle"><span>Панель закладок</span><div class="toggle-switch"><input type="checkbox" id="setting-show-bookmarks" checked><span class="toggle-slider"></span></div></label>
+        </div>
+        <div class="settings-row">
+          <label class="settings-toggle"><span>Прозрачная панель</span><div class="toggle-switch"><input type="checkbox" id="setting-transparent-chrome"><span class="toggle-slider"></span></div></label>
         </div>
         <div class="settings-row">
           <label class="settings-label">Размер шрифта: <span id="font-size-value">14px</span></label>
@@ -195,35 +171,21 @@
         </div>
       </div>
 
-      <!-- Privacy -->
       <div class="settings-section">
         <div class="settings-section-title">Приватность</div>
         <div class="settings-row">
-          <label class="settings-toggle">
-            <span>Обход DPI при запуске</span>
-            <div class="toggle-switch">
-              <input type="checkbox" id="setting-bypass-start">
-              <span class="toggle-slider"></span>
-            </div>
-          </label>
+          <label class="settings-toggle"><span>Обход DPI при запуске</span><div class="toggle-switch"><input type="checkbox" id="setting-bypass-start"><span class="toggle-slider"></span></div></label>
         </div>
         <div class="settings-row">
-          <label class="settings-toggle">
-            <span>Очищать данные при выходе</span>
-            <div class="toggle-switch">
-              <input type="checkbox" id="setting-clear-exit">
-              <span class="toggle-slider"></span>
-            </div>
-          </label>
+          <label class="settings-toggle"><span>Очищать данные при выходе</span><div class="toggle-switch"><input type="checkbox" id="setting-clear-exit"><span class="toggle-slider"></span></div></label>
         </div>
       </div>
 
-      <!-- Data -->
       <div class="settings-section">
         <div class="settings-section-title">Данные</div>
         <div class="settings-row">
-          <button class="settings-btn" id="btn-export-settings">Экспорт настроек</button>
-          <button class="settings-btn" id="btn-import-settings">Импорт настроек</button>
+          <button class="settings-btn" id="btn-export-settings">Экспорт</button>
+          <button class="settings-btn" id="btn-import-settings">Импорт</button>
         </div>
         <div class="settings-row">
           <button class="settings-btn settings-btn-danger" id="btn-reset-settings">Сбросить настройки</button>
@@ -239,33 +201,19 @@
   <div class="panel-container panel-container-sm">
     <div class="panel-header">
       <h2 class="panel-title">Закладки</h2>
-      <button class="panel-close" id="bookmarks-panel-close">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-        </svg>
-      </button>
+      <button class="panel-close" id="bookmarks-panel-close"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
     </div>
     <div class="panel-body">
-      <div class="bookmarks-search">
-        <input type="text" id="bookmarks-search-input" placeholder="Поиск закладок..." autocomplete="off" spellcheck="false">
-      </div>
-      <div id="bookmarks-panel-list" class="bookmarks-panel-list">
-        <!-- Bookmarks rendered here -->
-      </div>
+      <div class="bookmarks-search"><input type="text" id="bookmarks-search-input" placeholder="Поиск закладок..." autocomplete="off" spellcheck="false"></div>
+      <div id="bookmarks-panel-list" class="bookmarks-panel-list"></div>
       <div id="bookmarks-empty" class="bookmarks-empty hidden">
-        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-          <path d="M20 4l4.5 9 10 1.5-7.2 7 1.7 9.8L20 27.5 11 31.3l1.7-9.8-7.2-7 10-1.5L20 4z"
-                stroke="currentColor" stroke-width="1.5" fill="none"/>
-        </svg>
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><path d="M20 4l4.5 9 10 1.5-7.2 7 1.7 9.8L20 27.5 11 31.3l1.7-9.8-7.2-7 10-1.5L20 4z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
         <p>Закладок пока нет</p>
         <p class="text-muted">Нажмите ★ чтобы добавить</p>
       </div>
     </div>
   </div>
 </div>
-
-<!-- ── Tab drag indicator ── -->
-<div id="tab-drag-indicator" class="tab-drag-indicator hidden"></div>
 
 <script src="js/renderer.js"></script>
 </body>

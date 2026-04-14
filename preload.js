@@ -13,11 +13,17 @@ contextBridge.exposeInMainWorld('integra', {
   closeTab: (id) => ipcRenderer.send('tab-close', { id }),
   activateTab: (id) => ipcRenderer.send('tab-activate', { id }),
   reorderTab: (id, newIndex) => ipcRenderer.send('tab-reorder', { id, newIndex }),
+  pinTab: (id) => ipcRenderer.send('tab-pin', { id }),
+  muteTab: (id) => ipcRenderer.send('tab-mute', { id }),
+  setTabGroup: (id, group) => ipcRenderer.send('tab-group', { id, group }),
+  closeOtherTabs: (id) => ipcRenderer.send('tab-close-others', { id }),
+  closeTabsToRight: (id) => ipcRenderer.send('tab-close-right', { id }),
 
   // Window controls
   minimize: () => ipcRenderer.send('window-minimize'),
   maximize: () => ipcRenderer.send('window-maximize'),
   close: () => ipcRenderer.send('window-close'),
+  newIncognitoWindow: (url) => ipcRenderer.send('window-incognito', { url }),
 
   // Bypass
   toggleBypass: () => ipcRenderer.send('bypass-toggle'),
@@ -43,7 +49,7 @@ contextBridge.exposeInMainWorld('integra', {
 
   // Listeners
   on: (channel, fn) => {
-    const allowed = ['tabs-update', 'nav-state', 'fullscreen-change', 'context-menu', 'bypass-no-binary', 'bookmarks-update', 'settings-changed'];
+    const allowed = ['tabs-update', 'nav-state', 'fullscreen-change', 'context-menu', 'bypass-no-binary', 'bookmarks-update', 'settings-changed', 'bookmarks-bar-visibility'];
     if (allowed.includes(channel)) ipcRenderer.on(channel, (_, ...args) => fn(...args));
   },
   off: (channel, fn) => ipcRenderer.removeListener(channel, fn),
