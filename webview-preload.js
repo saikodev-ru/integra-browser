@@ -41,3 +41,24 @@ document.addEventListener('contextmenu', (e) => {
     });
   } catch {}
 });
+
+// ── Notification forwarding ──
+if (window.Notification) {
+  const OrigNotification = window.Notification;
+  window.Notification = function(title, options) {
+    const notif = new OrigNotification(title, options);
+    try {
+      ipcRenderer.sendToHost('internal-msg', {
+        type: 'notification-event',
+        title: title,
+        body: options ? options.body || '' : '',
+        icon: options ? options.icon || '' : '',
+        url: options && options.data && options.data.url ? options.data.url : '',
+      });
+    } catch {}
+    return notif;
+  };
+  window.Notification.prototype = OrigNotification.prototype;
+  window.Notification.permission = OrigNotification.permission;
+  window.Notification.requestPermission = OrigNotification.requestPermission;
+}

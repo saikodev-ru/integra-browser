@@ -211,6 +211,10 @@ function createWindow(incognito = false) {
   win.on('enter-full-screen', () => win.webContents.send('fullscreen-change', true));
   win.on('leave-full-screen', () => win.webContents.send('fullscreen-change', false));
 
+  // Reposition notification popups when main window moves/resizes
+  win.on('move', repositionNotifications);
+  win.on('resize', repositionNotifications);
+
   if (!incognito) {
     win.on('close', () => {
       try {
@@ -494,6 +498,143 @@ ipcMain.on('show-page-context-menu', (e, params) => {
 
   const menu = Menu.buildFromTemplate(items);
   menu.popup(win, Math.round(params.x), Math.round(params.y));
+});
+
+// ── Notification Popup System ──────────────────────────────────
+let activeNotifications = [];
+
+function showNotificationPopup(notifData) {
+  if (!mainWindow) return;
+
+  const mainBounds = mainWindow.getBounds();
+  const notifWidth = 360;
+  const notifHeight = 80;
+  const padding = 12;
+
+  // Stack notifications
+  const yPos = mainBounds.y + padding + (activeNotifications.length * (notifHeight + 8));
+  const xPos = mainBounds.x + mainBounds.width - notifWidth - padding;
+
+  const notifWin = new BrowserWindow({
+    width: notifWidth,
+    height: notifHeight,
+    x: xPos,
+    y: yPos,
+    frame: false,
+    transparent: true,
+    resizable: false,
+    skipTaskbar: true,
+    alwaysOnTop: true,
+    focusable: false,
+    hasShadow: false,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+    },
+  });
+
+  // Build notification HTML with inline CSS
+  const iconHtml = notifData.icon
+    ? `<img src="${notifData.icon}" style="width:36px;height:36px;border-radius:8px;object-fit:cover;flex-shrink:0;">`
+    : `<div style="width:36px;height:36px;border-radius:8px;background:rgba(139,92,246,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>`;
+
+  const escapedTitle = (notifData.title || 'Уведомление').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const escapedBody = (notifData.body || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  const html = `<!DOCTYPE html><html><head><style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: -apple-system, 'Segoe UI', sans-serif;
+      background: rgba(26,26,27,.92);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      height: 100vh;
+      overflow: hidden;
+      cursor: pointer;
+      animation: notifIn .3s cubic-bezier(.16,1,.3,1) both;
+    }
+    @keyframes notifIn { from { opacity:0; transform:translateY(-8px) scale(.96); } to { opacity:1; transform:none; } }
+    @keyframes notifOut { from { opacity:1; transform:none; } to { opacity:0; transform:translateY(-8px) scale(.96); } }
+    .notif-out { animation: notifOut .25s cubic-bezier(.16,1,.3,1) both; }
+    .notif-content { flex:1; min-width:0; }
+    .notif-title { font-size:13px; font-weight:700; color:#efefef; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.3; }
+    .notif-body { font-size:12px; font-weight:500; color:rgba(239,239,239,.5); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px; line-height:1.3; }
+  </style></head><body>
+    ${iconHtml}
+    <div class="notif-content">
+      <div class="notif-title">${escapedTitle}</div>
+      ${escapedBody ? `<div class="notif-body">${escapedBody}</div>` : ''}
+    </div>
+  </body></html>`;
+
+  notifWin.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
+
+  // Track for cleanup and click handling
+  const notifEntry = { win: notifWin, timer: null, url: notifData.url || null };
+  activeNotifications.push(notifEntry);
+
+  // Click to open URL
+  notifWin.webContents.on('did-finish-load', () => {
+    notifWin.webContents.executeJavaScript(`
+      document.body.addEventListener('click', () => {
+        window.close();
+      });
+    `);
+  });
+
+  // Auto-close after 5 seconds
+  notifEntry.timer = setTimeout(() => {
+    closeNotification(notifEntry);
+  }, 5000);
+
+  // Cleanup on close
+  notifWin.on('closed', () => {
+    clearTimeout(notifEntry.timer);
+    activeNotifications = activeNotifications.filter(n => n !== notifEntry);
+    repositionNotifications();
+  });
+
+  return notifEntry;
+}
+
+function closeNotification(entry) {
+  if (!entry || entry.win.isDestroyed()) return;
+  entry.win.webContents.executeJavaScript(`
+    document.body.classList.add('notif-out');
+  `).then(() => {
+    setTimeout(() => {
+      try { entry.win.close(); } catch {}
+    }, 250);
+  }).catch(() => {
+    try { entry.win.close(); } catch {}
+  });
+}
+
+function repositionNotifications() {
+  if (!mainWindow) return;
+  const mainBounds = mainWindow.getBounds();
+  const notifWidth = 360;
+  const notifHeight = 80;
+  const padding = 12;
+
+  activeNotifications.forEach((entry, i) => {
+    if (entry.win.isDestroyed()) return;
+    const yPos = mainBounds.y + padding + (i * (notifHeight + 8));
+    const xPos = mainBounds.x + mainBounds.width - notifWidth - padding;
+    entry.win.setPosition(xPos, yPos);
+  });
+}
+
+// ── IPC: Notification Popup ────────────────────────────────────
+ipcMain.on('show-notification-popup', (_, notifData) => {
+  showNotificationPopup(notifData);
 });
 
 // ── IPC: State ───────────────────────────────────────────────

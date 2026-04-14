@@ -58,6 +58,9 @@ contextBridge.exposeInMainWorld('integral', {
   getState: () => ipcRenderer.invoke('get-state'),
   openExternal: (url) => ipcRenderer.send('open-external', url),
 
+  // Notification popups
+  showNotificationPopup: (data) => ipcRenderer.send('show-notification-popup', data),
+
   // Listeners
   on: (channel, fn) => {
     const allowed = [

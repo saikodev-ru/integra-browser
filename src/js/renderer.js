@@ -390,6 +390,16 @@ function createTab(url, opts = {}) {
           }
           return;
         }
+        // Handle notification events from webview
+        if (msg && msg.type === 'notification-event') {
+          api.showNotificationPopup({
+            title: msg.title,
+            body: msg.body,
+            icon: msg.icon,
+            url: msg.url,
+          });
+          return;
+        }
         handleInternalMessage(id, msg);
       }
     });
