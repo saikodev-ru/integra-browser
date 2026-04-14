@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, session, shell, Menu, nativeTheme, dialog, protocol, net } = require('electron');
+const { app, BrowserWindow, ipcMain, session, shell, Menu, nativeTheme, dialog, protocol } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs');
@@ -7,21 +7,19 @@ const fs = require('fs');
 app.setPath('crashDumps', path.join(app.getPath('temp'), 'integra-noop'));
 app.commandLine.appendSwitch('disable-crash-reporter');
 app.commandLine.appendSwitch('disable-breakpad');
-app.commandLine.appendSwitch('disable-features', 'Reporting,NetworkQualityEstimator,URLLoading,SafeBrowsingEnhancedProtection');
+app.commandLine.appendSwitch('disable-features', 'Reporting,NetworkQualityEstimator,SafeBrowsingEnhancedProtection');
 app.commandLine.appendSwitch('no-report-upload');
 app.commandLine.appendSwitch('disable-component-update');
 app.commandLine.appendSwitch('disable-background-networking');
 
-// ── Register custom protocol for local pages (avoids file:// restrictions in webviews) ──
+// ── Register custom protocol for local pages (avoids file:// restrictions in webviews with partition) ──
 protocol.registerSchemesAsPrivileged([
   {
-    scheme: 'local',
+    scheme: 'integra',
     privileges: {
-      bypassCSP: true,
-      stream: true,
-      supportFetchAPI: true,
-      standard: false,
       secure: true,
+      standard: true,
+      supportFetchAPI: true,
       corsEnabled: true,
     },
   },
@@ -172,7 +170,7 @@ ipcMain.on('window-incognito', () => createWindow(true));
 
 // ── IPC: Paths ───────────────────────────────────────────────
 ipcMain.handle('get-webview-preload-path', () => path.join(__dirname, 'webview-preload.js'));
-ipcMain.handle('get-newtab-url', () => 'local://newtab.html');
+ipcMain.handle('get-newtab-url', () => 'integra://app/newtab.html');
 
 // ── IPC: Bypass ──────────────────────────────────────────────
 ipcMain.on('bypass-toggle', (e) => {
@@ -195,7 +193,6 @@ ipcMain.handle('settings-get', () => currentSettings);
 ipcMain.handle('settings-set', (_, { key, value }) => {
   currentSettings[key] = value; saveSettings(currentSettings);
   if (key === 'theme') nativeTheme.themeSource = value === 'system' ? 'system' : 'dark';
-  // Broadcast to all windows
   [mainWindow, ...incognitoWindows].forEach(w => {
     if (w) w.webContents.send('settings-changed', currentSettings);
   });
@@ -243,34 +240,56 @@ ipcMain.on('open-external', (_, url) => shell.openExternal(url));
 
 // ── App lifecycle ─────────────────────────────────────────────
 app.whenReady().then(() => {
-  // ── Serve local files via local:// protocol ────────────────
-  protocol.handle('local', (request) => {
+  // ── Serve local files via integra:// protocol ───────────────
+  // URL format: integra://app/<filename>  →  src/<filename>
+  protocol.handle('integra', (request) => {
     try {
-      const urlPath = new URL(request.url).pathname.replace(/^\//, '');
-      const filePath = path.join(__dirname, 'src', urlPath);
+      // With standard:true, URL is integra://app/newtab.html
+      // new URL gives pathname = '/newtab.html', host = 'app'
+      const parsed = new URL(request.url);
+      const relativePath = parsed.pathname.replace(/^\//, '');
+      const filePath = path.join(__dirname, 'src', relativePath);
+      console.log('[protocol] integra:// request:', request.url, '→', filePath);
+
+      if (!fs.existsSync(filePath)) {
+        console.error('[protocol] file not found:', filePath);
+        return new Response('Not Found', { status: 404, headers: { 'Content-Type': 'text/plain' } });
+      }
+
+      const stat = fs.statSync(filePath);
+      if (stat.isDirectory()) {
+        return new Response('Forbidden', { status: 403, headers: { 'Content-Type': 'text/plain' } });
+      }
+
       const ext = path.extname(filePath).toLowerCase();
       const mimeTypes = {
         '.html': 'text/html; charset=utf-8',
-        '.css': 'text/css; charset=utf-8',
-        '.js': 'application/javascript; charset=utf-8',
+        '.htm':  'text/html; charset=utf-8',
+        '.css':  'text/css; charset=utf-8',
+        '.js':   'application/javascript; charset=utf-8',
         '.json': 'application/json; charset=utf-8',
-        '.png': 'image/png',
-        '.jpg': 'image/jpeg',
-        '.svg': 'image/svg+xml',
-        '.ico': 'image/x-icon',
+        '.png':  'image/png',
+        '.jpg':  'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.gif':  'image/gif',
+        '.svg':  'image/svg+xml',
+        '.ico':  'image/x-icon',
         '.woff': 'font/woff',
-        '.woff2': 'font/woff2',
+        '.woff2':'font/woff2',
+        '.ttf':  'font/ttf',
+        '.eot':  'application/vnd.ms-fontobject',
       };
       const contentType = mimeTypes[ext] || 'application/octet-stream';
-      if (!fs.existsSync(filePath)) {
-        return new Response('Not Found', { status: 404, headers: { 'Content-Type': 'text/plain' } });
-      }
-      return new Response(fs.createReadStream(filePath), {
-        headers: { 'Content-Type': contentType },
+      const buffer = fs.readFileSync(filePath);
+      return new Response(buffer, {
+        headers: {
+          'Content-Type': contentType,
+          'Content-Length': buffer.length,
+        },
       });
     } catch (e) {
-      console.error('[protocol] local:// handler error:', e);
-      return new Response('Internal Server Error', { status: 500, headers: { 'Content-Type': 'text/plain' } });
+      console.error('[protocol] handler error:', e);
+      return new Response('Internal Error', { status: 500, headers: { 'Content-Type': 'text/plain' } });
     }
   });
 
