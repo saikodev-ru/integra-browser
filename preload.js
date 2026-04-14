@@ -32,13 +32,16 @@ contextBridge.exposeInMainWorld('integra', {
   getSavedTabs: () => ipcRenderer.invoke('get-saved-tabs'),
   saveTabsSession: (tabData) => ipcRenderer.send('save-tabs-session', tabData),
 
+  // Native context menu for webview
+  showContextMenu: (params) => ipcRenderer.send('show-page-context-menu', params),
+
   // State
   getState: () => ipcRenderer.invoke('get-state'),
   openExternal: (url) => ipcRenderer.send('open-external', url),
 
   // Listeners
   on: (channel, fn) => {
-    const allowed = ['fullscreen-change', 'bypass-no-binary', 'bookmarks-update', 'settings-changed', 'incognito-mode', 'save-tabs'];
+    const allowed = ['fullscreen-change', 'bypass-no-binary', 'bookmarks-update', 'settings-changed', 'incognito-mode', 'save-tabs', 'ctx-action'];
     if (allowed.includes(channel)) ipcRenderer.on(channel, (_, ...args) => fn(...args));
   },
 });

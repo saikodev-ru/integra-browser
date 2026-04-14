@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, session, shell, Menu, nativeTheme, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, session, shell, Menu, nativeTheme, dialog, clipboard } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs');
@@ -178,7 +178,7 @@ function createWindow(incognito = false) {
       contextIsolation: true, nodeIntegration: false, sandbox: false,
       webviewTag: true,
     },
-    show: false, titleBarStyle: 'hidden',
+    show: false,
   });
   win.loadFile(path.join(__dirname, 'src', 'browser.html'));
   win.once('ready-to-show', () => {
@@ -290,6 +290,56 @@ ipcMain.handle('settings-import', (e) => {
 // ── IPC: Tabs Session ────────────────────────────────────────
 ipcMain.handle('get-saved-tabs', () => loadTabSession());
 ipcMain.on('save-tabs-session', (_, tabData) => saveTabSession(tabData));
+
+// ── IPC: Native Context Menu for Webview ─────────────────────
+ipcMain.on('show-page-context-menu', (e, params) => {
+  const win = BrowserWindow.fromWebContents(e.sender);
+  if (!win) return;
+
+  const sendAction = (action) => win.webContents.send('ctx-action', action);
+
+  const items = [];
+
+  // Navigation
+  items.push(
+    { label: '← Назад', enabled: !!params.canGoBack, click: () => sendAction('back') },
+    { label: '→ Вперёд', enabled: !!params.canGoForward, click: () => sendAction('forward') },
+    { label: '↻ Обновить', click: () => sendAction('reload') },
+  );
+  items.push({ type: 'separator' });
+
+  // Edit (if text selected)
+  if (params.selectionText) {
+    items.push(
+      { label: 'Копировать выделенное', click: () => { clipboard.writeText(params.selectionText); sendAction('copied'); } },
+    );
+    items.push({ type: 'separator' });
+  }
+
+  // Link actions
+  if (params.linkURL && params.linkURL !== '') {
+    items.push(
+      { label: 'Открыть ссылку', click: () => sendAction({ action: 'open-link', url: params.linkURL }) },
+      { label: 'Открыть в новой вкладке', click: () => sendAction({ action: 'open-link-tab', url: params.linkURL }) },
+      { label: 'Копировать ссылку', click: () => { clipboard.writeText(params.linkURL); sendAction('copied'); } },
+    );
+    items.push({ type: 'separator' });
+  }
+
+  // Page actions
+  items.push(
+    { label: '★ Добавить в закладки', click: () => sendAction('bookmark-toggle') },
+    { label: '+ Новая вкладка', click: () => sendAction('new-tab') },
+  );
+  items.push({ type: 'separator' });
+  items.push(
+    { label: 'Копировать URL страницы', click: () => { clipboard.writeText(params.pageURL || ''); sendAction('copied'); } },
+  );
+
+  const menu = Menu.buildFromTemplate(items);
+  // popup(window, x, y) uses window-relative coordinates
+  menu.popup(win, Math.round(params.x), Math.round(params.y));
+});
 
 // ── IPC: State ───────────────────────────────────────────────
 ipcMain.handle('get-state', () => ({

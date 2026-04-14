@@ -59,6 +59,7 @@ let ctxBmUrl = null;
 let isIncognito = false;
 let NEWTAB_URL = '';
 let webviewPreloadPath = '';
+const FALLBACK_URL = 'about:blank';
 
 // ── Init ──────────────────────────────────────────────────────
 (async () => {
@@ -92,7 +93,8 @@ let webviewPreloadPath = '';
     }
   } catch (err) {
     console.error('[init] FATAL:', err);
-    // Fallback: try to create at least one tab
+    // Fallback: create at least one tab with hardcoded URL
+    NEWTAB_URL = NEWTAB_URL || FALLBACK_URL;
     createTab(NEWTAB_URL);
   }
 })();
@@ -106,12 +108,33 @@ api.on('incognito-mode', (v) => { isIncognito = v; });
 api.on('save-tabs', () => {
   // Main asks us to save tabs before window closes
   const tabData = tabs.map(t => ({
-    url: t.url && !t.url.includes('127.0.0.1') ? t.url : '',
+    url: t.url && !t.url.includes('127.0.0.1') && !t.url.startsWith('about:') ? t.url : '',
     title: t.title || '',
   })).filter(t => t.url);
   if (tabData.length > 0) {
     api.saveTabsSession(tabData);
     console.log('[tabs] saved', tabData.length, 'tabs');
+  }
+});
+
+// ── Native context menu actions (from main process) ──────────
+api.on('ctx-action', (action) => {
+  if (typeof action === 'string') {
+    const wv = getActiveWebView();
+    if (action === 'back') { if (wv) wv.goBack(); }
+    else if (action === 'forward') { if (wv) wv.goForward(); }
+    else if (action === 'reload') { if (wv) wv.reload(); }
+    else if (action === 'bookmark-toggle') $btnBookmark.click();
+    else if (action === 'new-tab') createTab(NEWTAB_URL);
+    else if (action === 'copied') showToast('Скопировано');
+  } else if (action && typeof action === 'object') {
+    // Object actions (open-link, open-link-tab)
+    if (action.action === 'open-link') {
+      const t = getActiveTab();
+      if (t) { t.url = action.url; t.webview.loadURL(action.url); }
+    } else if (action.action === 'open-link-tab') {
+      createTab(action.url);
+    }
   }
 });
 
@@ -124,7 +147,7 @@ function getActiveTab() { return getTab(activeTabId); }
 function getActiveWebView() { const t = getActiveTab(); return t ? t.webview : null; }
 
 function resolveTabUrl(url) {
-  if (!url || url === 'about:blank' || url === 'newtab' || url === '') return NEWTAB_URL;
+  if (!url || url === 'about:blank' || url === 'newtab' || url === '') return NEWTAB_URL || FALLBACK_URL;
   return url;
 }
 
@@ -212,7 +235,16 @@ function createTab(url, opts = {}) {
     webview.addEventListener('context-menu', (e) => {
       if (id === activeTabId) {
         const rect = webview.getBoundingClientRect();
-        showPageCtxMenu(rect.left + e.params.x, rect.top + e.params.y, e.params);
+        // Use native context menu via IPC (DOM menus are behind webview native layer)
+        api.showContextMenu({
+          x: rect.left + e.params.x,
+          y: rect.top + e.params.y,
+          pageURL: e.params.pageURL,
+          linkURL: e.params.linkURL,
+          selectionText: e.params.selectionText,
+          canGoBack: webview.canGoBack(),
+          canGoForward: webview.canGoForward(),
+        });
       }
     });
 
@@ -542,10 +574,29 @@ $newTabBtn.className = 'tab-new-btn';
 $newTabBtn.title = 'Новая вкладка (Ctrl+T)';
 $newTabBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
 $newTabBtn.addEventListener('click', () => {
-  console.log('[+] new tab clicked');
-  createTab(NEWTAB_URL);
+  console.log('[+] new tab clicked, NEWTAB_URL:', NEWTAB_URL);
+  createTab(NEWTAB_URL || FALLBACK_URL);
 });
+$newTabBtn.setAttribute('draggable', 'false');
+$newTabBtn.style.webkitAppRegion = 'no-drag';
 $tabsList.appendChild($newTabBtn);
+
+// ── Webview resize handling ──────────────────────────────────
+const webviewResizeObserver = new ResizeObserver(() => {
+  // Force active webview to recalculate its size on container resize
+  const wv = getActiveWebView();
+  if (!wv) return;
+  const wvRect = wv.getBoundingClientRect();
+  const containerRect = $webviewsContainer.getBoundingClientRect();
+  if (Math.abs(wvRect.width - containerRect.width) > 1 || Math.abs(wvRect.height - containerRect.height) > 1) {
+    // Size mismatch detected — force reflow
+    const wasVisible = wv.style.display !== 'none';
+    wv.style.display = 'none';
+    void wv.offsetWidth; // force reflow
+    if (wasVisible) wv.style.display = 'block';
+  }
+});
+webviewResizeObserver.observe($webviewsContainer);
 
 // ── Window controls ───────────────────────────────────────────
 document.getElementById('btn-min').addEventListener('click', () => api.minimize());

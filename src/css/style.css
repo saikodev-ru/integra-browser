@@ -20,12 +20,15 @@
 }
 
 html, body { height: 100%; overflow: hidden; background: var(--chrome); color: var(--t1); font-family: var(--font); font-size: 14px; font-weight: 500; -webkit-font-smoothing: antialiased; user-select: none; }
+body { display: flex; flex-direction: column; }
 
 /* ── Drag region ───────────────────────────────────────────── */
-#drag-region { position: fixed; top: 0; left: 0; right: 0; height: var(--tabbar-h); -webkit-app-region: drag; z-index: 0; pointer-events: none; }
+#drag-region { position: fixed; top: 0; left: 0; right: 0; height: var(--tabbar-h); -webkit-app-region: drag; z-index: 9999; pointer-events: none; }
 
 /* ── Tab Bar ─────────────────────────────────────────────────── */
 #tabbar { position: fixed; top: 0; left: 0; right: 0; height: var(--tabbar-h); background: var(--chrome); display: flex; align-items: center; gap: 2px; padding: 0 4px 0 0; border-bottom: 1px solid var(--b); z-index: 100; -webkit-app-region: drag; }
+/* Drag padding at the left edge of tabbar (before tabs) */
+#tabbar::before { content: ''; display: block; width: 8px; height: 100%; flex-shrink: 0; -webkit-app-region: drag; }
 
 #tabs-list { display: flex; align-items: center; gap: 1px; flex: 1; overflow: hidden; height: 100%; padding-left: 8px; -webkit-app-region: no-drag; min-width: 0; }
 
@@ -88,9 +91,9 @@ html, body { height: 100%; overflow: hidden; background: var(--chrome); color: v
 .wc-close:hover { background: rgba(255, 69, 58, .18); color: #ff453a; }
 
 /* ── Navigation Bar ────────────────────────────────────────── */
-#navbar { position: fixed; top: var(--tabbar-h); left: 0; right: 0; height: var(--navbar-h); background: var(--chrome); display: flex; align-items: center; gap: 4px; padding: 0 10px; border-bottom: 1px solid var(--b); z-index: 100; transition: background .3s, backdrop-filter .3s; }
-
-.nav-left, .nav-right { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+#navbar { position: fixed; top: var(--tabbar-h); left: 0; right: 0; height: var(--navbar-h); background: var(--chrome); display: flex; align-items: center; gap: 4px; padding: 0 10px; border-bottom: 1px solid var(--b); z-index: 100; transition: background .3s; -webkit-app-region: drag; }
+.nav-left, .nav-right { display: flex; align-items: center; gap: 2px; flex-shrink: 0; -webkit-app-region: no-drag; }
+.nav-bar-wrap { -webkit-app-region: no-drag; }
 .nav-btn { width: 32px; height: 32px; border-radius: 9px; background: transparent; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--t3); transition: background .12s var(--ease), color .12s, transform .1s var(--sp); position: relative; }
 .nav-btn:hover:not(:disabled) { background: var(--s2); color: var(--t1); }
 .nav-btn:active:not(:disabled) { transform: scale(.93); }
@@ -236,9 +239,11 @@ html, body { height: 100%; overflow: hidden; background: var(--chrome); color: v
 body.incognito-mode #tabbar::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, #8b5cf6, #0ea5e9); }
 
 /* ── Transparent chrome mode ──────────────────────────────── */
-body.transparent-mode #tabbar { background: rgba(20, 20, 20, 0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
-body.transparent-mode #navbar { background: rgba(20, 20, 20, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
-body.transparent-mode #bookmarks-bar { background: rgba(20, 20, 20, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+/* Transparent chrome mode — backdrop-filter doesn't work with <webview> (native layer),
+   so we use semi-transparent backgrounds with a subtle bottom glow instead */
+body.transparent-mode #tabbar { background: rgba(18, 18, 20, 0.82); box-shadow: 0 1px 0 0 rgba(255,255,255,.04); }
+body.transparent-mode #navbar { background: rgba(18, 18, 20, 0.78); box-shadow: 0 1px 0 0 rgba(255,255,255,.03); }
+body.transparent-mode #bookmarks-bar { background: rgba(18, 18, 20, 0.78); box-shadow: 0 1px 0 0 rgba(255,255,255,.03); }
 
 /* ── Webviews Container ───────────────────────────────────── */
 #webviews-container {
@@ -248,17 +253,21 @@ body.transparent-mode #bookmarks-bar { background: rgba(20, 20, 20, 0.7); backdr
   bottom: 0;
   top: calc(var(--tabbar-h) + var(--navbar-h));
   z-index: 1;
+  overflow: hidden;
 }
 body.show-bookmarks #webviews-container {
   top: calc(var(--tabbar-h) + var(--navbar-h) + var(--bookmarksbar-h));
 }
 .tab-webview {
+  display: block;
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   border: none;
+  outline: none;
+  box-shadow: none;
   background: #111111;
 }
 
