@@ -60,6 +60,7 @@
   /* ── Chrome heights ── */
   --tabbar-h: 40px;
   --navbar-h: 52px;
+  --bookmarksbar-h: 34px;
 }
 
 html, body {
@@ -141,6 +142,16 @@ html, body {
   border-color: var(--b2);
 }
 
+/* Tab drag-n-drop */
+.tab.dragging {
+  opacity: 0.4;
+  transform: scale(0.95);
+}
+
+.tab.drag-over {
+  border-left: 2px solid var(--y2);
+}
+
 .tab-favicon {
   width: 14px;
   height: 14px;
@@ -211,6 +222,21 @@ html, body {
   background: rgba(255,255,255,.1);
   color: var(--t1);
 }
+
+/* Tab drag indicator */
+.tab-drag-indicator {
+  position: fixed;
+  top: 0;
+  width: 2px;
+  height: var(--tabbar-h);
+  background: var(--y2);
+  z-index: 200;
+  pointer-events: none;
+  border-radius: 0 2px 2px 0;
+  box-shadow: 0 0 8px rgba(139,92,246,.4);
+}
+
+.tab-drag-indicator.hidden { display: none; }
 
 /* New tab button */
 .tab-new-btn {
@@ -380,6 +406,27 @@ html, body {
 
 .spinner.hidden { display: none; }
 
+/* Bookmark star button */
+.bookmark-star-btn {
+  transition: color .15s, transform .15s var(--sp);
+}
+
+.bookmark-star-btn.active {
+  color: var(--y2) !important;
+}
+
+.bookmark-star-btn.active svg path {
+  stroke: var(--y2);
+}
+
+.bookmark-star-btn:hover {
+  transform: scale(1.1);
+}
+
+.bookmark-star-btn:active {
+  transform: scale(.9);
+}
+
 /* Bypass button */
 .bypass-btn {
   width: auto;
@@ -413,6 +460,111 @@ html, body {
 
 #bypass-label {
   white-space: nowrap;
+}
+
+/* ── Bookmarks Bar ───────────────────────────────────────────── */
+#bookmarks-bar {
+  position: fixed;
+  top: calc(var(--tabbar-h) + var(--navbar-h));
+  left: 0;
+  right: 0;
+  height: var(--bookmarksbar-h);
+  background: var(--chrome);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--b);
+  z-index: 99;
+  overflow: hidden;
+}
+
+#bookmarks-bar.hidden {
+  display: none;
+}
+
+#bookmarks-list {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  overflow: hidden;
+  height: 100%;
+}
+
+.bm-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 7px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  min-width: 0;
+  max-width: 180px;
+  transition: background .12s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.bm-item:hover {
+  background: var(--s2);
+}
+
+.bm-item:active {
+  background: var(--s3);
+}
+
+.bm-item-favicon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bm-item-favicon img {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  object-fit: contain;
+}
+
+.bm-item-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--t2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bm-item:hover .bm-item-title {
+  color: var(--t1);
+}
+
+.bm-more-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--t3);
+  flex-shrink: 0;
+  transition: background .12s, color .12s;
+}
+
+.bm-more-btn:hover {
+  background: var(--s2);
+  color: var(--t1);
 }
 
 /* ── Toast ───────────────────────────────────────────────────── */
@@ -489,6 +641,470 @@ html, body {
   margin: 4px 0;
 }
 
+/* ── Panels (Settings & Bookmarks) ───────────────────────────── */
+.panel {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: panelIn .25s var(--ease);
+}
+
+@keyframes panelIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.panel.hidden { display: none; }
+
+.panel-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  backdrop-filter: blur(4px);
+}
+
+.panel-container {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  max-height: 75vh;
+  background: var(--solid2);
+  border: 1px solid var(--b3);
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -8px 40px rgba(0,0,0,.6);
+  display: flex;
+  flex-direction: column;
+  animation: panelSlideUp .3s var(--ease);
+}
+
+.panel-container-sm {
+  max-width: 440px;
+}
+
+@keyframes panelSlideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 0;
+  flex-shrink: 0;
+}
+
+.panel-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--t1);
+  letter-spacing: -.3px;
+}
+
+.panel-close {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--t3);
+  transition: background .12s, color .12s;
+}
+
+.panel-close:hover {
+  background: var(--s2);
+  color: var(--t1);
+}
+
+.panel-body {
+  padding: 16px 24px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* ── Settings Styles ─────────────────────────────────────────── */
+.settings-section {
+  margin-bottom: 20px;
+}
+
+.settings-section:last-child {
+  margin-bottom: 0;
+}
+
+.settings-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .7px;
+  text-transform: uppercase;
+  color: var(--t3);
+  margin-bottom: 10px;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.settings-row:last-child {
+  margin-bottom: 0;
+}
+
+.settings-select {
+  flex: 1;
+  height: 36px;
+  padding: 0 12px;
+  background: var(--solid1);
+  border: 1px solid var(--b2);
+  border-radius: 10px;
+  color: var(--t1);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='rgba(255,255,255,.35)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+  transition: border-color .2s;
+}
+
+.settings-select:focus {
+  border-color: rgba(139,92,246,.5);
+}
+
+.settings-select option {
+  background: var(--solid2);
+  color: var(--t1);
+}
+
+/* Toggle switch */
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--t2);
+  cursor: pointer;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--s2);
+  border-radius: 12px;
+  transition: background .2s;
+  cursor: pointer;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--t3);
+  transition: transform .2s var(--sp), background .2s;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background: var(--ybg);
+  border: 1px solid var(--yb);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(18px);
+  background: var(--y2);
+}
+
+/* Radio buttons */
+.settings-radio-group {
+  display: flex;
+  gap: 20px;
+}
+
+.settings-radio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--t2);
+  cursor: pointer;
+}
+
+.settings-radio input {
+  display: none;
+}
+
+.settings-radio-mark {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--b3);
+  position: relative;
+  transition: border-color .2s;
+  flex-shrink: 0;
+}
+
+.settings-radio input:checked ~ .settings-radio-mark {
+  border-color: var(--y2);
+}
+
+.settings-radio input:checked ~ .settings-radio-mark::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--y2);
+}
+
+/* Range slider */
+.settings-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--t2);
+}
+
+.settings-range {
+  flex: 1;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--s2);
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+}
+
+.settings-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--y2);
+  cursor: pointer;
+  border: 2px solid var(--chrome);
+  box-shadow: 0 0 0 2px var(--yb);
+  transition: transform .1s var(--sp);
+}
+
+.settings-range::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+/* Buttons */
+.settings-btn {
+  flex: 1;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 10px;
+  background: var(--s1);
+  border: 1px solid var(--b2);
+  color: var(--t1);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, transform .1s var(--sp);
+}
+
+.settings-btn:hover {
+  background: var(--s2);
+  border-color: var(--b3);
+}
+
+.settings-btn:active {
+  transform: scale(.97);
+}
+
+.settings-btn-danger {
+  color: var(--red);
+  border-color: rgba(255,69,58,.2);
+}
+
+.settings-btn-danger:hover {
+  background: rgba(255,69,58,.1);
+  border-color: rgba(255,69,58,.35);
+}
+
+/* ── Bookmarks Panel Styles ──────────────────────────────────── */
+.bookmarks-search {
+  margin-bottom: 12px;
+}
+
+.bookmarks-search input {
+  width: 100%;
+  height: 38px;
+  padding: 0 14px;
+  background: var(--solid1);
+  border: 1px solid var(--b2);
+  border-radius: 11px;
+  color: var(--t1);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.bookmarks-search input:focus {
+  border-color: rgba(139,92,246,.5);
+  box-shadow: 0 0 0 3px rgba(139,92,246,.1);
+}
+
+.bookmarks-search input::placeholder {
+  color: var(--t3);
+}
+
+.bookmarks-panel-list {
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.bm-panel-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background .12s;
+  margin-bottom: 2px;
+}
+
+.bm-panel-item:hover {
+  background: var(--s2);
+}
+
+.bm-panel-item-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--s1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.bm-panel-item-icon img {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  object-fit: contain;
+}
+
+.bm-panel-item-icon .bm-default-icon {
+  width: 16px;
+  height: 16px;
+  opacity: .5;
+}
+
+.bm-panel-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.bm-panel-item-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--t1);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.bm-panel-item-url {
+  font-size: 11px;
+  color: var(--t3);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+.bm-panel-item-delete {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--t3);
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity .12s, background .12s, color .12s;
+}
+
+.bm-panel-item:hover .bm-panel-item-delete {
+  opacity: 1;
+}
+
+.bm-panel-item-delete:hover {
+  background: rgba(255,69,58,.15);
+  color: var(--red);
+}
+
+.bookmarks-empty {
+  text-align: center;
+  padding: 32px 20px;
+  color: var(--t3);
+}
+
+.bookmarks-empty svg {
+  margin-bottom: 12px;
+  opacity: .3;
+}
+
+.bookmarks-empty p {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.bookmarks-empty .text-muted {
+  font-size: 12px;
+  font-weight: 500;
+  opacity: .6;
+}
+
+.bookmarks-empty.hidden { display: none; }
+
 /* ── Scrollbar ───────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -510,4 +1126,13 @@ html, body {
 
 #loading-bar.active {
   opacity: 1;
+}
+
+/* ── Bookmarks bar visibility offset ── */
+body.bookmarks-visible #navbar {
+  border-bottom-color: transparent;
+}
+
+body.bookmarks-visible #bookmarks-bar {
+  border-top: 1px solid var(--b);
 }

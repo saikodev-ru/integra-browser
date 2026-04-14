@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('integra', {
   newTab: (url) => ipcRenderer.send('tab-new', { url }),
   closeTab: (id) => ipcRenderer.send('tab-close', { id }),
   activateTab: (id) => ipcRenderer.send('tab-activate', { id }),
+  reorderTab: (id, newIndex) => ipcRenderer.send('tab-reorder', { id, newIndex }),
 
   // Window controls
   minimize: () => ipcRenderer.send('window-minimize'),
@@ -21,13 +22,28 @@ contextBridge.exposeInMainWorld('integra', {
   // Bypass
   toggleBypass: () => ipcRenderer.send('bypass-toggle'),
 
+  // Bookmarks
+  getBookmarks: () => ipcRenderer.invoke('bookmarks-get'),
+  addBookmark: (url, title, favicon) => ipcRenderer.invoke('bookmark-add', { url, title, favicon }),
+  removeBookmark: (id) => ipcRenderer.invoke('bookmark-remove', { id }),
+  toggleBookmark: (url, title, favicon) => ipcRenderer.invoke('bookmark-toggle', { url, title, favicon }),
+  checkBookmark: (url) => ipcRenderer.invoke('bookmark-check', { url }),
+  updateBookmark: (id, updates) => ipcRenderer.invoke('bookmark-update', { id, updates }),
+
+  // Settings
+  getSettings: () => ipcRenderer.invoke('settings-get'),
+  setSetting: (key, value) => ipcRenderer.invoke('settings-set', { key, value }),
+  resetSettings: () => ipcRenderer.invoke('settings-reset'),
+  exportSettings: () => ipcRenderer.invoke('settings-export'),
+  importSettings: () => ipcRenderer.invoke('settings-import'),
+
   // State
   getState: () => ipcRenderer.invoke('get-state'),
   openExternal: (url) => ipcRenderer.send('open-external', url),
 
   // Listeners
   on: (channel, fn) => {
-    const allowed = ['tabs-update', 'nav-state', 'fullscreen-change', 'context-menu', 'bypass-no-binary'];
+    const allowed = ['tabs-update', 'nav-state', 'fullscreen-change', 'context-menu', 'bypass-no-binary', 'bookmarks-update', 'settings-changed'];
     if (allowed.includes(channel)) ipcRenderer.on(channel, (_, ...args) => fn(...args));
   },
   off: (channel, fn) => ipcRenderer.removeListener(channel, fn),
