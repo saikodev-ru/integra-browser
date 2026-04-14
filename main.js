@@ -384,6 +384,16 @@ ipcMain.on('window-maximize', () => { if (mainWindow?.isMaximized()) mainWindow.
 ipcMain.on('window-close', () => mainWindow?.close());
 ipcMain.on('window-incognito', (_, { url }) => createIncognitoWindow(url));
 
+// ── IPC: View visibility (for overlays) ─────────────────────
+ipcMain.on('view-hide', () => {
+  // Collapse all BrowserViews to 0x0 so HTML overlays are visible
+  tabs.forEach(tab => tab.view.setBounds({ x: 0, y: 0, width: 0, height: 0 }));
+});
+ipcMain.on('view-show', () => {
+  // Restore proper bounds for the active tab
+  updateViewBounds();
+});
+
 // ── IPC: Bypass ──────────────────────────────────────────────
 ipcMain.on('bypass-toggle', (e) => {
   if (bypassEnabled) stopBypass(); else { if (!startBypass()) e.sender.send('bypass-no-binary'); }

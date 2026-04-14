@@ -361,25 +361,49 @@ document.getElementById('btn-export-settings').addEventListener('click', async (
 document.getElementById('btn-import-settings').addEventListener('click', async () => { const r = await api.importSettings(); if (r.success) { showToast('Настройки импортированы'); applySettings(); } else showToast('Ошибка: ' + (r.error || '')); });
 document.getElementById('btn-reset-settings').addEventListener('click', async () => { await api.resetSettings(); settings = await api.getSettings(); applySettings(); showToast('Настройки сброшены'); });
 
-function openPanel(p) { p.classList.remove('hidden'); }
-function closePanel(p) { p.classList.add('hidden'); }
-document.querySelectorAll('.panel-backdrop').forEach(b => b.addEventListener('click', () => b.closest('.panel').classList.add('hidden')));
+// ── View sync: BrowserView is a native element that renders ON TOP
+//    of HTML. We must hide it when showing any overlay, and restore
+//    it when ALL overlays are closed.
+function isAnyOverlayVisible() {
+  return !$settingsPanel.classList.contains('hidden') ||
+         !$bookmarksPanel.classList.contains('hidden') ||
+         !$tabCtxMenu.classList.contains('hidden') ||
+         !$pageCtxMenu.classList.contains('hidden') ||
+         !$bmCtxMenu.classList.contains('hidden');
+}
+function syncViewVisibility() {
+  if (isAnyOverlayVisible()) api.hideActiveView();
+  else api.showActiveView();
+}
+
+function openPanel(p) { p.classList.remove('hidden'); syncViewVisibility(); }
+function closePanel(p) { p.classList.add('hidden'); syncViewVisibility(); }
+document.querySelectorAll('.panel-backdrop').forEach(b => b.addEventListener('click', () => {
+  b.closest('.panel').classList.add('hidden');
+  syncViewVisibility();
+}));
 
 // ══════════════════════════════════════════════════════════════
 //  CONTEXT MENUS
 // ══════════════════════════════════════════════════════════════
 
-function hideAllMenus() { $tabCtxMenu.classList.add('hidden'); $pageCtxMenu.classList.add('hidden'); $bmCtxMenu.classList.add('hidden'); if ($groupColorMenu) $groupColorMenu.style.display = ''; }
+function hideAllMenus() {
+  $tabCtxMenu.classList.add('hidden');
+  $pageCtxMenu.classList.add('hidden');
+  $bmCtxMenu.classList.add('hidden');
+  if ($groupColorMenu) $groupColorMenu.style.display = '';
+  syncViewVisibility();
+}
 document.addEventListener('mousedown', (e) => {
   // Close context menus on any click outside them
   if (!$tabCtxMenu.contains(e.target)) $tabCtxMenu.classList.add('hidden');
   if (!$pageCtxMenu.contains(e.target)) $pageCtxMenu.classList.add('hidden');
   if (!$bmCtxMenu.contains(e.target)) $bmCtxMenu.classList.add('hidden');
+ // After potential closes, sync view
+  syncViewVisibility();
 });
 document.addEventListener('click', hideAllMenus);
-// Only prevent default contextmenu on the chrome area (not on web content)
 document.addEventListener('contextmenu', (e) => {
-  // Allow default on webview area; prevent on chrome UI
   e.preventDefault();
 });
 
@@ -403,6 +427,7 @@ function showTabCtxMenu(tabId, x, y) {
   $tabCtxMenu.style.left = x + 'px';
   $tabCtxMenu.style.top = y + 'px';
   $tabCtxMenu.classList.remove('hidden');
+  syncViewVisibility();
 
   // Clamp position
   requestAnimationFrame(() => {
@@ -445,6 +470,7 @@ function showPageCtxMenu(x, y, params) {
   $pageCtxMenu.style.left = x + 'px';
   $pageCtxMenu.style.top = y + 'px';
   $pageCtxMenu.classList.remove('hidden');
+  syncViewVisibility();
 
   requestAnimationFrame(() => {
     const rect = $pageCtxMenu.getBoundingClientRect();
@@ -499,7 +525,7 @@ document.addEventListener('keydown', (e) => {
   if (ctrl && e.key === 'b') { e.preventDefault(); api.setSetting('showBookmarksBar', !settings.showBookmarksBar); }
   if (ctrl && e.key === ',') { e.preventDefault(); $btnSettings.click(); }
   if (ctrl && shift && e.key === 'N') { e.preventDefault(); api.newIncognitoWindow(); }
-  if (e.key === 'Escape') { $settingsPanel.classList.add('hidden'); $bookmarksPanel.classList.add('hidden'); hideAllMenus(); }
+  if (e.key === 'Escape') { $settingsPanel.classList.add('hidden'); $bookmarksPanel.classList.add('hidden'); hideAllMenus(); syncViewVisibility(); }
 });
 
 // ══════════════════════════════════════════════════════════════
@@ -532,6 +558,7 @@ function showBmCtxMenu(bm, x, y) {
   $bmCtxMenu.style.left = x + 'px';
   $bmCtxMenu.style.top = y + 'px';
   $bmCtxMenu.classList.remove('hidden');
+  syncViewVisibility();
   requestAnimationFrame(() => {
     const rect = $bmCtxMenu.getBoundingClientRect();
     if (rect.right > window.innerWidth) $bmCtxMenu.style.left = (window.innerWidth - rect.width - 4) + 'px';

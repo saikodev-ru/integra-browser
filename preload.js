@@ -43,6 +43,10 @@ contextBridge.exposeInMainWorld('integra', {
   exportSettings: () => ipcRenderer.invoke('settings-export'),
   importSettings: () => ipcRenderer.invoke('settings-import'),
 
+  // View control (hide/show BrowserView for overlays)
+  hideActiveView: () => ipcRenderer.send('view-hide'),
+  showActiveView: () => ipcRenderer.send('view-show'),
+
   // State
   getState: () => ipcRenderer.invoke('get-state'),
   openExternal: (url) => ipcRenderer.send('open-external', url),
