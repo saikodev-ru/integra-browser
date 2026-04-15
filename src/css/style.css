@@ -5,7 +5,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
 :root {
-  --bg: #1a1a1c; --bg2: #1e1e20; --bg3: #242426; --chrome: #1e1e20;
+  --bg: #18181b; --bg2: #1c1c1f; --bg3: #202023; --chrome: #1c1c1f;
   --s0: rgba(255,255,255,.03); --s1: rgba(255,255,255,.05); --s2: rgba(255,255,255,.08); --s3: rgba(255,255,255,.14);
   --solid1: #2a2a2c; --solid2: #303032; --solid3: #3a3a3c;
   --b: rgba(255,255,255,.05); --b2: rgba(255,255,255,.09); --b3: rgba(255,255,255,.15);
@@ -39,6 +39,19 @@ body.transparent-mode {
   background: transparent !important;
 }
 
+/* ── Mica noise grain overlay ── */
+body.transparent-mode::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
 /* ══════════════════════════════════════════════════════════════
    TAB BAR — Safari-style with macOS traffic lights
    ══════════════════════════════════════════════════════════════ */
@@ -46,8 +59,8 @@ body.transparent-mode {
   flex-shrink: 0;
   height: var(--tabbar-h);
   background: rgba(30,30,32,.82);
-  backdrop-filter: blur(30px) saturate(180%);
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  backdrop-filter: blur(30px) saturate(200%);
+  -webkit-backdrop-filter: blur(30px) saturate(200%);
   display: flex; align-items: center;
   gap: 0; padding: 0;
   z-index: 100;
@@ -185,8 +198,8 @@ body.transparent-mode {
   flex-shrink: 0;
   height: var(--navbar-h);
   background: rgba(30,30,32,.78);
-  backdrop-filter: blur(30px) saturate(180%);
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  backdrop-filter: blur(30px) saturate(200%);
+  -webkit-backdrop-filter: blur(30px) saturate(200%);
   display: flex; align-items: center;
   gap: 4px; padding: 0 10px;
   z-index: 100;
@@ -255,8 +268,8 @@ body.transparent-mode {
   flex-shrink: 0;
   height: var(--bookmarksbar-h);
   background: rgba(30,30,32,.72);
-  backdrop-filter: blur(20px) saturate(150%);
-  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  backdrop-filter: blur(20px) saturate(200%);
+  -webkit-backdrop-filter: blur(20px) saturate(200%);
   display: flex; align-items: center;
   gap: 4px; padding: 0 10px;
   z-index: 99; overflow: hidden;
@@ -358,31 +371,34 @@ body.transparent-mode {
 body.incognito-mode #tabbar::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, #8b5cf6, #0ea5e9); }
 
 /* ── Transparent chrome mode ── */
-body.transparent-mode #tabbar { background: rgba(20, 20, 20, 0.6); }
-body.transparent-mode #navbar { background: rgba(20, 20, 20, 0.55); }
-body.transparent-mode #bookmarks-bar { background: rgba(20, 20, 20, 0.55); }
+/* ── Mica color tint overlay ── */
+body.transparent-mode::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 0%, rgba(139,92,246,0.04) 0%, transparent 70%);
+}
 
-/* ── Webviews Container ── */
+body.transparent-mode #tabbar { background: rgba(18, 18, 21, 0.65); }
+body.transparent-mode #navbar { background: rgba(18, 18, 21, 0.65); }
+body.transparent-mode #bookmarks-bar { background: rgba(18, 18, 21, 0.65); }
+
+/* ── Content Area (BrowserView overlays this) ── */
 #webviews-container {
   flex: 1 1 0;
   min-height: 0;
   min-width: 0;
   position: relative;
   overflow: hidden;
+  background: transparent;
 }
 
-/* ── Webview ── */
-.tab-webview {
-  display: none;
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border: none;
-  outline: none;
-  box-shadow: none;
-  background: #1a1a1c;
+/* ── Fullscreen mode ── */
+body.fullscreen #webviews-container {
+  /* Ensure content area still takes flex space */
+  flex: 1 1 0;
 }
 
 /* ── Loading Bar — Safari-style thin accent line ── */

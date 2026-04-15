@@ -11,7 +11,6 @@ contextBridge.exposeInMainWorld('integral', {
   toggleBypass: () => ipcRenderer.send('bypass-toggle'),
 
   // Paths & URLs
-  getWebViewPreloadPath: () => ipcRenderer.invoke('get-webview-preload-path'),
   getNewTabUrl: () => ipcRenderer.invoke('get-newtab-url'),
   getSettingsUrl: () => ipcRenderer.invoke('get-settings-url'),
   getHistoryUrl: () => ipcRenderer.invoke('get-history-url'),
@@ -49,10 +48,27 @@ contextBridge.exposeInMainWorld('integral', {
   cacheGetSize: () => ipcRenderer.invoke('cache-get-size'),
   cacheClear: () => ipcRenderer.invoke('cache-clear'),
 
-  // Native context menus
-  showContextMenu: (params) => ipcRenderer.send('show-page-context-menu', params),
+  // Native context menus (tab and bookmark only — page context menu handled by BrowserView in main)
   showTabContextMenu: (params) => ipcRenderer.send('show-tab-context-menu', params),
   showBmContextMenu: (params) => ipcRenderer.send('show-bm-context-menu', params),
+
+  // BrowserView Tab Management
+  tabCreate: (url, opts) => ipcRenderer.invoke('tab-create', { url, opts }),
+  tabClose: (id) => ipcRenderer.send('tab-close', { id }),
+  tabSetActive: (id) => ipcRenderer.send('tab-set-active', { id }),
+  tabNavigate: (id, url) => ipcRenderer.send('tab-navigate', { id, url }),
+  tabGoBack: (id) => ipcRenderer.send('tab-go-back', { id }),
+  tabGoForward: (id) => ipcRenderer.send('tab-go-forward', { id }),
+  tabReload: (id) => ipcRenderer.send('tab-reload', { id }),
+  tabStop: (id) => ipcRenderer.send('tab-stop', { id }),
+  tabSetZoom: (id, level) => ipcRenderer.send('tab-set-zoom', { id, level }),
+  tabSetMuted: (id, muted) => ipcRenderer.send('tab-set-muted', { id, muted }),
+  tabSetPinned: (id, pinned) => ipcRenderer.send('tab-set-pinned', { id, pinned }),
+  tabSetGroup: (id, group) => ipcRenderer.send('tab-set-group', { id, group }),
+  tabGetAll: () => ipcRenderer.invoke('tab-get-all'),
+  tabGetActive: () => ipcRenderer.invoke('tab-get-active'),
+  notifyChromeHeight: (height) => ipcRenderer.send('notify-chrome-height', { height }),
+  rendererReady: () => ipcRenderer.send('renderer-ready'),
 
   // State
   getState: () => ipcRenderer.invoke('get-state'),
@@ -61,12 +77,22 @@ contextBridge.exposeInMainWorld('integral', {
   // Notification popups
   showNotificationPopup: (data) => ipcRenderer.send('show-notification-popup', data),
 
+  // Zoom (via main process for active tab)
+  zoomIn: () => ipcRenderer.send('zoom-in'),
+  zoomOut: () => ipcRenderer.send('zoom-out'),
+  zoomReset: () => ipcRenderer.send('zoom-reset'),
+
   // Listeners
   on: (channel, fn) => {
     const allowed = [
       'fullscreen-change', 'bypass-no-binary', 'bookmarks-update',
-      'settings-changed', 'incognito-mode', 'save-tabs',
-      'ctx-action', 'do-zoom',
+      'settings-changed', 'incognito-mode',
+      'ctx-action', 'tab-cleared-cache',
+      // BrowserView tab events
+      'tab-created', 'tab-activated', 'tab-closed', 'tab-loading',
+      'tab-url-updated', 'tab-title-updated', 'tab-favicon-updated',
+      'tab-audio-updated', 'tab-state-updated', 'tab-zoom-updated',
+      'tab-crashed',
     ];
     if (allowed.includes(channel)) ipcRenderer.on(channel, (_, ...args) => fn(...args));
   },

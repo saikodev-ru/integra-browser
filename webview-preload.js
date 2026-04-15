@@ -1,44 +1,22 @@
-/* ── webview-preload.js ── Preload for webview content ── */
+/* ── webview-preload.js ── Preload for BrowserView content ── */
 'use strict';
 
 const { contextBridge, ipcRenderer } = require('electron');
 
 // Expose a bridge for internal pages (settings, history, error) to communicate
-// with the parent renderer via IPC message relay
+// with the main process via IPC (instead of sendToHost which was for webview tags)
 contextBridge.exposeInMainWorld('chrome', {
   webview: {
     postMessage: (msg) => {
-      try { ipcRenderer.sendToHost('internal-msg', msg); } catch {}
+      try { ipcRenderer.send('bv-internal-msg', msg); } catch {}
     },
   },
 });
 
-// Listen for responses sent back from parent renderer to internal pages
+// Listen for responses sent back from main process to internal pages
 ipcRenderer.on('internal-response', (e, data) => {
   try {
     window.dispatchEvent(new CustomEvent('integral-response', { detail: data }));
-  } catch {}
-});
-
-// ── Context menu: intercept and forward to host via IPC ──
-// This is more reliable than the webview's 'context-menu' event
-document.addEventListener('contextmenu', (e) => {
-  e.preventDefault();
-  try {
-    const selection = window.getSelection ? window.getSelection().toString() : '';
-    const linkEl = e.target.closest('a[href]');
-    const imgEl = e.target.closest('img');
-    ipcRenderer.sendToHost('internal-msg', {
-      type: 'context-menu',
-      x: e.clientX,
-      y: e.clientY,
-      pageURL: window.location.href,
-      linkURL: linkEl ? (linkEl.href || '') : '',
-      linkText: linkEl ? (linkEl.textContent || '') : '',
-      srcURL: imgEl ? (imgEl.src || '') : '',
-      selectionText: selection || '',
-      frameUrl: '',
-    });
   } catch {}
 });
 
@@ -48,7 +26,7 @@ if (window.Notification) {
   window.Notification = function(title, options) {
     const notif = new OrigNotification(title, options);
     try {
-      ipcRenderer.sendToHost('internal-msg', {
+      ipcRenderer.send('bv-internal-msg', {
         type: 'notification-event',
         title: title,
         body: options ? options.body || '' : '',
