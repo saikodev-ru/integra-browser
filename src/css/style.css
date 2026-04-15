@@ -182,7 +182,7 @@ body.transparent-mode {
 
 /* The URL bar wrapper opts out of dragging so it's clickable */
 .nav-bar-wrap { -webkit-app-region: no-drag; }
-.nav-bar-wrap { flex: 1; position: relative; display: flex; align-items: center; background: var(--solid1); border: 1px solid transparent; border-radius: 11px; height: 36px; padding: 0 12px; gap: 8px; transition: border-color .2s, box-shadow .2s, background .2s; cursor: text; }
+.nav-bar-wrap { flex: 1; position: relative; display: flex; align-items: center; background: var(--solid1); border: 1px solid transparent; border-radius: 11px; height: 36px; padding: 0 12px; gap: 8px; transition: border-color .2s, box-shadow .2s, background .2s; cursor: text; overflow: hidden; }
 .nav-bar-wrap:focus-within { border-color: rgba(139,92,246,.5); background: rgba(255,255,255,.04); box-shadow: 0 0 0 3px rgba(139,92,246,.12); }
 
 /* ── Safari-style URL Bar ─────────────────────────────────── */
@@ -354,24 +354,28 @@ body.transparent-mode #bookmarks-bar { background: rgba(20, 20, 20, 0.70); }
   position: absolute;
   top: 0;
   left: 0;
-  /* Dimensions are set by JS in pixels — CSS % is unreliable for <webview> */
+  /* Fallback 100% before JS sets px values */
+  width: 100%;
+  height: 100%;
   border: none;
   outline: none;
   box-shadow: none;
   background: #111111;
 }
 
-/* ── Loading Bar ──────────────────────────────────────────── */
+/* ── Loading Bar — inside urlbar, bottom edge ──────────────── */
 #loading-bar {
-  position: fixed;
-  top: 0; left: 0;
-  height: 2px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
   width: 0;
   background: linear-gradient(90deg, var(--y), var(--y3));
-  z-index: 9999;
+  border-radius: 0 2px 2px 0;
   pointer-events: none;
   opacity: 0;
   transition: width .15s ease, opacity .2s;
+  z-index: 10;
 }
 #loading-bar.active {
   opacity: 1;

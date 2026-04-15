@@ -5,1178 +5,430 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Настройки</title>
   <base target="_self">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg: #0a0a0c;
-      --bg-subtle: #0e0e11;
-      --surface: #141416;
-      --surface-hover: #1a1a1d;
-      --surface-active: #202024;
-      --border: rgba(255,255,255,.06);
-      --border-hover: rgba(255,255,255,.1);
-      --text: #f0f0f2;
-      --text-secondary: rgba(240,240,242,.55);
-      --text-tertiary: rgba(240,240,242,.28);
-      --accent: #8b5cf6;
-      --accent-secondary: #a78bfa;
-      --accent-glow: rgba(139,92,246,.15);
-      --accent-border: rgba(139,92,246,.25);
+      --bg: #111111; --bg2: #161616; --surface: #1c1c1e; --surface2: #242426; --surface3: #2c2c2e;
+      --border: rgba(255,255,255,.06); --border2: rgba(255,255,255,.10);
+      --text: #f5f5f7; --text2: rgba(245,245,247,.55); --text3: rgba(245,245,247,.28);
+      --accent: #8b5cf6; --accent2: #a78bfa; --accent-sky: #0ea5e9;
       --accent-grad: linear-gradient(135deg, #8b5cf6, #0ea5e9);
-      --red: #ff453a;
-      --green: #30d158;
-      --font: 'Inter', -apple-system, 'Segoe UI', sans-serif;
-      --ease: cubic-bezier(.16,1,.3,1);
-      --spring: cubic-bezier(.34,1.56,.64,1);
-      --radius-lg: 16px;
-      --radius-md: 12px;
-      --radius-sm: 8px;
+      --accent-glow: rgba(139,92,246,.14); --accent-ring: rgba(139,92,246,.28);
+      --red: #ff453a; --green: #30d158;
+      --font: 'Google Sans', -apple-system, 'Helvetica Neue', sans-serif;
+      --ease: cubic-bezier(.16,1,.3,1); --spring: cubic-bezier(.34,1.56,.64,1);
+      --sidebar-w: 220px;
     }
+    html, body { height: 100%; overflow: hidden; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 13px; font-weight: 500; -webkit-font-smoothing: antialiased; display: flex; }
 
-    html { height: 100%; }
+    /* SIDEBAR */
+    .sidebar { width: var(--sidebar-w); flex-shrink: 0; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+    .sidebar-header { padding: 28px 20px 16px; flex-shrink: 0; }
+    .sidebar-header h1 { font-size: 18px; font-weight: 700; letter-spacing: -.2px; }
+    .sidebar-header p { font-size: 11px; color: var(--text3); margin-top: 2px; }
+    .sidebar-divider { height: 1px; background: var(--border); margin: 0 16px; flex-shrink: 0; }
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 10px; }
+    .sidebar-nav::-webkit-scrollbar { display: none; }
+    .nav-group-label { font-size: 10px; font-weight: 700; letter-spacing: .7px; text-transform: uppercase; color: var(--text3); padding: 14px 10px 6px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 9px; cursor: pointer; transition: background .12s, color .12s; color: var(--text2); font-size: 13px; font-weight: 500; user-select: none; margin-bottom: 1px; }
+    .nav-item:hover { background: rgba(255,255,255,.05); color: var(--text); }
+    .nav-item.active { background: rgba(139,92,246,.16); color: var(--accent2); }
+    .nav-icon { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--surface2); color: var(--text3); transition: background .12s, color .12s; }
+    .nav-item.active .nav-icon { background: var(--accent-glow); color: var(--accent2); }
+    .nav-item:hover:not(.active) .nav-icon { background: var(--surface3); color: var(--text2); }
 
-    html, body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font);
-      font-size: 14px;
-      font-weight: 500;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      overflow-x: hidden;
-    }
+    /* MAIN */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .main-header { padding: 28px 36px 0; flex-shrink: 0; }
+    .main-header h2 { font-size: 22px; font-weight: 700; letter-spacing: -.3px; background: var(--accent-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .content-area { flex: 1; overflow-y: auto; padding: 20px 36px 40px; }
+    .content-area::-webkit-scrollbar { width: 4px; }
+    .content-area::-webkit-scrollbar-track { background: transparent; }
+    .content-area::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 99px; }
 
-    body {
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
+    /* PAGES */
+    .page { display: none; animation: pageIn .25s var(--ease) both; }
+    .page.active { display: block; }
+    @keyframes pageIn { from { opacity: 0; transform: translateX(8px); } to { opacity: 1; transform: none; } }
 
-    /* ── Accent bar ── */
-    .accent-bar {
-      width: 100%;
-      height: 2px;
-      background: var(--accent-grad);
-      flex-shrink: 0;
-      opacity: .8;
-    }
+    /* SECTION */
+    .section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 16px; animation: rowIn .3s var(--ease) both; }
+    .section:nth-child(1) { animation-delay: .03s; }
+    .section:nth-child(2) { animation-delay: .06s; }
+    .section:nth-child(3) { animation-delay: .09s; }
+    .section:nth-child(4) { animation-delay: .12s; }
+    @keyframes rowIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    .section-title { padding: 12px 18px 8px; font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--text3); }
 
-    /* ── Hero header ── */
-    .hero {
-      position: relative;
-      padding: 40px 48px 32px;
-      flex-shrink: 0;
-      overflow: hidden;
-      animation: heroIn .6s var(--ease) both;
-    }
+    /* ROW */
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 18px; border-top: 1px solid var(--border); transition: background .12s; }
+    .row:first-of-type { border-top: none; }
+    .row:hover { background: rgba(255,255,255,.02); }
+    .row-left { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .row-label { font-size: 13px; font-weight: 600; color: var(--text); }
+    .row-desc { font-size: 11px; color: var(--text3); font-weight: 500; }
 
-    .hero::before {
-      content: '';
-      position: absolute;
-      top: -40%;
-      right: -10%;
-      width: 340px;
-      height: 340px;
-      background: var(--accent-glow);
-      border-radius: 50%;
-      filter: blur(80px);
-      pointer-events: none;
-      opacity: .6;
-    }
-
-    .hero-content {
-      position: relative;
-      display: flex;
-      align-items: center;
-      gap: 18px;
-    }
-
-    .hero-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 14px;
-      background: var(--accent-glow);
-      border: 1px solid var(--accent-border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--accent-secondary);
-      flex-shrink: 0;
-      backdrop-filter: blur(12px);
-    }
-
-    .hero-text h1 {
-      font-size: 26px;
-      font-weight: 800;
-      letter-spacing: -.4px;
-      background: var(--accent-grad);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      line-height: 1.2;
-    }
-
-    .hero-text p {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text-tertiary);
-      margin-top: 3px;
-    }
-
-    /* ── Content area ── */
-    .content {
-      flex: 1;
-      overflow-y: auto;
-      padding: 8px 48px 60px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    /* ── Glass card ── */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 22px 24px;
-      backdrop-filter: blur(20px);
-      transition: border-color .2s, background .2s, transform .2s;
-      animation: cardIn .45s var(--ease) both;
-    }
-
-    .card:hover {
-      border-color: var(--border-hover);
-    }
-
-    .card:nth-child(1) { animation-delay: .04s; }
-    .card:nth-child(2) { animation-delay: .07s; }
-    .card:nth-child(3) { animation-delay: .10s; }
-    .card:nth-child(4) { animation-delay: .13s; }
-    .card:nth-child(5) { animation-delay: .16s; }
-    .card:nth-child(6) { animation-delay: .19s; }
-    .card:nth-child(7) { animation-delay: .22s; }
-    .card:nth-child(8) { animation-delay: .25s; }
-
-    .card-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 18px;
-    }
-
-    .card-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: var(--radius-sm);
-      background: var(--accent-glow);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--accent-secondary);
-      flex-shrink: 0;
-    }
-
-    .card-title {
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: -.1px;
-      color: var(--text);
-    }
-
-    .card-desc {
-      font-size: 12px;
-      color: var(--text-tertiary);
-      font-weight: 500;
-    }
-
-    /* ── Settings row ── */
-    .row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 6px 0;
-    }
-
-    .row + .row {
-      border-top: 1px solid var(--border);
-      margin-top: 4px;
-      padding-top: 14px;
-    }
-
-    .row:last-child { margin-bottom: 0; }
-
-    .row-label {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      min-width: 0;
-    }
-
-    .row-label span:first-child {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-secondary);
-    }
-
-    .row-label span:last-child {
-      font-size: 11px;
-      color: var(--text-tertiary);
-      font-weight: 500;
-    }
-
-    /* ── Toggle switch ── */
-    .toggle {
-      position: relative;
-      width: 44px;
-      height: 24px;
-      flex-shrink: 0;
-    }
-
+    /* TOGGLE */
+    .toggle { position: relative; width: 42px; height: 24px; flex-shrink: 0; }
     .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .ttrack { position: absolute; inset: 0; background: var(--surface3); border: 1px solid var(--border2); border-radius: 12px; cursor: pointer; transition: background .2s var(--ease), border-color .2s, box-shadow .2s; }
+    .ttrack::before { content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: var(--text3); transition: transform .22s var(--spring), background .2s, box-shadow .2s; }
+    .toggle input:checked + .ttrack { background: rgba(139,92,246,.25); border-color: var(--accent-ring); box-shadow: 0 0 10px var(--accent-glow); }
+    .toggle input:checked + .ttrack::before { transform: translateX(18px); background: var(--accent2); box-shadow: 0 0 6px var(--accent-glow); }
 
-    .toggle-track {
-      position: absolute;
-      inset: 0;
-      background: var(--surface-active);
-      border: 1px solid var(--border);
-      border-radius: 13px;
-      transition: background .25s var(--ease), border-color .25s, box-shadow .25s;
-      cursor: pointer;
-    }
+    /* SELECT */
+    .sel { height: 32px; padding: 0 30px 0 12px; background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px; color: var(--text); font-family: var(--font); font-size: 12px; font-weight: 600; outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='rgba(255,255,255,.3)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; min-width: 140px; transition: border-color .15s, box-shadow .15s; }
+    .sel:focus { border-color: var(--accent-ring); box-shadow: 0 0 0 3px var(--accent-glow); }
+    .sel option { background: var(--surface); }
 
-    .toggle-track::before {
-      content: '';
-      position: absolute;
-      top: 3px;
-      left: 3px;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: var(--text-tertiary);
-      transition: transform .25s var(--spring), background .25s, box-shadow .25s;
-    }
+    /* RANGE */
+    .range-wrap { display: flex; align-items: center; gap: 12px; }
+    .range-val { font-size: 12px; font-weight: 700; color: var(--accent2); min-width: 34px; text-align: right; font-variant-numeric: tabular-nums; }
+    .rng { flex: 1; height: 3px; -webkit-appearance: none; appearance: none; background: var(--surface3); border-radius: 4px; outline: none; cursor: pointer; min-width: 100px; }
+    .rng::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent2); cursor: pointer; border: 2px solid var(--bg); box-shadow: 0 0 0 2px var(--accent-ring); transition: transform .15s var(--spring); }
+    .rng::-webkit-slider-thumb:hover { transform: scale(1.2); }
 
-    .toggle input:checked + .toggle-track {
-      background: var(--accent-glow);
-      border-color: var(--accent-border);
-      box-shadow: 0 0 12px var(--accent-glow);
-    }
+    /* BTN */
+    .btn { height: 32px; padding: 0 16px; border-radius: 8px; background: var(--surface2); border: 1px solid var(--border2); color: var(--text); font-family: var(--font); font-size: 12px; font-weight: 600; cursor: pointer; transition: background .12s, border-color .12s, transform .1s var(--spring); white-space: nowrap; }
+    .btn:hover { background: var(--surface3); border-color: rgba(255,255,255,.14); }
+    .btn:active { transform: scale(.96); }
+    .btn-danger { color: var(--red); border-color: rgba(255,69,58,.18); }
+    .btn-danger:hover { background: rgba(255,69,58,.08); border-color: rgba(255,69,58,.3); }
+    .btn-row { display: flex; gap: 8px; }
 
-    .toggle input:checked + .toggle-track::before {
-      transform: translateX(20px);
-      background: var(--accent-secondary);
-      box-shadow: 0 0 8px var(--accent-glow);
-    }
-
-    /* ── Theme picker ── */
-    .theme-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      width: 100%;
-    }
-
-    .theme-card {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      padding: 16px 12px 14px;
-      border-radius: var(--radius-md);
-      border: 1.5px solid var(--border);
-      background: var(--bg-subtle);
-      cursor: pointer;
-      transition: border-color .2s, background .2s, transform .15s var(--spring);
-      user-select: none;
-    }
-
-    .theme-card:hover {
-      border-color: var(--border-hover);
-      background: var(--surface);
-    }
-
+    /* THEME GRID */
+    .theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 14px 18px 18px; }
+    .theme-card { display: flex; flex-direction: column; align-items: center; gap: 9px; padding: 14px 10px 12px; border-radius: 11px; border: 1.5px solid var(--border); background: var(--bg2); cursor: pointer; transition: border-color .15s, background .15s, transform .15s var(--spring); user-select: none; }
+    .theme-card:hover { border-color: var(--border2); background: var(--surface); transform: translateY(-1px); }
     .theme-card:active { transform: scale(.97); }
+    .theme-card.active { border-color: var(--accent-ring); background: var(--accent-glow); }
+    .theme-preview { width: 52px; height: 36px; border-radius: 7px; border: 1px solid rgba(255,255,255,.06); overflow: hidden; position: relative; flex-shrink: 0; }
+    .tp-dark { background: #1a1a1b; }
+    .tp-light { background: #f0f0f2; }
+    .tp-sys { background: linear-gradient(135deg, #f0f0f2 50%, #1a1a1b 50%); }
+    .tp-bar { position: absolute; top: 0; left: 0; right: 0; height: 10px; }
+    .tp-dark .tp-bar { background: #111; border-bottom: 1px solid rgba(255,255,255,.06); }
+    .tp-light .tp-bar { background: #e8e8ea; border-bottom: 1px solid rgba(0,0,0,.08); }
+    .tp-dot { position: absolute; top: 2.5px; left: 0; right: 0; display: flex; justify-content: center; gap: 2px; }
+    .tp-dot span { width: 3px; height: 3px; border-radius: 50%; background: rgba(139,92,246,.5); }
+    .theme-name { font-size: 11px; font-weight: 600; color: var(--text3); transition: color .15s; }
+    .theme-card.active .theme-name { color: var(--accent2); }
 
-    .theme-card.active {
-      border-color: var(--accent-border);
-      background: var(--accent-glow);
-    }
+    /* ACCENT SWATCHES */
+    .accent-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 14px 18px 18px; }
+    .swatch { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; position: relative; transition: transform .15s var(--spring); flex-shrink: 0; }
+    .swatch:hover { transform: scale(1.15); }
+    .swatch:active { transform: scale(.95); }
+    .swatch.active { outline: 2px solid var(--text); outline-offset: 2px; }
+    .swatch-check { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; opacity: 0; transition: opacity .15s; }
+    .swatch.active .swatch-check { opacity: 1; }
 
-    .theme-preview {
-      width: 56px;
-      height: 38px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      overflow: hidden;
-      position: relative;
-    }
+    /* ABOUT */
+    .about-block { padding: 18px; display: flex; align-items: center; gap: 16px; }
+    .about-logo { width: 52px; height: 52px; border-radius: 14px; background: var(--accent-grad); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 20px var(--accent-glow); }
+    .about-name { font-size: 16px; font-weight: 700; letter-spacing: -.1px; }
+    .about-ver { font-size: 12px; color: var(--text3); margin-top: 2px; }
+    .about-footer { padding: 14px 18px 16px; font-size: 11px; color: var(--text3); line-height: 1.7; border-top: 1px solid var(--border); }
 
-    .theme-preview-dark {
-      background: #1a1a1b;
-    }
+    /* CACHE */
+    .cache-val { font-size: 12px; color: var(--text3); font-weight: 500; }
+    .cache-val span { color: var(--accent2); font-weight: 700; font-variant-numeric: tabular-nums; }
 
-    .theme-preview-dark::before {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 12px;
-      background: #111;
-      border-top: 1px solid rgba(255,255,255,.06);
-    }
-
-    .theme-preview-light {
-      background: #f5f5f7;
-    }
-
-    .theme-preview-light::before {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 12px;
-      background: #e5e5e7;
-      border-top: 1px solid rgba(0,0,0,.06);
-    }
-
-    .theme-preview-system {
-      background: linear-gradient(135deg, #f5f5f7 50%, #1a1a1b 50%);
-    }
-
-    .theme-preview-system::before {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 12px;
-      background: linear-gradient(135deg, #e5e5e7 50%, #111 50%);
-      border-top: 1px solid rgba(128,128,128,.15);
-    }
-
-    .theme-preview-bar {
-      position: absolute;
-      top: 4px;
-      left: 4px;
-      right: 4px;
-      height: 4px;
-      border-radius: 2px;
-      background: rgba(139,92,246,.4);
-    }
-
-    .theme-name {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      transition: color .15s;
-    }
-
-    .theme-card.active .theme-name {
-      color: var(--accent-secondary);
-    }
-
-    /* ── Accent color picker ── */
-    .accent-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .accent-swatch {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      cursor: pointer;
-      position: relative;
-      transition: transform .15s var(--spring), box-shadow .2s;
-      border: 2px solid transparent;
-    }
-
-    .accent-swatch:hover {
-      transform: scale(1.12);
-    }
-
-    .accent-swatch:active { transform: scale(.95); }
-
-    .accent-swatch.active {
-      border-color: var(--text);
-      box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--text-tertiary);
-      transform: scale(1.08);
-    }
-
-    .accent-swatch.active::after {
-      content: '';
-      position: absolute;
-      inset: -6px;
-      border-radius: 50%;
-      border: 2px solid var(--text-tertiary);
-    }
-
-    .accent-swatch-check {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      opacity: 0;
-      transition: opacity .15s;
-    }
-
-    .accent-swatch.active .accent-swatch-check { opacity: 1; }
-
-    .accent-label {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-tertiary);
-      text-transform: uppercase;
-      letter-spacing: .6px;
-      margin-top: 6px;
-    }
-
-    /* ── Select ── */
-    .sel {
-      height: 38px;
-      padding: 0 36px 0 14px;
-      background: var(--surface-hover);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--text);
-      font-family: var(--font);
-      font-size: 13px;
-      font-weight: 500;
-      outline: none;
-      cursor: pointer;
-      appearance: none;
-      -webkit-appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='rgba(255,255,255,.3)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 12px center;
-      transition: border-color .2s, box-shadow .2s, background .2s;
-      min-width: 160px;
-    }
-
-    .sel:focus {
-      border-color: var(--accent-border);
-      box-shadow: 0 0 0 3px var(--accent-glow);
-      background-color: var(--surface-active);
-    }
-
-    .sel option {
-      background: var(--surface);
-      color: var(--text);
-    }
-
-    /* ── Range slider ── */
-    .range-wrap {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .range-val {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--accent-secondary);
-      min-width: 38px;
-      text-align: right;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .rng {
-      flex: 1;
-      height: 4px;
-      -webkit-appearance: none;
-      appearance: none;
-      background: var(--surface-active);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      outline: none;
-      cursor: pointer;
-    }
-
-    .rng::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: var(--accent-secondary);
-      cursor: pointer;
-      border: 2px solid var(--bg);
-      box-shadow: 0 0 0 2px var(--accent-border), 0 2px 8px rgba(0,0,0,.3);
-      transition: transform .15s var(--spring), box-shadow .15s;
-    }
-
-    .rng::-webkit-slider-thumb:hover {
-      transform: scale(1.15);
-      box-shadow: 0 0 0 3px var(--accent-glow), 0 2px 12px rgba(0,0,0,.4);
-    }
-
-    /* ── Buttons ── */
-    .btn {
-      height: 38px;
-      padding: 0 18px;
-      border-radius: var(--radius-sm);
-      background: var(--surface-hover);
-      border: 1px solid var(--border);
-      color: var(--text);
-      font-family: var(--font);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background .15s, border-color .15s, transform .1s var(--spring);
-      white-space: nowrap;
-    }
-
-    .btn:hover {
-      background: var(--surface-active);
-      border-color: var(--border-hover);
-    }
-
-    .btn:active { transform: scale(.97); }
-
-    .btn-danger {
-      color: var(--red);
-      border-color: rgba(255,69,58,.15);
-    }
-
-    .btn-danger:hover {
-      background: rgba(255,69,58,.08);
-      border-color: rgba(255,69,58,.3);
-    }
-
-    .btn-accent {
-      background: var(--accent-grad);
-      border-color: transparent;
-      color: #fff;
-    }
-
-    .btn-accent:hover {
-      opacity: .9;
-      border-color: transparent;
-    }
-
-    .btn-row {
-      display: flex;
-      gap: 10px;
-    }
-
-    .btn-row .btn { flex: 1; min-width: 100px; justify-content: center; display: flex; align-items: center; }
-
-    /* ── Cache row ── */
-    .cache-info {
-      font-size: 12px;
-      color: var(--text-tertiary);
-      font-weight: 500;
-    }
-
-    .cache-size {
-      color: var(--accent-secondary);
-      font-weight: 700;
-      font-variant-numeric: tabular-nums;
-    }
-
-    /* ── About ── */
-    .about {
-      display: flex;
-      align-items: center;
-      gap: 18px;
-    }
-
-    .about-logo {
-      width: 56px;
-      height: 56px;
-      border-radius: 16px;
-      background: var(--accent-grad);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      box-shadow: 0 4px 20px var(--accent-glow);
-    }
-
-    .about-name {
-      font-size: 17px;
-      font-weight: 800;
-      letter-spacing: -.2px;
-    }
-
-    .about-ver {
-      font-size: 12px;
-      color: var(--text-tertiary);
-      margin-top: 2px;
-      font-weight: 500;
-    }
-
-    .about-footer {
-      font-size: 11px;
-      color: var(--text-tertiary);
-      margin-top: 16px;
-      line-height: 1.7;
-      opacity: .6;
-      padding-top: 14px;
-      border-top: 1px solid var(--border);
-    }
-
-    /* ── Toast ── */
-    .toast {
-      position: fixed;
-      bottom: 28px;
-      left: 50%;
-      transform: translateX(-50%) translateY(10px);
-      background: var(--surface-active);
-      border: 1px solid var(--border-hover);
-      color: var(--text);
-      font-family: var(--font);
-      font-size: 13px;
-      font-weight: 600;
-      padding: 10px 22px;
-      border-radius: var(--radius-md);
-      box-shadow: 0 12px 40px rgba(0,0,0,.5);
-      opacity: 0;
-      transition: opacity .25s var(--ease), transform .25s var(--ease);
-      z-index: 9999;
-      pointer-events: none;
-      white-space: nowrap;
-      backdrop-filter: blur(16px);
-    }
-
+    /* TOAST */
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--surface); border: 1px solid var(--border2); color: var(--text); font-family: var(--font); font-size: 12px; font-weight: 600; padding: 9px 20px; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,.5); opacity: 0; transition: opacity .2s var(--ease), transform .2s var(--ease); z-index: 9999; pointer-events: none; white-space: nowrap; backdrop-filter: blur(14px); }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     .toast.hidden { display: none; }
 
-    /* ── Modal ── */
-    .modal-bg {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.65);
-      backdrop-filter: blur(6px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      animation: fadeIn .15s var(--ease);
-    }
-
+    /* MODAL */
+    .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; animation: fadeIn .15s var(--ease); }
     .modal-bg.hidden { display: none; }
-
-    .modal-box {
-      background: var(--surface);
-      border: 1px solid var(--border-hover);
-      border-radius: 20px;
-      padding: 28px;
-      width: 100%;
-      max-width: 380px;
-      box-shadow: 0 24px 80px rgba(0,0,0,.6);
-      animation: modalPop .25s var(--ease);
-    }
-
-    .modal-box h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
-    .modal-box p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 22px; }
-    .modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
-    .modal-btns .btn { min-width: 90px; text-align: center; justify-content: center; display: flex; }
-
-    /* ── Animations ── */
-    @keyframes heroIn {
-      from { opacity: 0; transform: translateY(-12px); }
-      to   { opacity: 1; transform: none; }
-    }
-
-    @keyframes cardIn {
-      from { opacity: 0; transform: translateY(14px) scale(.99); }
-      to   { opacity: 1; transform: none; }
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to   { opacity: 1; }
-    }
-
-    @keyframes modalPop {
-      from { opacity: 0; transform: scale(.94) translateY(10px); }
-      to   { opacity: 1; transform: none; }
-    }
-
-    /* ── Scrollbar ── */
-    ::-webkit-scrollbar { width: 5px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(128,128,128,.15); border-radius: 99px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(128,128,128,.25); }
-
-    /* ── Responsive ── */
-    @media (max-width: 640px) {
-      .hero { padding: 28px 24px 24px; }
-      .content { padding: 8px 24px 40px; }
-      .card { padding: 18px 18px; }
-      .theme-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
-      .btn-row { flex-direction: column; }
-      .btn-row .btn { min-width: 0; }
-    }
+    .modal-box { background: var(--surface); border: 1px solid var(--border2); border-radius: 18px; padding: 24px; width: 100%; max-width: 360px; box-shadow: 0 24px 80px rgba(0,0,0,.6); animation: modalPop .2s var(--ease); }
+    .modal-box h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+    .modal-box p { font-size: 12px; color: var(--text2); line-height: 1.55; margin-bottom: 20px; }
+    .modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes modalPop { from { opacity: 0; transform: scale(.95) translateY(8px); } to { opacity: 1; transform: none; } }
   </style>
 </head>
 <body>
 
-  <div class="accent-bar"></div>
-
-  <!-- Hero -->
-  <header class="hero">
-    <div class="hero-content">
-      <div class="hero-icon">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" stroke="currentColor" stroke-width="1.8" fill="none"/>
-        </svg>
-      </div>
-      <div class="hero-text">
-        <h1>Настройки</h1>
-        <p>Персонализация браузера Integral.</p>
-      </div>
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <h1>Настройки</h1>
+    <p>Integral. Browser</p>
+  </div>
+  <div class="sidebar-divider"></div>
+  <nav class="sidebar-nav">
+    <div class="nav-group-label">Оформление</div>
+    <div class="nav-item active" data-page="appearance">
+      <div class="nav-icon"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.4"/><path d="M8 3.5v2M8 10.5v2M3.5 8h2M10.5 8h2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></div>
+      Внешний вид
     </div>
-  </header>
+    <div class="nav-item" data-page="search">
+      <div class="nav-icon"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.4"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></div>
+      Поиск
+    </div>
+    <div class="nav-group-label">Безопасность</div>
+    <div class="nav-item" data-page="privacy">
+      <div class="nav-icon"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2" y="7" width="12" height="8" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M5 7V5a3 3 0 0 1 6 0V7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></div>
+      Приватность
+    </div>
+    <div class="nav-group-label">Данные</div>
+    <div class="nav-item" data-page="cache">
+      <div class="nav-icon"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2.5 8a5.5 5.5 0 0 1 10-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M13.5 8a5.5 5.5 0 0 1-10 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M10.5 1.5v3.5H7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      Кэш
+    </div>
+    <div class="nav-item" data-page="data">
+      <div class="nav-icon"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 8h5M8 5.5v5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></div>
+      Данные
+    </div>
+    <div class="nav-group-label">Браузер</div>
+    <div class="nav-item" data-page="about">
+      <div class="nav-icon"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M8 7v3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="8" cy="5" r=".9" fill="currentColor"/></svg></div>
+      О программе
+    </div>
+  </nav>
+</aside>
 
-  <div class="content">
+<div class="main">
+  <div class="main-header"><h2 id="page-title">Внешний вид</h2></div>
+  <div class="content-area">
 
-    <!-- Theme -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.4"/>
-            <path d="M8 3.5v2M8 10.5v2M3.5 8h2M10.5 8h2M4.8 4.8l1.4 1.4M9.8 9.8l1.4 1.4M11.2 4.8l-1.4 1.4M6.2 9.8l-1.4 1.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div>
-          <div class="card-title">Тема оформления</div>
-          <div class="card-desc">Выберите цветовую схему интерфейса</div>
-        </div>
-      </div>
-      <div class="theme-grid">
-        <div class="theme-card" data-theme="dark">
-          <div class="theme-preview theme-preview-dark">
-            <div class="theme-preview-bar"></div>
+    <div class="page active" id="page-appearance">
+      <div class="section">
+        <div class="section-title">Тема</div>
+        <div class="theme-grid">
+          <div class="theme-card" data-theme="dark">
+            <div class="theme-preview tp-dark"><div class="tp-bar"><div class="tp-dot"><span></span><span></span><span></span></div></div></div>
+            <span class="theme-name">Тёмная</span>
           </div>
-          <span class="theme-name">Тёмная</span>
-        </div>
-        <div class="theme-card" data-theme="light">
-          <div class="theme-preview theme-preview-light">
-            <div class="theme-preview-bar" style="background:rgba(139,92,246,.5)"></div>
+          <div class="theme-card" data-theme="light">
+            <div class="theme-preview tp-light"><div class="tp-bar" style="background:#e8e8ea;border-bottom:1px solid rgba(0,0,0,.06)"><div class="tp-dot"><span style="background:rgba(139,92,246,.6)"></span><span style="background:rgba(139,92,246,.6)"></span><span style="background:rgba(139,92,246,.6)"></span></div></div></div>
+            <span class="theme-name">Светлая</span>
           </div>
-          <span class="theme-name">Светлая</span>
-        </div>
-        <div class="theme-card" data-theme="system">
-          <div class="theme-preview theme-preview-system">
-            <div class="theme-preview-bar"></div>
+          <div class="theme-card" data-theme="system">
+            <div class="theme-preview tp-sys"></div>
+            <span class="theme-name">Авто</span>
           </div>
-          <span class="theme-name">Системная</span>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">Цвет акцента</div>
+        <div class="accent-row" id="accent-grid"></div>
+      </div>
+      <div class="section">
+        <div class="section-title">Интерфейс</div>
+        <div class="row">
+          <div class="row-left"><span class="row-label">Панель закладок</span><span class="row-desc">Показать под адресной строкой</span></div>
+          <div class="toggle"><input type="checkbox" id="tog-bookmarks-bar" checked><span class="ttrack"></span></div>
+        </div>
+        <div class="row">
+          <div class="row-left"><span class="row-label">Прозрачная панель</span><span class="row-desc">Эффект матового стекла</span></div>
+          <div class="toggle"><input type="checkbox" id="tog-transparent-chrome"><span class="ttrack"></span></div>
+        </div>
+        <div class="row">
+          <div class="row-left"><span class="row-label">Размер шрифта</span></div>
+          <div class="range-wrap"><input type="range" class="rng" id="rng-font-size" min="12" max="18" value="14" step="1"><span class="range-val" id="font-size-val">14px</span></div>
         </div>
       </div>
     </div>
 
-    <!-- Accent color -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/>
-            <circle cx="8" cy="8" r="3" fill="currentColor" opacity=".4"/>
-          </svg>
-        </div>
-        <div>
-          <div class="card-title">Цвет акцента</div>
-          <div class="card-desc">Подсветка кнопок, переключателей и ссылок</div>
-        </div>
-      </div>
-      <div class="accent-grid" id="accent-grid"></div>
-      <div class="accent-label" id="accent-label" style="margin-top: 12px;">Фиолетовый</div>
-    </div>
-
-    <!-- Search engine -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.4"/>
-            <path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div>
-          <div class="card-title">Поисковая система</div>
-          <div class="card-desc">По умолчанию из адресной строки</div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="row-label"><span>Поисковик</span></div>
-        <select class="sel" id="sel-engine">
-          <option value="yandex">Яндекс</option>
-          <option value="google">Google</option>
-          <option value="duckduckgo">DuckDuckGo</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- Appearance -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <rect x="2" y="2" width="12" height="12" rx="3" stroke="currentColor" stroke-width="1.4" fill="none"/>
-            <path d="M5 6h6M5 8.5h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div>
-          <div class="card-title">Внешний вид</div>
-          <div class="card-desc">Настройка элементов интерфейса</div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="row-label"><span>Панель закладок</span><span>Показать под адресной строкой</span></div>
-        <div class="toggle"><input type="checkbox" id="tog-bookmarks-bar" checked><span class="toggle-track"></span></div>
-      </div>
-      <div class="row">
-        <div class="row-label"><span>Прозрачная панель</span><span>Эффект матового стекла</span></div>
-        <div class="toggle"><input type="checkbox" id="tog-transparent-chrome"><span class="toggle-track"></span></div>
-      </div>
-      <div class="row">
-        <div class="row-label"><span>Размер шрифта</span><span>Базовый размер текста в интерфейсе</span></div>
-        <div class="range-wrap">
-          <input type="range" class="rng" id="rng-font-size" min="12" max="18" value="14" step="1">
-          <span class="range-val" id="font-size-val">14px</span>
+    <div class="page" id="page-search">
+      <div class="section">
+        <div class="section-title">Поисковая система</div>
+        <div class="row">
+          <div class="row-left"><span class="row-label">По умолчанию</span><span class="row-desc">Используется в адресной строке</span></div>
+          <select class="sel" id="sel-engine">
+            <option value="yandex">Яндекс</option>
+            <option value="google">Google</option>
+            <option value="duckduckgo">DuckDuckGo</option>
+          </select>
         </div>
       </div>
     </div>
 
-    <!-- Privacy -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <rect x="2" y="7" width="12" height="8" rx="1.5" stroke="currentColor" stroke-width="1.4"/>
-            <path d="M5 7V5a3 3 0 0 1 6 0V7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-            <circle cx="8" cy="11" r="1" fill="currentColor"/>
-          </svg>
+    <div class="page" id="page-privacy">
+      <div class="section">
+        <div class="section-title">Защита</div>
+        <div class="row">
+          <div class="row-left"><span class="row-label">Блокировка трекеров</span><span class="row-desc">Блокировать known-трекеры</span></div>
+          <div class="toggle"><input type="checkbox" id="tog-block-trackers" checked><span class="ttrack"></span></div>
         </div>
-        <div>
-          <div class="card-title">Приватность</div>
-          <div class="card-desc">Защита и блокировка</div>
+        <div class="row">
+          <div class="row-left"><span class="row-label">Сторонние куки</span><span class="row-desc">Блокировать куки от других сайтов</span></div>
+          <div class="toggle"><input type="checkbox" id="tog-block-3p-cookies" checked><span class="ttrack"></span></div>
         </div>
       </div>
-      <div class="row">
-        <div class="row-label"><span>Блокировка трекеров</span><span>Блокировать known-трекеры</span></div>
-        <div class="toggle"><input type="checkbox" id="tog-block-trackers" checked><span class="toggle-track"></span></div>
+      <div class="section">
+        <div class="section-title">Обход DPI</div>
+        <div class="row">
+          <div class="row-left"><span class="row-label">Автозапуск при старте</span></div>
+          <div class="toggle"><input type="checkbox" id="tog-bypass-start"><span class="ttrack"></span></div>
+        </div>
       </div>
-      <div class="row">
-        <div class="row-label"><span>Сторонние куки</span><span>Блокировать куки от других сайтов</span></div>
-        <div class="toggle"><input type="checkbox" id="tog-block-3p-cookies" checked><span class="toggle-track"></span></div>
-      </div>
-      <div class="row">
-        <div class="row-label"><span>Обход DPI при запуске</span><span>Автоматически включать</span></div>
-        <div class="toggle"><input type="checkbox" id="tog-bypass-start"><span class="toggle-track"></span></div>
-      </div>
-      <div class="row">
-        <div class="row-label"><span>Очищать данные при выходе</span><span>Кэш, куки, история</span></div>
-        <div class="toggle"><input type="checkbox" id="tog-clear-exit"><span class="toggle-track"></span></div>
+      <div class="section">
+        <div class="section-title">Данные сессии</div>
+        <div class="row">
+          <div class="row-left"><span class="row-label">Очищать при выходе</span><span class="row-desc">Кэш, куки, история</span></div>
+          <div class="toggle"><input type="checkbox" id="tog-clear-exit"><span class="ttrack"></span></div>
+        </div>
       </div>
     </div>
 
-    <!-- Cache -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M2.5 8a5.5 5.5 0 0 1 10-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-            <path d="M13.5 8a5.5 5.5 0 0 1-10 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-            <path d="M10.5 1.5v3.5H7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M5.5 14.5V11H9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+    <div class="page" id="page-cache">
+      <div class="section">
+        <div class="section-title">Кэш браузера</div>
+        <div class="row">
+          <div class="row-left"><span class="row-label">Занято на диске</span></div>
+          <span class="cache-val">Размер: <span id="cache-size-display">...</span></span>
         </div>
-        <div>
-          <div class="card-title">Кэширование</div>
-          <div class="card-desc">Управление кэшем браузера</div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="row-label"><span>Очистить кэш</span></div>
-        <div style="display:flex;align-items:center;gap:14px;">
-          <span class="cache-info">Размер: <span class="cache-size" id="cache-size-display">...</span></span>
+        <div class="row">
+          <div class="row-left"><span class="row-label">Очистить кэш</span><span class="row-desc">Удалить все кэшированные данные</span></div>
           <button class="btn btn-danger" id="btn-clear-cache">Очистить</button>
         </div>
       </div>
     </div>
 
-    <!-- Data -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M8 2v5l3 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/>
-          </svg>
+    <div class="page" id="page-data">
+      <div class="section">
+        <div class="section-title">Настройки</div>
+        <div class="row">
+          <div class="row-left"><span class="row-label">Перенос конфигурации</span><span class="row-desc">Сохранить или загрузить .json</span></div>
+          <div class="btn-row"><button class="btn" id="btn-export">Экспорт</button><button class="btn" id="btn-import">Импорт</button></div>
         </div>
-        <div>
-          <div class="card-title">Данные</div>
-          <div class="card-desc">Экспорт, импорт и сброс</div>
+        <div class="row">
+          <div class="row-left"><span class="row-label">Сбросить настройки</span><span class="row-desc">Вернуть к значениям по умолчанию</span></div>
+          <button class="btn btn-danger" id="btn-reset">Сбросить</button>
         </div>
-      </div>
-      <div class="row">
-        <div class="row-label"><span>Перенос настроек</span><span>Сохранить или загрузить конфигурацию</span></div>
-        <div class="btn-row">
-          <button class="btn" id="btn-export">Экспорт</button>
-          <button class="btn" id="btn-import">Импорт</button>
-        </div>
-      </div>
-      <div class="row">
-        <div class="row-label"><span>Сбросить настройки</span><span>Вернуть значения по умолчанию</span></div>
-        <button class="btn btn-danger" id="btn-reset">Сбросить</button>
       </div>
     </div>
 
-    <!-- About -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.4"/>
-            <path d="M8 7v3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-            <circle cx="8" cy="5" r=".9" fill="currentColor"/>
-          </svg>
+    <div class="page" id="page-about">
+      <div class="section">
+        <div class="about-block">
+          <div class="about-logo"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="2"/><path d="M6 12h12M12 6v12" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
+          <div><div class="about-name">Integral.</div><div class="about-ver" id="app-version">Версия 1.0.0</div></div>
         </div>
-        <div>
-          <div class="card-title">О программе</div>
-        </div>
-      </div>
-      <div class="about">
-        <div class="about-logo">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="2"/>
-            <path d="M6 12h12M12 6v12" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div>
-          <div class="about-name">Integral. Browser</div>
-          <div class="about-ver" id="app-version">Версия 1.0.0</div>
-        </div>
-      </div>
-      <div class="about-footer">
-        Построен на базе Chromium и Electron.<br>
-        Разработан с ♥ для быстрого и безопасного серфинга.
+        <div class="about-footer">Построен на базе Chromium и Electron.<br>Разработан для быстрого и безопасного серфинга.</div>
       </div>
     </div>
 
   </div>
+</div>
 
-  <!-- Toast -->
-  <div class="toast hidden" id="toast"></div>
-
-  <!-- Modal -->
-  <div class="modal-bg hidden" id="modal-overlay">
-    <div class="modal-box">
-      <h3 id="modal-title">Подтверждение</h3>
-      <p id="modal-text">Вы уверены?</p>
-      <div class="modal-btns">
-        <button class="btn" id="modal-cancel">Отмена</button>
-        <button class="btn btn-danger" id="modal-confirm">Подтвердить</button>
-      </div>
+<div class="toast hidden" id="toast"></div>
+<div class="modal-bg hidden" id="modal-overlay">
+  <div class="modal-box">
+    <h3 id="modal-title">Подтверждение</h3>
+    <p id="modal-text">Вы уверены?</p>
+    <div class="modal-btns">
+      <button class="btn" id="modal-cancel">Отмена</button>
+      <button class="btn btn-danger" id="modal-confirm">Подтвердить</button>
     </div>
   </div>
+</div>
 
-  <script>
-    // ── Accent colors palette ──
-    const ACCENTS = {
-      violet:  { name: 'Фиолетовый', pri: '#8b5cf6', sec: '#a78bfa', grad: 'linear-gradient(135deg,#8b5cf6,#0ea5e9)',  glow: 'rgba(139,92,246,.15)', border: 'rgba(139,92,246,.25)' },
-      blue:    { name: 'Синий',      pri: '#3b82f6', sec: '#60a5fa', grad: 'linear-gradient(135deg,#3b82f6,#06b6d4)',  glow: 'rgba(59,130,246,.15)', border: 'rgba(59,130,246,.25)' },
-      cyan:    { name: 'Бирюзовый',  pri: '#06b6d4', sec: '#22d3ee', grad: 'linear-gradient(135deg,#06b6d4,#10b981)',  glow: 'rgba(6,182,212,.15)',  border: 'rgba(6,182,212,.25)' },
-      green:   { name: 'Зелёный',    pri: '#10b981', sec: '#34d399', grad: 'linear-gradient(135deg,#10b981,#06b6d4)',  glow: 'rgba(16,185,129,.15)', border: 'rgba(16,185,129,.25)' },
-      orange:  { name: 'Оранжевый',  pri: '#f97316', sec: '#fb923c', grad: 'linear-gradient(135deg,#f97316,#f59e0b)',  glow: 'rgba(249,115,22,.15)', border: 'rgba(249,115,22,.25)' },
-      rose:    { name: 'Розовый',    pri: '#f43f5e', sec: '#fb7185', grad: 'linear-gradient(135deg,#f43f5e,#f97316)',  glow: 'rgba(244,63,94,.15)',  border: 'rgba(244,63,94,.25)' },
-      pink:    { name: 'Пурпурный',  pri: '#ec4899', sec: '#f472b6', grad: 'linear-gradient(135deg,#ec4899,#a855f7)',  glow: 'rgba(236,72,153,.15)', border: 'rgba(236,72,153,.25)' },
-      amber:   { name: 'Янтарный',   pri: '#f59e0b', sec: '#fbbf24', grad: 'linear-gradient(135deg,#f59e0b,#f97316)',  glow: 'rgba(245,158,11,.15)', border: 'rgba(245,158,11,.25)' },
-    };
+<script>
+  const ACCENTS = {
+    violet: { name: 'Фиолетовый', pri: '#8b5cf6', sec: '#a78bfa', grad: 'linear-gradient(135deg,#8b5cf6,#0ea5e9)', glow: 'rgba(139,92,246,.14)', border: 'rgba(139,92,246,.28)' },
+    blue:   { name: 'Синий',      pri: '#3b82f6', sec: '#60a5fa', grad: 'linear-gradient(135deg,#3b82f6,#06b6d4)', glow: 'rgba(59,130,246,.14)',  border: 'rgba(59,130,246,.28)'  },
+    cyan:   { name: 'Бирюзовый',  pri: '#06b6d4', sec: '#22d3ee', grad: 'linear-gradient(135deg,#06b6d4,#10b981)', glow: 'rgba(6,182,212,.14)',   border: 'rgba(6,182,212,.28)'   },
+    green:  { name: 'Зелёный',    pri: '#10b981', sec: '#34d399', grad: 'linear-gradient(135deg,#10b981,#06b6d4)', glow: 'rgba(16,185,129,.14)',  border: 'rgba(16,185,129,.28)'  },
+    orange: { name: 'Оранжевый',  pri: '#f97316', sec: '#fb923c', grad: 'linear-gradient(135deg,#f97316,#f59e0b)', glow: 'rgba(249,115,22,.14)',  border: 'rgba(249,115,22,.28)'  },
+    rose:   { name: 'Розовый',    pri: '#f43f5e', sec: '#fb7185', grad: 'linear-gradient(135deg,#f43f5e,#f97316)', glow: 'rgba(244,63,94,.14)',   border: 'rgba(244,63,94,.28)'   },
+    pink:   { name: 'Пурпурный',  pri: '#ec4899', sec: '#f472b6', grad: 'linear-gradient(135deg,#ec4899,#a855f7)', glow: 'rgba(236,72,153,.14)',  border: 'rgba(236,72,153,.28)'  },
+    amber:  { name: 'Янтарный',   pri: '#f59e0b', sec: '#fbbf24', grad: 'linear-gradient(135deg,#f59e0b,#f97316)', glow: 'rgba(245,158,11,.14)',  border: 'rgba(245,158,11,.28)'  },
+  };
 
-    let currentAccent = 'violet';
-
-    // ── Utility ──
-    function postMsg(data) {
-      try {
-        if (window.chrome && window.chrome.webview) window.chrome.webview.postMessage(data);
-        else window.parent.postMessage(data, '*');
-      } catch {}
-    }
-
-    function onMsg(handler) {
-      window.addEventListener('integral-response', (e) => handler(e.detail || {}));
-      window.addEventListener('message', (e) => { if (e.data && e.data.type) handler(e.data); });
-    }
-
-    function showToast(text) {
-      const t = document.getElementById('toast');
-      t.textContent = text;
-      t.classList.remove('hidden');
-      requestAnimationFrame(() => t.classList.add('show'));
-      clearTimeout(t._timer);
-      t._timer = setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.classList.add('hidden'), 250); }, 2400);
-    }
-
-    function showModal(title, text) {
-      return new Promise((resolve) => {
-        const ov = document.getElementById('modal-overlay');
-        document.getElementById('modal-title').textContent = title;
-        document.getElementById('modal-text').textContent = text;
-        ov.classList.remove('hidden');
-        function done(r) { ov.classList.add('hidden'); clean(); resolve(r); }
-        function clean() {
-          document.getElementById('modal-cancel').removeEventListener('click', onC);
-          document.getElementById('modal-confirm').removeEventListener('click', onOk);
-          ov.removeEventListener('click', onBg);
-        }
-        function onC() { done(false); }
-        function onOk() { done(true); }
-        function onBg(e) { if (e.target === ov) done(false); }
-        document.getElementById('modal-cancel').addEventListener('click', onC);
-        document.getElementById('modal-confirm').addEventListener('click', onOk);
-        ov.addEventListener('click', onBg);
-      });
-    }
-
-    // ── Apply accent color ──
-    function applyAccent(key) {
-      const a = ACCENTS[key];
-      if (!a) return;
-      currentAccent = key;
-      const r = document.documentElement.style;
-      r.setProperty('--accent', a.pri);
-      r.setProperty('--accent-secondary', a.sec);
-      r.setProperty('--accent-grad', a.grad);
-      r.setProperty('--accent-glow', a.glow);
-      r.setProperty('--accent-border', a.border);
-      // Update swatches active state
-      document.querySelectorAll('.accent-swatch').forEach(s => s.classList.toggle('active', s.dataset.color === key));
-      document.getElementById('accent-label').textContent = a.name;
-    }
-
-    // ── Build accent swatches ──
-    (function buildSwatches() {
-      const grid = document.getElementById('accent-grid');
-      for (const [key, a] of Object.entries(ACCENTS)) {
-        const el = document.createElement('div');
-        el.className = 'accent-swatch';
-        el.dataset.color = key;
-        el.style.background = a.grad;
-        el.innerHTML = `<span class="accent-swatch-check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7l3 3 5-6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
-        el.addEventListener('click', () => {
-          applyAccent(key);
-          postMsg({ type: 'settings-set', key: 'accentColor', value: key });
-        });
-        grid.appendChild(el);
-      }
-    })();
-
-    // ── Theme cards ──
-    document.querySelectorAll('.theme-card').forEach(card => {
-      card.addEventListener('click', () => {
-        document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
-        card.classList.add('active');
-        postMsg({ type: 'settings-set', key: 'theme', value: card.dataset.theme });
-      });
+  function postMsg(data) { try { if (window.chrome && window.chrome.webview) window.chrome.webview.postMessage(data); else window.parent.postMessage(data, '*'); } catch {} }
+  function onMsg(handler) { window.addEventListener('integral-response', (e) => handler(e.detail || {})); window.addEventListener('message', (e) => { if (e.data && e.data.type) handler(e.data); }); }
+  function showToast(text) { const t = document.getElementById('toast'); t.textContent = text; t.classList.remove('hidden'); requestAnimationFrame(() => t.classList.add('show')); clearTimeout(t._timer); t._timer = setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.classList.add('hidden'), 250); }, 2400); }
+  function showModal(title, text) {
+    return new Promise(resolve => {
+      const ov = document.getElementById('modal-overlay');
+      document.getElementById('modal-title').textContent = title;
+      document.getElementById('modal-text').textContent = text;
+      ov.classList.remove('hidden');
+      function done(r) { ov.classList.add('hidden'); clean(); resolve(r); }
+      function clean() { document.getElementById('modal-cancel').removeEventListener('click', onC); document.getElementById('modal-confirm').removeEventListener('click', onOk); ov.removeEventListener('click', onBg); }
+      function onC() { done(false); } function onOk() { done(true); } function onBg(e) { if (e.target === ov) done(false); }
+      document.getElementById('modal-cancel').addEventListener('click', onC);
+      document.getElementById('modal-confirm').addEventListener('click', onOk);
+      ov.addEventListener('click', onBg);
     });
+  }
 
-    // ── Request initial data ──
-    postMsg({ type: 'settings-get' });
-    postMsg({ type: 'get-cache-size' });
+  function applyAccent(key) {
+    const a = ACCENTS[key]; if (!a) return;
+    const r = document.documentElement.style;
+    r.setProperty('--accent', a.pri); r.setProperty('--accent2', a.sec); r.setProperty('--accent-grad', a.grad); r.setProperty('--accent-glow', a.glow); r.setProperty('--accent-ring', a.border);
+    document.querySelectorAll('.swatch').forEach(s => s.classList.toggle('active', s.dataset.color === key));
+  }
 
-    // ── Listen for parent ──
-    onMsg((d) => {
-      if (!d || typeof d !== 'object') return;
-
-      if (d.type === 'init-settings' && d.settings) {
-        const s = d.settings;
-        // Theme
-        const themeCard = document.querySelector(`.theme-card[data-theme="${s.theme || 'dark'}"]`);
-        if (themeCard) { document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active')); themeCard.classList.add('active'); }
-
-        // Accent
-        if (s.accentColor && ACCENTS[s.accentColor]) applyAccent(s.accentColor);
-
-        // Search engine
-        if (s.searchEngine) document.getElementById('sel-engine').value = s.searchEngine;
-
-        // Toggles
-        const tm = { showBookmarksBar: 'tog-bookmarks-bar', transparentChrome: 'tog-transparent-chrome', blockTrackers: 'tog-block-trackers', block3pCookies: 'tog-block-3p-cookies', bypassOnStart: 'tog-bypass-start', clearOnExit: 'tog-clear-exit' };
-        for (const [k, id] of Object.entries(tm)) { if (s[k] !== undefined) document.getElementById(id).checked = s[k]; }
-
-        // Font
-        if (s.fontSize) { document.getElementById('rng-font-size').value = s.fontSize; document.getElementById('font-size-val').textContent = s.fontSize + 'px'; }
-
-        // Version
-        if (s.version) document.getElementById('app-version').textContent = 'Версия ' + s.version;
-      }
-
-      if (d.type === 'cache-size' && typeof d.size === 'string') {
-        document.getElementById('cache-size-display').textContent = d.size;
-      }
-
-      if (d.type === 'export-data' && d.data) {
-        const blob = new Blob([JSON.stringify(d.data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'integral-settings.json'; a.click();
-        URL.revokeObjectURL(url);
-        showToast('Настройки экспортированы');
-      }
-    });
-
-    // ── Controls ──
-    document.getElementById('sel-engine').addEventListener('change', (e) => {
-      postMsg({ type: 'settings-set', key: 'searchEngine', value: e.target.value });
-    });
-
-    const toggleMap = { 'tog-bookmarks-bar': 'showBookmarksBar', 'tog-transparent-chrome': 'transparentChrome', 'tog-block-trackers': 'blockTrackers', 'tog-block-3p-cookies': 'block3pCookies', 'tog-bypass-start': 'bypassOnStart', 'tog-clear-exit': 'clearOnExit' };
-    for (const [id, key] of Object.entries(toggleMap)) {
-      document.getElementById(id).addEventListener('change', (e) => {
-        postMsg({ type: 'settings-set', key, value: e.target.checked });
-      });
+  (function buildSwatches() {
+    const grid = document.getElementById('accent-grid');
+    for (const [key, a] of Object.entries(ACCENTS)) {
+      const el = document.createElement('div');
+      el.className = 'swatch'; el.dataset.color = key; el.style.background = a.grad; el.title = a.name;
+      el.innerHTML = `<span class="swatch-check"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.5l3 3 4-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
+      el.addEventListener('click', () => { applyAccent(key); postMsg({ type: 'settings-set', key: 'accentColor', value: key }); });
+      grid.appendChild(el);
     }
+  })();
 
-    const fontSlider = document.getElementById('rng-font-size');
-    const fontDisplay = document.getElementById('font-size-val');
-    fontSlider.addEventListener('input', () => { fontDisplay.textContent = fontSlider.value + 'px'; });
-    fontSlider.addEventListener('change', () => { postMsg({ type: 'settings-set', key: 'fontSize', value: parseInt(fontSlider.value) }); });
-
-    document.getElementById('btn-clear-cache').addEventListener('click', async () => {
-      if (await showModal('Очистить кэш', 'Все кэшированные данные будут удалены. Продолжить?')) {
-        postMsg({ type: 'clear-cache' });
-        document.getElementById('cache-size-display').textContent = '...';
-        showToast('Кэш очищается...');
-      }
+  const PAGE_TITLES = { appearance: 'Внешний вид', search: 'Поиск', privacy: 'Приватность', cache: 'Кэш', data: 'Данные', about: 'О программе' };
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const pageId = item.dataset.page;
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      item.classList.add('active');
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      const page = document.getElementById('page-' + pageId);
+      if (page) { page.classList.add('active'); page.style.animation = 'none'; requestAnimationFrame(() => { page.style.animation = ''; }); }
+      document.getElementById('page-title').textContent = PAGE_TITLES[pageId] || pageId;
     });
+  });
 
-    document.getElementById('btn-export').addEventListener('click', () => postMsg({ type: 'settings-export' }));
+  document.querySelectorAll('.theme-card').forEach(card => {
+    card.addEventListener('click', () => { document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active')); card.classList.add('active'); postMsg({ type: 'settings-set', key: 'theme', value: card.dataset.theme }); });
+  });
 
-    document.getElementById('btn-import').addEventListener('click', () => {
-      const inp = document.createElement('input');
-      inp.type = 'file'; inp.accept = '.json';
-      inp.onchange = (e) => {
-        const f = e.target.files[0]; if (!f) return;
-        const r = new FileReader();
-        r.onload = (ev) => {
-          try { postMsg({ type: 'settings-import', data: JSON.parse(ev.target.result) }); showToast('Настройки импортированы'); }
-          catch { showToast('Ошибка: неверный формат файла'); }
-        };
-        r.readAsText(f);
-      };
-      inp.click();
-    });
+  postMsg({ type: 'settings-get' }); postMsg({ type: 'get-cache-size' });
 
-    document.getElementById('btn-reset').addEventListener('click', async () => {
-      if (await showModal('Сбросить настройки', 'Все настройки будут возвращены к значениям по умолчанию.')) {
-        postMsg({ type: 'settings-reset' });
-        showToast('Настройки сброшены');
-      }
-    });
-  </script>
+  onMsg((d) => {
+    if (!d || typeof d !== 'object') return;
+    if (d.type === 'init-settings' && d.settings) {
+      const s = d.settings;
+      const themeCard = document.querySelector(`.theme-card[data-theme="${s.theme || 'dark'}"]`);
+      if (themeCard) { document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active')); themeCard.classList.add('active'); }
+      if (s.accentColor && ACCENTS[s.accentColor]) applyAccent(s.accentColor);
+      if (s.searchEngine) document.getElementById('sel-engine').value = s.searchEngine;
+      const tm = { showBookmarksBar: 'tog-bookmarks-bar', transparentChrome: 'tog-transparent-chrome', blockTrackers: 'tog-block-trackers', block3pCookies: 'tog-block-3p-cookies', bypassOnStart: 'tog-bypass-start', clearOnExit: 'tog-clear-exit' };
+      for (const [k, id] of Object.entries(tm)) { if (s[k] !== undefined) { const el = document.getElementById(id); if (el) el.checked = s[k]; } }
+      if (s.fontSize) { document.getElementById('rng-font-size').value = s.fontSize; document.getElementById('font-size-val').textContent = s.fontSize + 'px'; }
+      if (s.version) document.getElementById('app-version').textContent = 'Версия ' + s.version;
+    }
+    if (d.type === 'cache-size' && typeof d.size === 'string') document.getElementById('cache-size-display').textContent = d.size;
+    if (d.type === 'export-data' && d.data) {
+      const blob = new Blob([JSON.stringify(d.data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'integral-settings.json'; a.click(); URL.revokeObjectURL(url);
+      showToast('Настройки экспортированы');
+    }
+  });
+
+  document.getElementById('sel-engine').addEventListener('change', (e) => postMsg({ type: 'settings-set', key: 'searchEngine', value: e.target.value }));
+  const toggleMap = { 'tog-bookmarks-bar': 'showBookmarksBar', 'tog-transparent-chrome': 'transparentChrome', 'tog-block-trackers': 'blockTrackers', 'tog-block-3p-cookies': 'block3pCookies', 'tog-bypass-start': 'bypassOnStart', 'tog-clear-exit': 'clearOnExit' };
+  for (const [id, key] of Object.entries(toggleMap)) { const el = document.getElementById(id); if (el) el.addEventListener('change', (e) => postMsg({ type: 'settings-set', key, value: e.target.checked })); }
+  const fontSlider = document.getElementById('rng-font-size'); const fontDisplay = document.getElementById('font-size-val');
+  fontSlider.addEventListener('input', () => { fontDisplay.textContent = fontSlider.value + 'px'; });
+  fontSlider.addEventListener('change', () => postMsg({ type: 'settings-set', key: 'fontSize', value: parseInt(fontSlider.value) }));
+  document.getElementById('btn-clear-cache').addEventListener('click', async () => { if (await showModal('Очистить кэш', 'Все кэшированные данные будут удалены. Продолжить?')) { postMsg({ type: 'clear-cache' }); document.getElementById('cache-size-display').textContent = '...'; showToast('Кэш очищается...'); } });
+  document.getElementById('btn-export').addEventListener('click', () => postMsg({ type: 'settings-export' }));
+  document.getElementById('btn-import').addEventListener('click', () => { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json'; inp.onchange = (e) => { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = (ev) => { try { postMsg({ type: 'settings-import', data: JSON.parse(ev.target.result) }); showToast('Настройки импортированы'); } catch { showToast('Ошибка: неверный формат файла'); } }; r.readAsText(f); }; inp.click(); });
+  document.getElementById('btn-reset').addEventListener('click', async () => { if (await showModal('Сбросить настройки', 'Все настройки будут возвращены к значениям по умолчанию.')) { postMsg({ type: 'settings-reset' }); showToast('Настройки сброшены'); } });
+</script>
 </body>
 </html>

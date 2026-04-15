@@ -38,9 +38,7 @@ const $bookmarksEmpty = document.getElementById('bookmarks-empty');
 
 const $webviewsContainer = document.getElementById('webviews-container');
 
-const $loadingBar = document.createElement('div');
-$loadingBar.id = 'loading-bar';
-document.body.appendChild($loadingBar);
+const $loadingBar = document.getElementById('loading-bar');
 
 // ── State ─────────────────────────────────────────────────────
 let tabs = [];
@@ -97,8 +95,11 @@ const FALLBACK_URL = 'about:blank';
     // Initial resize — multiple passes to catch async layout
     requestAnimationFrame(() => resizeAllWebviews());
     requestAnimationFrame(() => resizeAllWebviews());
+    setTimeout(() => resizeAllWebviews(), 50);
     setTimeout(() => resizeAllWebviews(), 100);
     setTimeout(() => resizeAllWebviews(), 300);
+    setTimeout(() => resizeAllWebviews(), 600);
+    setTimeout(() => resizeAllWebviews(), 1200);
   } catch (err) {
     console.error('[init] FATAL:', err);
     NEWTAB_URL = NEWTAB_URL || FALLBACK_URL;
@@ -252,7 +253,9 @@ function createTab(url, opts = {}) {
       // Set explicit size immediately on attach, then re-measure after layout
       resizeAllWebviews();
       requestAnimationFrame(() => resizeAllWebviews());
-      scheduleResize(80);
+      scheduleResize(50);
+      scheduleResize(150);
+      scheduleResize(400);
     });
 
     webview.addEventListener('did-start-loading', () => {
