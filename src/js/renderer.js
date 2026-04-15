@@ -251,7 +251,10 @@ function updateNavFromState() {
   const tab = tabs.find(t => t.id === activeTabId);
   if (!tab) return;
 
-  if (!urlbarFocused) $urlbar.value = isNewtabUrl(tab.url) ? '' : tab.url;
+  if (!urlbarFocused) {
+    // When not focused, clear the URL input — the title overlay shows the page title
+    $urlbar.value = '';
+  }
   $btnBack.disabled = !navState.canGoBack;
   $btnForward.disabled = !navState.canGoForward;
   isLoading = tab.loading;
@@ -263,14 +266,19 @@ function updateNavFromState() {
   updateBookmarkStarState(isBookmarkedUrl(tab.url));
   updateUrlbarTitle(tab);
   updateZoomIndicator(tab);
-  $urlbarWrap.classList.toggle('has-value', !!$urlbar.value);
+  // Only mark as "has-value" when focused and there's text
+  $urlbarWrap.classList.toggle('has-value', urlbarFocused && !!$urlbar.value);
 }
 
 function updateUrlbarTitle(tab) {
   if (!tab || urlbarFocused) return;
-  if (isNewtabUrl(tab.url) || isInternalPage(tab.url)) {
+  // Show the page title in the urlbar title overlay
+  if (isNewtabUrl(tab.url)) {
+    $urlbarTitle.textContent = 'Новая вкладка';
+  } else if (isInternalPage(tab.url)) {
     $urlbarTitle.textContent = tab.title || 'Новая вкладка';
   } else {
+    // Show page title, fall back to formatted URL
     $urlbarTitle.textContent = tab.title || formatUrl(tab.url) || 'Новая вкладка';
   }
 }
@@ -343,7 +351,10 @@ $urlbar.addEventListener('focus', () => {
   urlbarFocused = true;
   $urlbarWrap.classList.add('focused');
   const t = getActiveTab();
-  if (t) $urlbar.value = isNewtabUrl(t.url) ? '' : t.url;
+  if (t) {
+    // Show the actual URL when focused
+    $urlbar.value = isNewtabUrl(t.url) ? '' : t.url;
+  }
   $urlbar.select();
 });
 $urlbar.addEventListener('blur', () => {
@@ -351,8 +362,9 @@ $urlbar.addEventListener('blur', () => {
   $urlbarWrap.classList.remove('focused');
   const t = getActiveTab();
   if (t) {
-    $urlbar.value = isNewtabUrl(t.url) ? '' : formatUrl(t.url);
-    $urlbarWrap.classList.toggle('has-value', !!$urlbar.value);
+    // Clear URL input on blur — the title overlay will show the page title
+    $urlbar.value = '';
+    $urlbarWrap.classList.remove('has-value');
   }
 });
 $urlbar.addEventListener('input', () => {
@@ -415,9 +427,36 @@ $newTabBtn.style.webkitAppRegion = 'no-drag';
 $tabsList.appendChild($newTabBtn);
 
 // ── Window controls ───────────────────────────────────────────
-document.getElementById('btn-min').addEventListener('click', () => api.minimize());
-document.getElementById('btn-max').addEventListener('click', () => api.maximize());
-document.getElementById('btn-close').addEventListener('click', () => api.close());
+// When using titleBarStyle: 'hidden' with titleBarOverlay on Windows 11,
+// native controls handle minimize/maximize/close, so we hide our custom ones.
+// On macOS or when frame: false is used, show custom controls.
+const $winControls = document.getElementById('win-controls');
+let useNativeControls = false;
+
+// Detect if the window has native overlay controls (titleBarStyle: 'hidden')
+// On Windows 11, titleBarOverlay is used, so our custom controls are redundant
+try {
+  // Check if the titlebar overlay is present — if so, hide custom controls
+  // The Electron titleBarOverlay renders native buttons, we don't need ours
+  if (navigator.userAgent.includes('Windows')) {
+    // On Windows with titleBarOverlay, native controls are shown automatically
+    useNativeControls = true;
+    if ($winControls) $winControls.style.display = 'none';
+  } else {
+    // On macOS/Linux, show custom controls
+    if ($winControls) $winControls.style.display = '';
+    useNativeControls = false;
+  }
+} catch (e) {
+  // Fallback: show custom controls
+  if ($winControls) $winControls.style.display = '';
+}
+
+if (!useNativeControls) {
+  document.getElementById('btn-min')?.addEventListener('click', () => api.minimize());
+  document.getElementById('btn-max')?.addEventListener('click', () => api.maximize());
+  document.getElementById('btn-close')?.addEventListener('click', () => api.close());
+}
 
 // ── Windows 11 maximize/restore icon toggle ──
 let isMaximized = false;

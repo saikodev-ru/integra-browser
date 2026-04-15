@@ -36,6 +36,7 @@ body {
 /* ── Transparent mode: body must be transparent for mica to show ── */
 body.transparent-mode {
   background: transparent !important;
+  background-color: transparent !important;
 }
 
 /* ── Mica noise grain overlay ── */
@@ -45,14 +46,14 @@ body.transparent-mode::before {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.05;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 256px 256px;
 }
 
 /* ══════════════════════════════════════════════════════════════
-   TAB BAR — Windows 11 style with right-aligned window controls
+   TAB BAR — Windows 11 style with native titleBarOverlay
    ══════════════════════════════════════════════════════════════ */
 #tabbar {
   flex-shrink: 0;
@@ -127,18 +128,19 @@ body.transparent-mode::before {
 }
 #tabs-list::-webkit-scrollbar { display: none; }
 
-/* ── Tab — Safari pill style ── */
+/* ── Tab — Safari pill style with compression ── */
 .tab {
   display: flex; align-items: center; gap: 6px;
   height: 28px; padding: 0 10px;
   border-radius: 6px; background: transparent;
   cursor: pointer;
-  width: 180px; max-width: 180px; min-width: 180px;
-  flex-shrink: 0;
+  flex: 1 1 0;
+  min-width: 40px;
+  max-width: 250px;
   position: relative;
   -webkit-app-region: no-drag;
   border: none;
-  transition: background .15s var(--ease), opacity .2s var(--ease), transform .25s var(--ease);
+  transition: background .15s var(--ease), opacity .2s var(--ease), transform .25s var(--ease), flex .2s var(--ease);
 }
 .tab:hover { background: rgba(255,255,255,.06); }
 .tab.active {
@@ -152,7 +154,7 @@ body.transparent-mode::before {
   pointer-events: none;
 }
 @keyframes tabClose {
-  to { width: 0; min-width: 0; max-width: 0; padding: 0; opacity: 0; transform: translateX(-10px); overflow: hidden; }
+  to { flex: 0 0 0; min-width: 0; max-width: 0; padding: 0; opacity: 0; transform: translateX(-10px); overflow: hidden; }
 }
 
 /* Tab creation animation */
@@ -199,7 +201,7 @@ body.transparent-mode::before {
 .tab-spinner { width: 12px; height: 12px; border: 1.5px solid var(--b3); border-top-color: var(--y2); border-radius: 50%; animation: spin .6s linear infinite; flex-shrink: 0; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.tab-title { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12px; font-weight: 500; color: var(--t3); }
+.tab-title { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12px; font-weight: 500; color: var(--t3); max-width: 100%; }
 .tab.active .tab-title { color: var(--t2); }
 
 /* Mute indicator */
@@ -252,7 +254,8 @@ body.transparent-mode::before {
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   padding: 0 40px;
 }
-.nav-bar-wrap.focused .urlbar-title,
+.nav-bar-wrap.focused .urlbar-title { opacity: 0; transform: scale(.95); pointer-events: none; }
+/* When URL bar has a value being typed, hide the title */
 .nav-bar-wrap.has-value .urlbar-title { opacity: 0; transform: scale(.95); pointer-events: none; }
 
 .secure-icon { color: var(--green); flex-shrink: 0; display: flex; align-items: center; }
@@ -405,9 +408,9 @@ body.transparent-mode::after {
   background: radial-gradient(ellipse at 50% 0%, rgba(139,92,246,0.04) 0%, transparent 70%);
 }
 
-body.transparent-mode #tabbar { background: rgba(26, 26, 30, 0.65); }
-body.transparent-mode #navbar { background: rgba(26, 26, 30, 0.65); }
-body.transparent-mode #bookmarks-bar { background: rgba(26, 26, 30, 0.65); }
+body.transparent-mode #tabbar { background: rgba(26, 26, 30, 0.55); }
+body.transparent-mode #navbar { background: rgba(26, 26, 30, 0.55); }
+body.transparent-mode #bookmarks-bar { background: rgba(26, 26, 30, 0.55); }
 
 /* ── Content Area (BrowserView overlays this) ── */
 #webviews-container {

@@ -77,6 +77,10 @@ contextBridge.exposeInMainWorld('integral', {
   // Notification popups
   showNotificationPopup: (data) => ipcRenderer.send('show-notification-popup', data),
 
+  // Dropdown menus (BrowserView-based)
+  showDropdownMenu: (params) => ipcRenderer.send('show-dropdown-menu', params),
+  hideDropdownMenu: () => ipcRenderer.send('hide-dropdown-menu'),
+
   // Zoom (via main process for active tab)
   zoomIn: () => ipcRenderer.send('zoom-in'),
   zoomOut: () => ipcRenderer.send('zoom-out'),

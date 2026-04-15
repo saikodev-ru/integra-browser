@@ -586,6 +586,9 @@ function setupViewEvents(id, view) {
   wc.ipc.on('bv-internal-msg', (event, msg) => {
     handleInternalPageMessage(id, msg);
   });
+
+  // Close dropdown menu when user clicks on page content
+  wc.on('did-navigate', () => { hideDropdownMenu(); });
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -724,8 +727,15 @@ function stopBypass() { if (bypassProcess) { bypassProcess.kill(); bypassProcess
 function createWindow(incognito = false) {
   const win = new BrowserWindow({
     width: 1280, height: 800, minWidth: 700, minHeight: 500,
-    frame: false,
+    titleBarStyle: 'hidden',
+    titleBarOverlay: {
+      color: '#00000000',
+      symbolColor: '#ffffff',
+      height: 38,
+    },
     backgroundMaterial: 'mica',
+    backgroundColor: '#00000000',
+    transparent: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true, nodeIntegration: false, sandbox: false,
@@ -1190,6 +1200,120 @@ ipcMain.on('show-bm-context-menu', (e, params) => {
   const menu = Menu.buildFromTemplate(items);
   menu.popup(win, Math.round(params.x), Math.round(params.y));
 });
+
+// ── BrowserView Dropdown Menu System ────────────────────────────
+let menuView = null;
+let menuVisible = false;
+
+function createMenuView() {
+  if (menuView) return menuView;
+  menuView = new BrowserView({
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: false,
+      preload: path.join(__dirname, 'webview-preload.js'),
+    },
+  });
+
+  // Menu HTML content — dark, translucent, macOS Safari style
+  const menuHtml = `<!DOCTYPE html><html><head><style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Segoe UI', sans-serif;
+      background: rgba(30,30,34,.92);
+      backdrop-filter: blur(30px) saturate(200%);
+      -webkit-backdrop-filter: blur(30px) saturate(200%);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      padding: 6px;
+      color: #f5f5f7;
+      font-size: 12px;
+      font-weight: 500;
+      overflow: hidden;
+    }
+    .menu-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 12px; border-radius: 6px;
+      cursor: pointer; transition: background .1s;
+      color: rgba(245,245,247,.6);
+    }
+    .menu-item:hover { background: rgba(255,255,255,.08); color: #f5f5f7; }
+    .menu-item .icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; opacity: .5; }
+    .menu-item:hover .icon { opacity: .8; }
+    .menu-separator { height: 1px; background: rgba(255,255,255,.06); margin: 4px 6px; }
+  </style></head><body id="menu-items"></body></html>`;
+
+  menuView.webContents.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(menuHtml));
+
+  // Listen for menu item clicks via IPC
+  menuView.webContents.ipc.on('bv-internal-msg', (event, msg) => {
+    if (msg && msg.type === 'menu-action' && msg.action) {
+      hideDropdownMenu();
+      // Forward to renderer
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('ctx-action', msg.action);
+      }
+    }
+    if (msg && msg.type === 'menu-close') {
+      hideDropdownMenu();
+    }
+  });
+
+  return menuView;
+}
+
+function showDropdownMenu(x, y, width, height, items) {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  if (!menuView) createMenuView();
+
+  // Build menu items HTML
+  let itemsHtml = '';
+  for (const item of items) {
+    if (item.type === 'separator') {
+      itemsHtml += '<div class="menu-separator"></div>';
+    } else {
+      itemsHtml += `<div class="menu-item" onclick="try{window.chrome.webview.postMessage({type:'menu-action',action:'${item.action}'});}catch(e){}">
+        <div class="icon">${item.icon || ''}</div>
+        <span>${item.label}</span>
+      </div>`;
+    }
+  }
+
+  // Inject items into the menu BrowserView
+  menuView.webContents.executeJavaScript(`
+    document.getElementById('menu-items').innerHTML = ${JSON.stringify(itemsHtml)};
+  `).catch(() => {});
+
+  mainWindow.addBrowserView(menuView);
+  mainWindow.setTopBrowserView(menuView);
+  menuView.setBounds({ x: Math.round(x), y: Math.round(y), width: Math.round(width), height: Math.round(height) });
+  menuVisible = true;
+}
+
+function hideDropdownMenu() {
+  if (!mainWindow || mainWindow.isDestroyed() || !menuView || !menuVisible) return;
+  try { mainWindow.removeBrowserView(menuView); } catch {}
+  menuVisible = false;
+}
+
+// IPC for showing/hiding dropdown menus from renderer
+ipcMain.on('show-dropdown-menu', (e, params) => {
+  showDropdownMenu(params.x, params.y, params.width, params.height, params.items || []);
+});
+
+ipcMain.on('hide-dropdown-menu', () => {
+  hideDropdownMenu();
+});
+
+// Close dropdown menu on any BrowserView navigation or click outside
+// (We hook into the main window's focus events)
+function setupMenuAutoClose(win) {
+  win.on('blur', () => {
+    // Small delay to allow menu item clicks
+    setTimeout(() => { if (menuVisible) hideDropdownMenu(); }, 150);
+  });
+}
 
 // ── Notification Popup System ──────────────────────────────────
 let activeNotifications = [];
