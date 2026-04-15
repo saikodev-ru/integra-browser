@@ -342,8 +342,8 @@ function setActiveTab(id, win) {
     const wc = tab.view.webContents;
     win.webContents.send('tab-activated', {
       ...serializeTab(tab),
-      canGoBack: wc.canGoBack(),
-      canGoForward: wc.canGoForward(),
+      canGoBack: wc.navigationHistory.canGoBack(),
+      canGoForward: wc.navigationHistory.canGoForward(),
     });
   }
 }
@@ -429,7 +429,7 @@ function setupViewEvents(id, view) {
       }
       const win = tab.window;
       if (win && !win.isDestroyed()) {
-        win.webContents.send('tab-url-updated', { id, url, canGoBack: wc.canGoBack(), canGoForward: wc.canGoForward() });
+        win.webContents.send('tab-url-updated', { id, url, canGoBack: wc.navigationHistory.canGoBack(), canGoForward: wc.navigationHistory.canGoForward() });
       }
     }
   });
@@ -440,7 +440,7 @@ function setupViewEvents(id, view) {
       tab.url = url;
       const win = tab.window;
       if (win && !win.isDestroyed()) {
-        win.webContents.send('tab-url-updated', { id, url, canGoBack: wc.canGoBack(), canGoForward: wc.canGoForward() });
+        win.webContents.send('tab-url-updated', { id, url, canGoBack: wc.navigationHistory.canGoBack(), canGoForward: wc.navigationHistory.canGoForward() });
       }
     }
   });
@@ -489,7 +489,7 @@ function setupViewEvents(id, view) {
       if (win && !win.isDestroyed()) {
         win.webContents.send('tab-loading', { id, loading: false });
         win.webContents.send('tab-title-updated', { id, title: tab.title });
-        win.webContents.send('tab-url-updated', { id, url: tab.url, canGoBack: wc.canGoBack(), canGoForward: wc.canGoForward() });
+        win.webContents.send('tab-url-updated', { id, url: tab.url, canGoBack: wc.navigationHistory.canGoBack(), canGoForward: wc.navigationHistory.canGoForward() });
       }
       return;
     }
@@ -525,8 +525,8 @@ function setupViewEvents(id, view) {
 
     // Navigation
     items.push(
-      { label: '← Назад', enabled: wc.canGoBack(), click: () => wc.goBack() },
-      { label: '→ Вперёд', enabled: wc.canGoForward(), click: () => wc.goForward() },
+      { label: '← Назад', enabled: wc.navigationHistory.canGoBack(), click: () => wc.goBack() },
+      { label: '→ Вперёд', enabled: wc.navigationHistory.canGoForward(), click: () => wc.goForward() },
       { label: '↻ Обновить', click: () => wc.reload() },
     );
     items.push({ type: 'separator' });
@@ -729,12 +729,12 @@ function createWindow(incognito = false) {
     width: 1280, height: 800, minWidth: 700, minHeight: 500,
     titleBarStyle: 'hidden',
     titleBarOverlay: {
-      color: '#00000000',
+      color: '#1a1a1e',
       symbolColor: '#ffffff',
       height: 38,
     },
     backgroundMaterial: 'mica',
-    backgroundColor: '#00000000',
+    backgroundColor: '#1a1a1e',
     transparent: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -745,7 +745,16 @@ function createWindow(incognito = false) {
   });
   win.loadFile(path.join(__dirname, 'src', 'browser.html'));
 
+  // Safety fallback: show window even if ready-to-show doesn't fire
+  const showTimeout = setTimeout(() => {
+    if (!win.isDestroyed() && !win.isVisible()) {
+      console.warn('[window] ready-to-show did not fire, showing window anyway');
+      win.show();
+    }
+  }, 3000);
+
   win.once('ready-to-show', () => {
+    clearTimeout(showTimeout);
     win.show();
     if (incognito) {
       win.webContents.executeJavaScript(`document.body.classList.add('incognito-mode')`);
@@ -1480,7 +1489,12 @@ app.whenReady().then(async () => {
   // Preconnect to common search engines on startup
   try {
     ['https://yandex.ru', 'https://www.google.com', 'https://duckduckgo.com'].forEach(url => {
-      session.defaultSession.preconnect(url);
+      try {
+        const parsed = new URL(url);
+        session.defaultSession.preconnect(parsed.origin);
+      } catch (preErr) {
+        console.warn('[preconnect] failed for', url, ':', preErr.message);
+      }
     });
   } catch (e) {
     console.warn('[preconnect] failed:', e.message);

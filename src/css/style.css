@@ -35,8 +35,8 @@ body {
 
 /* ── Transparent mode: body must be transparent for mica to show ── */
 body.transparent-mode {
-  background: transparent !important;
-  background-color: transparent !important;
+  background: rgba(26, 26, 30, 0.65) !important;
+  background-color: rgba(26, 26, 30, 0.65) !important;
 }
 
 /* ── Mica noise grain overlay ── */
@@ -408,9 +408,9 @@ body.transparent-mode::after {
   background: radial-gradient(ellipse at 50% 0%, rgba(139,92,246,0.04) 0%, transparent 70%);
 }
 
-body.transparent-mode #tabbar { background: rgba(26, 26, 30, 0.55); }
-body.transparent-mode #navbar { background: rgba(26, 26, 30, 0.55); }
-body.transparent-mode #bookmarks-bar { background: rgba(26, 26, 30, 0.55); }
+body.transparent-mode #tabbar { background: rgba(26, 26, 30, 0.72); backdrop-filter: blur(30px) saturate(200%); -webkit-backdrop-filter: blur(30px) saturate(200%); }
+body.transparent-mode #navbar { background: rgba(26, 26, 30, 0.72); backdrop-filter: blur(30px) saturate(200%); -webkit-backdrop-filter: blur(30px) saturate(200%); }
+body.transparent-mode #bookmarks-bar { background: rgba(26, 26, 30, 0.72); backdrop-filter: blur(20px) saturate(200%); -webkit-backdrop-filter: blur(20px) saturate(200%); }
 
 /* ── Content Area (BrowserView overlays this) ── */
 #webviews-container {
