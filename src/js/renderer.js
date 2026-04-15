@@ -94,8 +94,11 @@ const FALLBACK_URL = 'about:blank';
       createTab(NEWTAB_URL);
     }
 
-    // Initial resize after layout settles
+    // Initial resize — multiple passes to catch async layout
     requestAnimationFrame(() => resizeAllWebviews());
+    requestAnimationFrame(() => resizeAllWebviews());
+    setTimeout(() => resizeAllWebviews(), 100);
+    setTimeout(() => resizeAllWebviews(), 300);
   } catch (err) {
     console.error('[init] FATAL:', err);
     NEWTAB_URL = NEWTAB_URL || FALLBACK_URL;
@@ -185,6 +188,10 @@ function resizeAllWebviews() {
   tabs.forEach(tab => {
     if (!tab.webview) return;
     try {
+      // Only resize if dimensions actually changed
+      const currentW = parseInt(tab.webview.style.width) || 0;
+      const currentH = parseInt(tab.webview.style.height) || 0;
+      if (currentW === w && currentH === h) return;
       tab.webview.style.width = w + 'px';
       tab.webview.style.height = h + 'px';
     } catch (e) {
@@ -193,9 +200,20 @@ function resizeAllWebviews() {
   });
 }
 
+// Schedule a resize after a short delay (handles async layout)
+let resizeTimer = null;
+function scheduleResize(delay) {
+  if (resizeTimer) clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    resizeTimer = null;
+    resizeAllWebviews();
+  }, delay || 50);
+}
+
 // Watch for container size changes and window resize
-window.addEventListener('resize', () => resizeAllWebviews());
-const resizeObs = new ResizeObserver(() => resizeAllWebviews());
+window.addEventListener('resize', () => { resizeAllWebviews(); scheduleResize(100); });
+window.addEventListener('DOMContentLoaded', () => { scheduleResize(50); });
+const resizeObs = new ResizeObserver(() => { resizeAllWebviews(); scheduleResize(50); });
 resizeObs.observe($webviewsContainer);
 
 // ══════════════════════════════════════════════════════════════
@@ -231,12 +249,10 @@ function createTab(url, opts = {}) {
     // ── Webview events ──
     webview.addEventListener('did-attach', () => {
       console.log('[webview] did-attach, tab', id);
-      // Set explicit size after attachment
-      const rect = $webviewsContainer.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) {
-        webview.style.width = Math.round(rect.width) + 'px';
-        webview.style.height = Math.round(rect.height) + 'px';
-      }
+      // Set explicit size immediately on attach, then re-measure after layout
+      resizeAllWebviews();
+      requestAnimationFrame(() => resizeAllWebviews());
+      scheduleResize(80);
     });
 
     webview.addEventListener('did-start-loading', () => {
@@ -448,12 +464,9 @@ function setActiveTab(id) {
   const tab = getTab(id);
   if (tab) {
     tab.webview.style.display = 'block';
-    // Explicit resize on tab switch to fix sizing
-    const rect = $webviewsContainer.getBoundingClientRect();
-    if (rect.width > 0 && rect.height > 0) {
-      tab.webview.style.width = Math.round(rect.width) + 'px';
-      tab.webview.style.height = Math.round(rect.height) + 'px';
-    }
+    // Explicit resize on tab switch
+    resizeAllWebviews();
+    requestAnimationFrame(() => resizeAllWebviews());
     // Restore zoom level
     try { tab.webview.setZoomLevel(tab.zoomLevel || 0); } catch {}
     updateNavFromTab(tab);
@@ -852,6 +865,8 @@ function renderBookmarksBar() {
   $bookmarksList.innerHTML = '';
   if (!settings.showBookmarksBar || bookmarks.length === 0) {
     $bookmarksBar.classList.add('hidden');
+    // Bar hidden → container gets taller, resize webviews
+    scheduleResize(30);
     return;
   }
   $bookmarksBar.classList.remove('hidden');
