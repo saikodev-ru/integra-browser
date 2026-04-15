@@ -1051,7 +1051,7 @@ ipcMain.handle('tab-get-active', (e) => {
   return getActiveTabId(win);
 });
 
-ipcMain.on('notify-chrome-height', (_, { height }) => {
+ipcMain.on('notify-chrome-height', (e, { height }) => {
   // Resize active BrowserView when chrome height changes (e.g., bookmarks bar toggle)
   const win = BrowserWindow.fromWebContents(e.sender) || mainWindow;
   setTimeout(() => resizeActiveView(win), 30);

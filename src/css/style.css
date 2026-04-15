@@ -5,9 +5,9 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
 :root {
-  --bg: #18181b; --bg2: #1c1c1f; --bg3: #202023; --chrome: #1c1c1f;
+  --bg: #1a1a1e; --bg2: #1e1e22; --bg3: #222226; --chrome: #1e1e22;
   --s0: rgba(255,255,255,.03); --s1: rgba(255,255,255,.05); --s2: rgba(255,255,255,.08); --s3: rgba(255,255,255,.14);
-  --solid1: #2a2a2c; --solid2: #303032; --solid3: #3a3a3c;
+  --solid1: #2c2c2e; --solid2: #323234; --solid3: #3c3c3e;
   --b: rgba(255,255,255,.05); --b2: rgba(255,255,255,.09); --b3: rgba(255,255,255,.15);
   --y: #8b5cf6; --y2: #a78bfa; --y3: #0ea5e9; --y4: #67e8f9;
   --ybg: rgba(139,92,246,.13); --yb: rgba(139,92,246,.36);
@@ -58,7 +58,7 @@ body.transparent-mode::before {
 #tabbar {
   flex-shrink: 0;
   height: var(--tabbar-h);
-  background: rgba(30,30,32,.82);
+  background: rgba(30,30,34,.82);
   backdrop-filter: blur(30px) saturate(200%);
   -webkit-backdrop-filter: blur(30px) saturate(200%);
   display: flex; align-items: center;
@@ -197,7 +197,7 @@ body.transparent-mode::before {
 #navbar {
   flex-shrink: 0;
   height: var(--navbar-h);
-  background: rgba(30,30,32,.78);
+  background: rgba(30,30,34,.78);
   backdrop-filter: blur(30px) saturate(200%);
   -webkit-backdrop-filter: blur(30px) saturate(200%);
   display: flex; align-items: center;
@@ -267,7 +267,7 @@ body.transparent-mode::before {
 #bookmarks-bar {
   flex-shrink: 0;
   height: var(--bookmarksbar-h);
-  background: rgba(30,30,32,.72);
+  background: rgba(30,30,34,.72);
   backdrop-filter: blur(20px) saturate(200%);
   -webkit-backdrop-filter: blur(20px) saturate(200%);
   display: flex; align-items: center;
@@ -381,9 +381,9 @@ body.transparent-mode::after {
   background: radial-gradient(ellipse at 50% 0%, rgba(139,92,246,0.04) 0%, transparent 70%);
 }
 
-body.transparent-mode #tabbar { background: rgba(18, 18, 21, 0.65); }
-body.transparent-mode #navbar { background: rgba(18, 18, 21, 0.65); }
-body.transparent-mode #bookmarks-bar { background: rgba(18, 18, 21, 0.65); }
+body.transparent-mode #tabbar { background: rgba(26, 26, 30, 0.65); }
+body.transparent-mode #navbar { background: rgba(26, 26, 30, 0.65); }
+body.transparent-mode #bookmarks-bar { background: rgba(26, 26, 30, 0.65); }
 
 /* ── Content Area (BrowserView overlays this) ── */
 #webviews-container {
