@@ -418,6 +418,35 @@ $tabsList.appendChild($newTabBtn);
 document.getElementById('btn-min').addEventListener('click', () => api.minimize());
 document.getElementById('btn-max').addEventListener('click', () => api.maximize());
 document.getElementById('btn-close').addEventListener('click', () => api.close());
+
+// ── Windows 11 maximize/restore icon toggle ──
+let isMaximized = false;
+const $icoMaximize = document.getElementById('ico-maximize');
+const $icoRestore = document.getElementById('ico-restore');
+const $btnMax = document.getElementById('btn-max');
+
+function updateMaximizeIcon(maximized) {
+  isMaximized = maximized;
+  if ($icoMaximize && $icoRestore) {
+    $icoMaximize.style.display = maximized ? 'none' : '';
+    $icoRestore.style.display = maximized ? '' : 'none';
+  }
+  if ($btnMax) {
+    $btnMax.title = maximized ? 'Восстановить' : 'Развернуть';
+  }
+}
+
+// Listen for maximize state changes from the main process
+api.on('fullscreen-change', (fs) => {
+  // Fullscreen is not maximized
+  if (fs) updateMaximizeIcon(false);
+});
+
+api.on('window-state-changed', (data) => {
+  if (data && data.maximized !== undefined) {
+    updateMaximizeIcon(data.maximized);
+  }
+});
 $btnBypass.addEventListener('click', () => api.toggleBypass());
 $btnIncognito.addEventListener('click', () => api.newIncognitoWindow());
 

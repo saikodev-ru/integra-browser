@@ -10,20 +10,21 @@
 
 <!-- ── Tab Bar ── -->
 <div id="tabbar">
-  <!-- macOS-style traffic lights (left side) -->
-  <div id="win-controls">
-    <button id="btn-close" class="traffic-light tl-close" title="Закрыть">
-      <svg class="tl-icon" width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 1l6 6M7 1L1 7" stroke="rgba(77,0,0,.8)" stroke-width="1.4" stroke-linecap="round"/></svg>
-    </button>
-    <button id="btn-min" class="traffic-light tl-minimize" title="Свернуть">
-      <svg class="tl-icon" width="8" height="2" viewBox="0 0 8 2"><rect width="8" height="1.5" rx=".75" fill="rgba(100,50,0,.7)"/></svg>
-    </button>
-    <button id="btn-max" class="traffic-light tl-maximize" title="Развернуть">
-      <svg class="tl-icon" width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 3v4h4M3 1h4v4" stroke="rgba(0,60,0,.7)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
-  </div>
   <div id="tabs-list">
     <!-- tabs rendered here, + button is the last child -->
+  </div>
+  <!-- Windows 11 style window controls (right side) -->
+  <div id="win-controls">
+    <button id="btn-min" class="win-ctrl" title="Свернуть">
+      <svg width="10" height="1" viewBox="0 0 10 1"><rect width="10" height="1" fill="currentColor"/></svg>
+    </button>
+    <button id="btn-max" class="win-ctrl" title="Развернуть">
+      <svg id="ico-maximize" width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x=".5" y=".5" width="9" height="9" rx=".5" stroke="currentColor" stroke-width="1"/></svg>
+      <svg id="ico-restore" width="10" height="10" viewBox="0 0 10 10" fill="none" style="display:none"><rect x="2.5" y=".5" width="7" height="7" rx=".5" stroke="currentColor" stroke-width="1"/><path d="M2.5 2.5H.5v7h7v-2" stroke="currentColor" stroke-width="1"/></svg>
+    </button>
+    <button id="btn-close" class="win-ctrl win-ctrl-close" title="Закрыть">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+    </button>
   </div>
 </div>
 

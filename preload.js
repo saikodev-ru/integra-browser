@@ -85,7 +85,7 @@ contextBridge.exposeInMainWorld('integral', {
   // Listeners
   on: (channel, fn) => {
     const allowed = [
-      'fullscreen-change', 'bypass-no-binary', 'bookmarks-update',
+      'fullscreen-change', 'window-state-changed', 'bypass-no-binary', 'bookmarks-update',
       'settings-changed', 'incognito-mode',
       'ctx-action', 'tab-cleared-cache',
       // BrowserView tab events

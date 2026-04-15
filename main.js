@@ -749,11 +749,13 @@ function createWindow(incognito = false) {
     setTimeout(() => resizeActiveView(win), 50);
     setTimeout(() => resizeActiveView(win), 200);
     repositionNotifications();
+    win.webContents.send('window-state-changed', { maximized: true });
   });
   win.on('unmaximize', () => {
     setTimeout(() => resizeActiveView(win), 50);
     setTimeout(() => resizeActiveView(win), 200);
     repositionNotifications();
+    win.webContents.send('window-state-changed', { maximized: false });
   });
   win.on('enter-full-screen', () => {
     // Multiple resize attempts for robust fullscreen transition

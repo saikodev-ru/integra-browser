@@ -17,7 +17,6 @@
   --sp: cubic-bezier(.34,1.56,.64,1); --ease: cubic-bezier(.16,1,.3,1);
   --font: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Google Sans', 'Segoe UI', sans-serif;
   --tabbar-h: 38px; --navbar-h: 46px; --bookmarksbar-h: 32px;
-  --tl-red: #ff5f57; --tl-yellow: #febc2e; --tl-green: #28c840;
 }
 
 /* ── Flex Layout ──────────────────────────────────────────── */
@@ -53,7 +52,7 @@ body.transparent-mode::before {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   TAB BAR — Safari-style with macOS traffic lights
+   TAB BAR — Windows 11 style with right-aligned window controls
    ══════════════════════════════════════════════════════════════ */
 #tabbar {
   flex-shrink: 0;
@@ -68,35 +67,60 @@ body.transparent-mode::before {
   -webkit-app-region: drag;
 }
 
-/* ── macOS Traffic Lights ── */
+/* ── Windows 11 Window Controls (right side) ── */
 #win-controls {
-  display: flex; align-items: center; gap: 8px;
-  margin-left: 12px; margin-right: 8px;
+  display: flex; align-items: stretch;
   flex-shrink: 0;
+  height: 100%;
   -webkit-app-region: no-drag;
+  border-left: 1px solid rgba(255,255,255,.04);
 }
 
-.traffic-light {
-  width: 12px; height: 12px; border-radius: 50%;
+.win-ctrl {
+  width: 46px; height: 100%;
   border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
+  background: transparent;
+  color: var(--t2);
+  transition: background .1s ease, color .1s ease;
   position: relative;
-  transition: filter .12s ease;
 }
-.traffic-light:active { filter: brightness(.85); }
+.win-ctrl:hover {
+  background: rgba(255,255,255,.08);
+  color: var(--t1);
+}
+.win-ctrl:active {
+  background: rgba(255,255,255,.04);
+}
 
-.tl-close { background: var(--tl-red); }
-.tl-minimize { background: var(--tl-yellow); }
-.tl-maximize { background: var(--tl-green); }
+/* Close button special styling */
+.win-ctrl-close:hover {
+  background: #c42b1c;
+  color: #fff;
+}
+.win-ctrl-close:active {
+  background: #b52a1a;
+  color: rgba(255,255,255,.7);
+}
 
-.tl-icon { opacity: 0; transition: opacity .12s ease; }
-#win-controls:hover .tl-icon { opacity: 1; }
+/* Separator between minimize/maximize and close (Win11 style) */
+.win-ctrl-close::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 4px; bottom: 4px;
+  width: 1px;
+  background: rgba(255,255,255,.04);
+}
+.win-ctrl-close:hover::before,
+.win-ctrl-close:active::before {
+  opacity: 0;
+}
 
 /* ── Tabs List ── */
 #tabs-list {
   display: flex; align-items: center;
   gap: 2px; flex: 1; overflow: hidden;
-  height: 100%; padding: 0 4px;
+  height: 100%; padding: 0 4px 0 12px;
   min-width: 0;
   -webkit-app-region: drag;
   overflow-x: auto; overflow-y: hidden;
