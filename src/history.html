@@ -5,133 +5,137 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>История</title>
   <base target="_self">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #111111; --bg2: #161616; --surface: #1c1c1e; --surface2: #242426; --surface3: #2c2c2e;
+      --bg: #1a1a1c; --bg2: #1e1e20; --surface: #2a2a2c; --surface2: #303032; --surface3: #3a3a3c;
       --border: rgba(255,255,255,.06); --border2: rgba(255,255,255,.10);
-      --text: #f5f5f7; --text2: rgba(245,245,247,.55); --text3: rgba(245,245,247,.28);
+      --text: #f5f5f7; --text2: rgba(245,245,247,.6); --text3: rgba(245,245,247,.3);
       --accent: #8b5cf6; --accent2: #a78bfa; --accent-grad: linear-gradient(135deg, #8b5cf6, #0ea5e9);
       --accent-glow: rgba(139,92,246,.14); --accent-ring: rgba(139,92,246,.28);
       --red: #ff453a; --green: #30d158;
-      --font: 'Google Sans', -apple-system, 'Helvetica Neue', sans-serif;
+      --font: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
       --ease: cubic-bezier(.16,1,.3,1); --spring: cubic-bezier(.34,1.56,.64,1);
-      --sidebar-w: 200px;
+      --sidebar-w: 240px;
     }
     html, body { height: 100%; overflow: hidden; }
     body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 13px; font-weight: 500; -webkit-font-smoothing: antialiased; display: flex; }
 
     /* SIDEBAR */
     .sidebar { width: var(--sidebar-w); flex-shrink: 0; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
-    .sidebar-header { padding: 28px 16px 16px; flex-shrink: 0; }
-    .sidebar-header h1 { font-size: 18px; font-weight: 700; letter-spacing: -.2px; }
-    .sidebar-header p { font-size: 11px; color: var(--text3); margin-top: 2px; }
-    .sidebar-divider { height: 1px; background: var(--border); margin: 0 12px; flex-shrink: 0; }
-    .sidebar-actions { padding: 12px 10px 4px; flex-shrink: 0; }
-    .btn-clear-all { display: flex; align-items: center; gap: 7px; width: 100%; height: 32px; padding: 0 12px; border-radius: 8px; background: transparent; border: 1px solid rgba(255,69,58,.18); color: var(--red); font-family: var(--font); font-size: 12px; font-weight: 600; cursor: pointer; transition: background .12s, border-color .12s, transform .1s var(--spring); }
-    .btn-clear-all:hover { background: rgba(255,69,58,.08); border-color: rgba(255,69,58,.3); }
+    .sidebar-header { padding: 24px 16px 10px; flex-shrink: 0; }
+    .sidebar-header h1 { font-size: 17px; font-weight: 700; letter-spacing: -.2px; display: flex; align-items: center; gap: 8px; }
+    .sidebar-header h1 .logo-icon { width: 22px; height: 22px; border-radius: 6px; background: var(--accent-grad); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .sidebar-header h1 .logo-icon svg { color: #fff; }
+    .sidebar-header p { font-size: 11px; color: var(--text3); margin-top: 2px; padding-left: 30px; }
+    .sidebar-divider { height: 1px; background: var(--border); margin: 4px 12px 0; flex-shrink: 0; }
+    .sidebar-actions { padding: 10px 10px 4px; flex-shrink: 0; }
+    .btn-clear-all { display: flex; align-items: center; gap: 6px; width: 100%; height: 30px; padding: 0 10px; border-radius: 6px; background: rgba(255,69,58,.08); border: 1px solid rgba(255,69,58,.15); color: var(--red); font-family: var(--font); font-size: 11px; font-weight: 600; cursor: pointer; transition: background .12s, border-color .12s, transform .1s var(--spring); }
+    .btn-clear-all:hover { background: rgba(255,69,58,.14); border-color: rgba(255,69,58,.25); }
     .btn-clear-all:active { transform: scale(.97); }
     .sidebar-groups { flex: 1; overflow-y: auto; padding: 8px 10px 10px; }
     .sidebar-groups::-webkit-scrollbar { display: none; }
-    .group-nav-label { font-size: 10px; font-weight: 700; letter-spacing: .7px; text-transform: uppercase; color: var(--text3); padding: 10px 6px 5px; }
-    .group-nav-item { display: flex; align-items: center; justify-content: space-between; height: 32px; padding: 0 10px; border-radius: 8px; cursor: pointer; transition: background .12s, color .12s; color: var(--text3); font-size: 12px; font-weight: 500; margin-bottom: 1px; user-select: none; }
+    .group-nav-label { font-size: 10px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--text3); padding: 10px 6px 4px; }
+    .group-nav-item { display: flex; align-items: center; justify-content: space-between; height: 30px; padding: 0 8px; border-radius: 6px; cursor: pointer; transition: background .12s, color .12s; color: var(--text3); font-size: 11px; font-weight: 500; margin-bottom: 1px; user-select: none; }
     .group-nav-item:hover { background: rgba(255,255,255,.05); color: var(--text); }
-    .group-nav-item.active { background: rgba(139,92,246,.14); color: var(--accent2); }
-    .group-badge { font-size: 10px; font-weight: 700; background: var(--surface3); color: var(--text3); padding: 1px 7px; border-radius: 10px; font-variant-numeric: tabular-nums; }
+    .group-nav-item.active { background: var(--accent-glow); color: var(--accent2); }
+    .group-badge { font-size: 9px; font-weight: 700; background: var(--surface3); color: var(--text3); padding: 1px 6px; border-radius: 8px; font-variant-numeric: tabular-nums; }
     .group-nav-item.active .group-badge { background: var(--accent-glow); color: var(--accent2); }
 
     /* MAIN */
     .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 
     /* SEARCH */
-    .search-bar { flex-shrink: 0; padding: 20px 28px 0; }
-    .search-box { display: flex; align-items: center; gap: 9px; background: var(--surface); border: 1px solid var(--border); border-radius: 11px; padding: 0 14px; height: 38px; transition: border-color .2s, box-shadow .2s, background .2s; }
+    .search-bar { flex-shrink: 0; padding: 16px 24px 0; }
+    .search-box { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 0 12px; height: 36px; transition: border-color .2s, box-shadow .2s, background .2s; }
     .search-box:focus-within { border-color: var(--accent-ring); background: var(--surface2); box-shadow: 0 0 0 3px var(--accent-glow); }
-    .search-ico { color: var(--text3); flex-shrink: 0; display: flex; }
-    .search-input { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-family: var(--font); font-size: 13px; font-weight: 500; caret-color: var(--accent2); }
+    .search-ico { color: var(--text3); flex-shrink: 0; display: flex; transition: color .2s; }
+    .search-box:focus-within .search-ico { color: var(--accent2); }
+    .search-input { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-family: var(--font); font-size: 12px; font-weight: 500; caret-color: var(--accent2); }
     .search-input::placeholder { color: var(--text3); }
-    .search-clear { width: 24px; height: 24px; border-radius: 6px; background: transparent; border: none; cursor: pointer; display: none; align-items: center; justify-content: center; color: var(--text3); transition: background .12s, color .12s; flex-shrink: 0; }
+    .search-clear { width: 22px; height: 22px; border-radius: 5px; background: transparent; border: none; cursor: pointer; display: none; align-items: center; justify-content: center; color: var(--text3); transition: background .12s, color .12s; flex-shrink: 0; }
     .search-clear.visible { display: flex; }
     .search-clear:hover { background: var(--surface3); color: var(--text); }
 
     /* STATS */
-    .stats-bar { flex-shrink: 0; padding: 10px 28px 0; font-size: 11px; color: var(--text3); font-weight: 500; display: flex; align-items: center; justify-content: space-between; }
+    .stats-bar { flex-shrink: 0; padding: 8px 24px 0; font-size: 10px; color: var(--text3); font-weight: 500; display: flex; align-items: center; justify-content: space-between; }
     .stats-bar.hidden { display: none; }
     .stats-count { color: var(--accent2); font-weight: 700; font-variant-numeric: tabular-nums; }
 
     /* LIST */
-    .history-list { flex: 1; overflow-y: auto; padding: 16px 28px 40px; }
+    .history-list { flex: 1; overflow-y: auto; padding: 12px 24px 32px; }
     .history-list::-webkit-scrollbar { width: 4px; }
     .history-list::-webkit-scrollbar-track { background: transparent; }
     .history-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 99px; }
 
     /* DATE GROUP */
-    .date-group { margin-bottom: 20px; animation: fadeUp .35s var(--ease) both; }
-    .date-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; padding: 0 2px; }
-    .date-label { font-size: 11px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--text3); white-space: nowrap; }
+    .date-group { margin-bottom: 16px; animation: fadeUp .3s var(--ease) both; }
+    .date-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; padding: 0 2px; }
+    .date-label { font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--text3); white-space: nowrap; }
     .date-line { flex: 1; height: 1px; background: var(--border); }
-    .date-count { font-size: 10px; font-weight: 700; color: var(--text3); background: var(--surface2); padding: 2px 7px; border-radius: 9px; border: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+    .date-count { font-size: 9px; font-weight: 700; color: var(--text3); background: var(--surface2); padding: 1px 6px; border-radius: 7px; border: 1px solid var(--border); font-variant-numeric: tabular-nums; }
 
     /* ITEM */
-    .h-item { display: flex; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 11px; cursor: pointer; transition: background .12s; margin-bottom: 1px; position: relative; }
+    .h-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; cursor: pointer; transition: background .12s; margin-bottom: 1px; position: relative; }
     .h-item:hover { background: var(--surface); }
     .h-item:active { background: var(--surface2); }
-    .h-favicon { width: 32px; height: 32px; border-radius: 8px; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; transition: border-color .15s; }
+    .h-favicon { width: 32px; height: 32px; border-radius: 7px; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; transition: border-color .15s; }
     .h-item:hover .h-favicon { border-color: var(--border2); }
     .h-favicon img { width: 16px; height: 16px; border-radius: 3px; object-fit: contain; }
     .h-favicon .def-ico { opacity: .3; }
     .h-info { flex: 1; min-width: 0; }
-    .h-title { font-size: 13px; font-weight: 600; color: var(--text); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; line-height: 1.35; }
-    .h-url { font-size: 11px; color: var(--text3); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; margin-top: 1px; font-weight: 500; }
-    .h-meta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-    .h-time { font-size: 11px; color: var(--text3); font-weight: 600; font-variant-numeric: tabular-nums; }
-    .h-delete { width: 26px; height: 26px; border-radius: 6px; background: transparent; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text3); flex-shrink: 0; opacity: 0; transition: opacity .12s, background .12s, color .12s, transform .12s var(--spring); }
+    .h-title { font-size: 12px; font-weight: 600; color: var(--text); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; line-height: 1.35; }
+    .h-url { font-size: 10px; color: var(--text3); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; margin-top: 1px; font-weight: 500; }
+    .h-meta { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .h-time { font-size: 10px; color: var(--text3); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .h-delete { width: 24px; height: 24px; border-radius: 5px; background: transparent; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text3); flex-shrink: 0; opacity: 0; transition: opacity .12s, background .12s, color .12s, transform .12s var(--spring); }
     .h-item:hover .h-delete { opacity: 1; }
     .h-delete:hover { background: rgba(255,69,58,.12); color: var(--red); transform: scale(1.08); }
 
     /* EMPTY */
-    .empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 24px; text-align: center; animation: fadeUp .5s var(--ease) both; }
+    .empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; animation: fadeUp .4s var(--ease) both; }
     .empty.hidden { display: none; }
-    .empty-icon { width: 72px; height: 72px; border-radius: 18px; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; margin-bottom: 18px; }
-    .empty-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 5px; }
-    .empty-desc { font-size: 12px; color: var(--text3); max-width: 260px; line-height: 1.6; }
+    .empty-icon { width: 64px; height: 64px; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+    .empty-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .empty-desc { font-size: 11px; color: var(--text3); max-width: 240px; line-height: 1.6; }
 
     /* TOAST */
-    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--surface); border: 1px solid var(--border2); color: var(--text); font-family: var(--font); font-size: 12px; font-weight: 600; padding: 9px 20px; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,.5); opacity: 0; transition: opacity .2s var(--ease), transform .2s var(--ease); z-index: 9999; pointer-events: none; white-space: nowrap; backdrop-filter: blur(14px); }
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(8px); background: var(--surface); border: 1px solid var(--border2); color: var(--text); font-family: var(--font); font-size: 11px; font-weight: 600; padding: 8px 16px; border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,.5); opacity: 0; transition: opacity .2s var(--ease), transform .2s var(--ease); z-index: 9999; pointer-events: none; white-space: nowrap; backdrop-filter: blur(14px); }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     .toast.hidden { display: none; }
 
     /* MODAL */
-    .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; animation: fadeIn .15s var(--ease); }
+    .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; animation: fadeIn .12s var(--ease); }
     .modal-bg.hidden { display: none; }
-    .modal-box { background: var(--surface); border: 1px solid var(--border2); border-radius: 18px; padding: 24px; width: 100%; max-width: 360px; box-shadow: 0 24px 80px rgba(0,0,0,.6); animation: modalPop .2s var(--ease); }
-    .modal-box h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
-    .modal-box p { font-size: 12px; color: var(--text2); line-height: 1.55; margin-bottom: 20px; }
-    .modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
-    .m-btn { height: 32px; padding: 0 16px; border-radius: 8px; background: var(--surface2); border: 1px solid var(--border2); color: var(--text); font-family: var(--font); font-size: 12px; font-weight: 600; cursor: pointer; transition: background .12s, border-color .12s, transform .1s var(--spring); display: flex; align-items: center; justify-content: center; min-width: 80px; }
-    .m-btn:hover { background: var(--surface3); }
+    .modal-box { background: var(--surface); border: 1px solid var(--border2); border-radius: 14px; padding: 20px; width: 100%; max-width: 320px; box-shadow: 0 20px 60px rgba(0,0,0,.6); animation: modalPop .15s var(--ease); }
+    .modal-box h3 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .modal-box p { font-size: 11px; color: var(--text2); line-height: 1.5; margin-bottom: 16px; }
+    .modal-btns { display: flex; gap: 6px; justify-content: flex-end; }
+    .m-btn { height: 28px; padding: 0 14px; border-radius: 6px; background: rgba(255,255,255,.06); border: 1px solid var(--border2); color: var(--text); font-family: var(--font); font-size: 11px; font-weight: 600; cursor: pointer; transition: background .12s, border-color .12s, transform .1s var(--spring); display: flex; align-items: center; justify-content: center; min-width: 70px; }
+    .m-btn:hover { background: rgba(255,255,255,.1); }
     .m-btn:active { transform: scale(.96); }
     .m-btn-danger { color: var(--red); border-color: rgba(255,69,58,.18); }
     .m-btn-danger:hover { background: rgba(255,69,58,.08); border-color: rgba(255,69,58,.3); }
 
-    @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes modalPop { from { opacity: 0; transform: scale(.95) translateY(8px); } to { opacity: 1; transform: none; } }
+    @keyframes modalPop { from { opacity: 0; transform: scale(.95) translateY(6px); } to { opacity: 1; transform: none; } }
   </style>
 </head>
 <body>
 
 <aside class="sidebar">
   <div class="sidebar-header">
-    <h1>История</h1>
+    <h1>
+      <span class="logo-icon"><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="#fff" stroke-width="1.5"/><path d="M4 7h6M7 4v6" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/></svg></span>
+      История
+    </h1>
     <p>Посещённые страницы</p>
   </div>
   <div class="sidebar-divider"></div>
   <div class="sidebar-actions">
     <button class="btn-clear-all" id="btn-clear-all">
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 3h8M4.5 3V2h3v1M3 3l.5 7.5h5L9 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 3h8M4.5 3V2h3v1M3 3l.5 7.5h5L9 3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Очистить историю
     </button>
   </div>
@@ -158,10 +162,10 @@
 <div class="main">
   <div class="search-bar">
     <div class="search-box">
-      <span class="search-ico"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.4"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span>
+      <span class="search-ico"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.4"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span>
       <input type="text" class="search-input" id="search-input" placeholder="Поиск в истории..." autocomplete="off" spellcheck="false">
       <button class="search-clear" id="search-clear" title="Очистить">
-        <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1.5 1.5l8 8M9.5 1.5l-8 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><path d="M1.5 1.5l8 8M9.5 1.5l-8 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
       </button>
     </div>
   </div>
@@ -174,7 +178,7 @@
 
   <div class="empty hidden" id="empty-state">
     <div class="empty-icon">
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="12" stroke="currentColor" stroke-width="1.4" opacity=".25"/><path d="M16 10v6l3.5 2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/></svg>
+      <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="12" stroke="currentColor" stroke-width="1.4" opacity=".25"/><path d="M16 10v6l3.5 2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/></svg>
     </div>
     <div class="empty-title" id="empty-title">История пуста</div>
     <div class="empty-desc" id="empty-desc">Здесь будут отображаться посещённые страницы</div>
@@ -198,12 +202,42 @@
   let searchTerm = '';
   let activeGroup = 'all';
 
-  function postMsg(data) { try { if (window.chrome && window.chrome.webview) window.chrome.webview.postMessage(data); else window.parent.postMessage(data, '*'); } catch {} }
-  function onMsg(handler) { window.addEventListener('integral-response', (e) => handler(e.detail || {})); window.addEventListener('message', (e) => { if (e.data && e.data.type) handler(e.data); }); }
+  // ── Communication with parent renderer (via webview preload only) ──
+  function postMsg(data) {
+    try {
+      if (window.chrome && window.chrome.webview) {
+        window.chrome.webview.postMessage(data);
+      }
+    } catch (e) { console.error('[history] postMsg error:', e); }
+  }
+
+  function onMsg(handler) {
+    window.addEventListener('integral-response', (e) => {
+      try { handler(e.detail || {}); } catch (err) { console.error('[history] onMsg error:', err); }
+    });
+  }
+
   function showToast(text) { const t = document.getElementById('toast'); t.textContent = text; t.classList.remove('hidden'); requestAnimationFrame(() => t.classList.add('show')); clearTimeout(t._timer); t._timer = setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.classList.add('hidden'), 250); }, 2400); }
   function escapeHtml(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
   function getDomain(url) { try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url; } }
-  function formatTime(ts) { const d = new Date(ts); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
+
+  // ── Relative time formatting (Russian) ──
+  function formatTime(ts) {
+    const now = Date.now();
+    const diff = now - ts;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (minutes < 1) return 'только что';
+    if (minutes < 60) return minutes + ' мин назад';
+    if (hours < 24) return hours + ' ч назад';
+    if (days === 1) return 'вчера';
+    if (days < 7) return days + ' дн назад';
+
+    const d = new Date(ts);
+    return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear();
+  }
 
   const ACCENTS = {
     violet: { pri: '#8b5cf6', sec: '#a78bfa', grad: 'linear-gradient(135deg,#8b5cf6,#0ea5e9)', glow: 'rgba(139,92,246,.14)', border: 'rgba(139,92,246,.28)' },
@@ -253,12 +287,10 @@
 
     let filtered = allEntries;
 
-    // Filter by group
     if (activeGroup !== 'all') {
       filtered = filtered.filter(e => getDateGroup(e.timestamp) === activeGroup);
     }
 
-    // Filter by search
     if (searchTerm) {
       const q = searchTerm.toLowerCase();
       filtered = filtered.filter(e => (e.title && e.title.toLowerCase().includes(q)) || (e.url && e.url.toLowerCase().includes(q)));
@@ -288,29 +320,29 @@
     for (const label of groupsToShow) {
       if (!groups[label]) continue;
       const count = groups[label].length;
-      html += `<div class="date-group" style="animation-delay:${delay * .04}s">`;
+      html += '<div class="date-group" style="animation-delay:' + (delay * .03) + 's">';
       if (activeGroup === 'all') {
-        html += `<div class="date-header"><span class="date-label">${escapeHtml(label)}</span><span class="date-line"></span><span class="date-count">${count}</span></div>`;
+        html += '<div class="date-header"><span class="date-label">' + escapeHtml(label) + '</span><span class="date-line"></span><span class="date-count">' + count + '</span></div>';
       }
       for (const entry of groups[label]) {
         const domain = getDomain(entry.url);
         const time = formatTime(entry.timestamp);
         const faviconHtml = entry.favicon
-          ? `<img src="${escapeHtml(entry.favicon)}" alt="">`
-          : `<svg class="def-ico" width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M5 7h4M7 5v4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>`;
-        html += `<div class="h-item" data-url="${escapeHtml(entry.url)}">
-          <div class="h-favicon">${faviconHtml}</div>
-          <div class="h-info">
-            <div class="h-title">${escapeHtml(entry.title || domain)}</div>
-            <div class="h-url">${escapeHtml(domain)}</div>
-          </div>
-          <div class="h-meta">
-            <span class="h-time">${time}</span>
-            <button class="h-delete" data-id="${escapeHtml(entry.id)}" title="Удалить">
-              <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1.5 1.5l8 8M9.5 1.5l-8 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-            </button>
-          </div>
-        </div>`;
+          ? '<img src="' + escapeHtml(entry.favicon) + '" alt="">'
+          : '<svg class="def-ico" width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M5 7h4M7 5v4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>';
+        html += '<div class="h-item" data-url="' + escapeHtml(entry.url) + '">' +
+          '<div class="h-favicon">' + faviconHtml + '</div>' +
+          '<div class="h-info">' +
+            '<div class="h-title">' + escapeHtml(entry.title || domain) + '</div>' +
+            '<div class="h-url">' + escapeHtml(domain) + '</div>' +
+          '</div>' +
+          '<div class="h-meta">' +
+            '<span class="h-time">' + time + '</span>' +
+            '<button class="h-delete" data-id="' + escapeHtml(entry.id) + '" title="Удалить">' +
+              '<svg width="10" height="10" viewBox="0 0 11 11" fill="none"><path d="M1.5 1.5l8 8M9.5 1.5l-8 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>' +
+            '</button>' +
+          '</div>' +
+        '</div>';
       }
       html += '</div>'; delay++;
     }
@@ -325,9 +357,13 @@
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const id = btn.dataset.id; if (!id) return;
-        postMsg({ type: 'history-delete', id });
+        postMsg({ type: 'history-delete', id: id });
         const item = btn.closest('.h-item');
-        if (item) { item.style.transition = 'opacity .15s, transform .15s'; item.style.opacity = '0'; item.style.transform = 'translateX(12px)'; setTimeout(() => { allEntries = allEntries.filter(e => String(e.id) !== String(id)); updateBadges(); render(); showToast('Запись удалена'); }, 150); }
+        if (item) {
+          item.style.transition = 'opacity .15s, transform .15s, max-height .2s .1s';
+          item.style.opacity = '0'; item.style.transform = 'translateX(12px)';
+          setTimeout(() => { allEntries = allEntries.filter(e => String(e.id) !== String(id)); updateBadges(); render(); showToast('Запись удалена'); }, 180);
+        }
       });
     });
   }
@@ -364,14 +400,15 @@
     if (confirmed) { postMsg({ type: 'history-clear' }); allEntries = []; updateBadges(); render(); showToast('История очищена'); }
   });
 
-  // Messages
+  // Handle messages from parent renderer
   onMsg((d) => {
     if (!d || typeof d !== 'object') return;
     if (d.type === 'init-history' && Array.isArray(d.entries)) { allEntries = d.entries; updateBadges(); render(); }
     if (d.type === 'init-settings' && d.settings && d.settings.accentColor) applyAccent(d.settings.accentColor);
   });
 
-  postMsg({ type: 'history-get' });
+  // Request initial data — use correct message types matching handleInternalMessage in renderer.js
+  postMsg({ type: 'get-history' });
   postMsg({ type: 'settings-get' });
 </script>
 </body>

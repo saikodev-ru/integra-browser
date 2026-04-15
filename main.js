@@ -193,7 +193,7 @@ function createWindow(incognito = false) {
   const win = new BrowserWindow({
     width: 1280, height: 800, minWidth: 700, minHeight: 500,
     frame: false,
-    backgroundMaterial: 'acrylic',
+    backgroundMaterial: 'mica',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true, nodeIntegration: false, sandbox: false,
